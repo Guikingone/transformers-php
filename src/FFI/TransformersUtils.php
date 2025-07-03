@@ -9,7 +9,9 @@ use Exception;
 use FFI;
 use FFI\CData;
 use FFI\CType;
+
 use function Codewithkyrian\Transformers\Utils\basePath;
+use function file_get_contents;
 
 class TransformersUtils
 {
@@ -28,7 +30,7 @@ class TransformersUtils
         if (!isset(self::$ffi)) {
             self::$ffi = FFI::cdef(
                 file_get_contents(Library::TransformersPHP->header(basePath('includes'))),
-                Library::TransformersPHP->library(basePath('libs'))
+                Library::TransformersPHP->library(basePath('libs')),
             );
         }
 
@@ -97,18 +99,51 @@ class TransformersUtils
     }
 
     public static function spectrogram(
-        $waveform, int $waveformLength, int $spectrogramLength, int $hopLength, int $fftLength,
-        $window, int $windowLength, int $d1, int $d1Max, float $power, bool $center, float $preemphasis,
-        $melFilters, int $nMelFilters, $nFreqBins, float $melFloor, int $logMel, ?bool $removeDcOffset,
-        bool $doPad, bool $transpose
-    ): CData
-    {
+        $waveform,
+        int $waveformLength,
+        int $spectrogramLength,
+        int $hopLength,
+        int $fftLength,
+        $window,
+        int $windowLength,
+        int $d1,
+        int $d1Max,
+        float $power,
+        bool $center,
+        float $preemphasis,
+        $melFilters,
+        int $nMelFilters,
+        $nFreqBins,
+        float $melFloor,
+        int $logMel,
+        ?bool $removeDcOffset,
+        bool $doPad,
+        bool $transpose,
+    ): CData {
         $spectrogram = self::new("float[$spectrogramLength]");
 
         self::ffi()->spectrogram(
-            $waveform, $waveformLength, $spectrogram, $spectrogramLength, $hopLength, $fftLength, $window,
-            $windowLength, $d1, $d1Max, $power, $center, $preemphasis, $melFilters, $nMelFilters, $nFreqBins,
-            $melFloor, $logMel, $removeDcOffset, $doPad, $transpose,
+            $waveform,
+            $waveformLength,
+            $spectrogram,
+            $spectrogramLength,
+            $hopLength,
+            $fftLength,
+            $window,
+            $windowLength,
+            $d1,
+            $d1Max,
+            $power,
+            $center,
+            $preemphasis,
+            $melFilters,
+            $nMelFilters,
+            $nFreqBins,
+            $melFloor,
+            $logMel,
+            $removeDcOffset,
+            $doPad,
+            $transpose,
         );
 
         return $spectrogram;

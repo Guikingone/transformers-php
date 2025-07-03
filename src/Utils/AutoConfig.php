@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Utils;
 
 use ArrayAccess;
 
 class AutoConfig implements ArrayAccess
 {
-
     public string $modelType;
 
     public bool $isEncoderDecoder;
@@ -37,16 +35,15 @@ class AutoConfig implements ArrayAccess
         ?array  $config = null,
         ?string $cacheDir = null,
         string  $revision = 'main',
-        ?callable $onProgress = null
-    ): self
-    {
+        ?callable $onProgress = null,
+    ): self {
         $data = $config ?? Hub::getJson(
             $modelNameOrPath,
             fileName: 'config.json',
             cacheDir: $cacheDir,
             revision: $revision,
             fatal: false,
-            onProgress: $onProgress
+            onProgress: $onProgress,
         );
 
         return new self($data);

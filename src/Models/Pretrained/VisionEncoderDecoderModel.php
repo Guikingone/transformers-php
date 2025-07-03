@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Pretrained;
-
 
 use Codewithkyrian\Transformers\Models\Auto\AutoModel;
 use Codewithkyrian\Transformers\Models\Auto\AutoModelForCausalLM;
@@ -13,6 +11,9 @@ use Codewithkyrian\Transformers\Transformers;
 use Codewithkyrian\Transformers\Utils\AutoConfig;
 use Codewithkyrian\Transformers\Utils\GenerationConfig;
 use Codewithkyrian\Transformers\Utils\InferenceSession;
+use Exception;
+
+use function property_exists;
 
 /**
  * Vision Encoder-Decoder model based on OpenAI's GPT architecture for image captioning and other vision tasks
@@ -37,17 +38,15 @@ class VisionEncoderDecoderModel extends PretrainedModel
      * @param AutoConfig $config The configuration array specifying the hyperparameters and other model settings.
      * @param mixed $session The ONNX session containing the encoder model.
      * @param InferenceSession $decoderMergedSession The ONNX session containing the merged decoder model.
-     * @param ModelArchitecture $modelArchitecture
      * @param GenerationConfig $generationConfig Configuration object for the generation process.
      */
     public function __construct(
-        AutoConfig               $config,
-        InferenceSession         $session,
-        public InferenceSession  $decoderMergedSession,
+        AutoConfig $config,
+        InferenceSession $session,
+        public InferenceSession $decoderMergedSession,
         public ModelArchitecture $modelArchitecture,
-        public GenerationConfig  $generationConfig
-    )
-    {
+        public GenerationConfig $generationConfig,
+    ) {
         parent::__construct($config, $session, $this->modelArchitecture);
 
         // Extract configs
@@ -69,7 +68,7 @@ class VisionEncoderDecoderModel extends PretrainedModel
         $decoderModel = AutoModelForCausalLM::MODEL_CLASS_MAPPING[$decoderConfig['model_type']];
 
         if (!$decoderModel) {
-            throw new \Exception("Unable to construct `VisionEncoderDecoder` due to unsupported decoder: '{$this->config['decoder']['model_type']}'");
+            throw new Exception("Unable to construct `VisionEncoderDecoder` due to unsupported decoder: '{$this->config['decoder']['model_type']}'");
         }
 
         $decoder = new $decoderModel($decoderConfig, $this->decoderMergedSession, ModelArchitecture::DecoderOnly, $this->generationConfig);

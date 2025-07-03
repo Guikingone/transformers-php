@@ -2,12 +2,17 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Tokenizers;
 
 use Codewithkyrian\Transformers\DataStructures\CharTrie;
 use Codewithkyrian\Transformers\DataStructures\TokenLattice;
+
+use function array_flip;
+use function array_merge;
 use function Codewithkyrian\Transformers\Utils\array_pop_key;
+use function mb_strlen;
+use function mb_substr;
+use function min;
 
 /**
  * Class representing a Unigram tokenizer model.

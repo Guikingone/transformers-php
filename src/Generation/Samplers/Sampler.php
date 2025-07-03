@@ -2,11 +2,15 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Generation\Samplers;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
 use Codewithkyrian\Transformers\Utils\GenerationConfig;
+use Error;
+
+use function array_reduce;
+use function mt_getrandmax;
+use function mt_rand;
 
 /**
  * Sampler is a base class for all sampling methods used for text generation.
@@ -19,10 +23,7 @@ abstract class Sampler
 
     /**
      * Executes the sampler, using the specified logits.
-     * @param Tensor $logits
-     * @param int $index
      *
-     * @return array
      */
     public function __invoke(Tensor $logits, int $index = -1): array
     {
@@ -33,15 +34,11 @@ abstract class Sampler
 
     /**
      * Abstract method for sampling the logits.
-     * @param Tensor $logits
-     * @param int $index
      */
     abstract public function sample(Tensor $logits, int $index);
 
     /**
      * Returns the specified logits as an array, with temperature applied.
-     * @param Tensor $logits
-     * @param int $index
      * @return array
      */
     public function getLogits(Tensor $logits, int $index): Tensor
@@ -63,7 +60,7 @@ abstract class Sampler
     public function randomSelect(array $probabilities): int
     {
         // Return index of chosen item
-        $sumProbabilities = array_reduce($probabilities, fn($acc, $curr) => $acc + $curr, 0);
+        $sumProbabilities = array_reduce($probabilities, static fn ($acc, $curr) => $acc + $curr, 0);
 
         // Generate a random number between 0 and the sum of probabilities
         $r = mt_rand() / mt_getrandmax() * $sumProbabilities;
@@ -81,7 +78,6 @@ abstract class Sampler
 
     /**
      * Returns a Sampler object based on the specified options.
-     * @param GenerationConfig $generationConfig
      * @return Sampler A Sampler object.
      */
     public static function getSampler(GenerationConfig $generationConfig): Sampler
@@ -99,11 +95,11 @@ abstract class Sampler
             return new MultinomialSampler($generationConfig);
         } elseif ($generationConfig->num_beams > 1) {
             return new BeamSearchSampler($generationConfig);
-        } else {
-            if ($generationConfig->num_return_sequences > 1) {
-                throw new \Error("num_return_sequences has to be 1 when doing greedy search, but is {$generationConfig->num_return_sequences}.");
-            }
-            return new GreedySampler($generationConfig);
         }
+        if ($generationConfig->num_return_sequences > 1) {
+            throw new Error("num_return_sequences has to be 1 when doing greedy search, but is {$generationConfig->num_return_sequences}.");
+        }
+        return new GreedySampler($generationConfig);
+
     }
 }

@@ -7,6 +7,15 @@ namespace Codewithkyrian\Transformers\Generation\Streamers;
 use Codewithkyrian\Transformers\PreTrainedTokenizers\PreTrainedTokenizer;
 use InvalidArgumentException;
 
+use function array_slice;
+use function call_user_func;
+use function count;
+use function in_array;
+use function mb_strlen;
+use function mb_substr;
+
+use const PHP_EOL;
+
 /**
  * Simple text streamer that prints the token(s) to stdout as soon as entire words are formed.
  */
@@ -22,11 +31,11 @@ class TextStreamer extends Streamer
     {
         $streamer = parent::make();
 
-        $streamer->onStreamCallback ??= function ($value) {
+        $streamer->onStreamCallback ??= static function ($value) {
             echo $value;
         };
 
-        $streamer->onStreamEndCallback ??= function () {
+        $streamer->onStreamEndCallback ??= static function () {
             echo PHP_EOL;
         };
 
@@ -41,11 +50,11 @@ class TextStreamer extends Streamer
 
         if ($this->skipPrompt && $this->nextTokensArePrompt) {
             $this->nextTokensArePrompt = false;
-//            $this->printedText = $this->tokenizer->decode($this->promptTokens, skipSpecialTokens: true);
-//            $this->printedLength = mb_strlen($this->printedText);
-//            $this->lastDecodedCheckpointForToken = count($this->promptTokens) - 1;
-//            $this->lastDecodedCheckpointForText = mb_strlen($this->printedText);
-//            return;
+            //            $this->printedText = $this->tokenizer->decode($this->promptTokens, skipSpecialTokens: true);
+            //            $this->printedLength = mb_strlen($this->printedText);
+            //            $this->lastDecodedCheckpointForToken = count($this->promptTokens) - 1;
+            //            $this->lastDecodedCheckpointForText = mb_strlen($this->printedText);
+            //            return;
             $prompt = $this->tokenizer->decode($this->promptTokens, skipSpecialTokens: true);
             $this->printedLength = mb_strlen($prompt);
             $this->lastDecodedCheckpointForToken = count($this->promptTokens) - 1;
@@ -54,7 +63,9 @@ class TextStreamer extends Streamer
 
         $tokensToDecode = array_slice($value[0]['output_token_ids'], $this->lastDecodedCheckpointForToken);
 
-        if (empty($tokensToDecode)) return;
+        if (empty($tokensToDecode)) {
+            return;
+        }
 
         $decodedText = $this->tokenizer->decode($tokensToDecode, skipSpecialTokens: true);
 
@@ -62,8 +73,8 @@ class TextStreamer extends Streamer
         $punctuationMarks = ['.', ',', '!', '?', ';', ':'];
 
         $this->printedText = mb_substr($this->printedText, 0, $this->lastDecodedCheckpointForText)
-            .($this->lastDecodedCheckpointForToken == 0 ? '' : ' ')
-            .$decodedText;
+            . ($this->lastDecodedCheckpointForToken == 0 ? '' : ' ')
+            . $decodedText;
 
         $newText = mb_substr($this->printedText, $this->printedLength);
 
@@ -77,7 +88,7 @@ class TextStreamer extends Streamer
         if ($this->onStreamCallback !== null) {
             call_user_func(
                 $this->onStreamCallback,
-                $this->streamMode === StreamMode::PARTIAL ? $newText : $this->printedText
+                $this->streamMode === StreamMode::PARTIAL ? $newText : $this->printedText,
             );
         }
     }

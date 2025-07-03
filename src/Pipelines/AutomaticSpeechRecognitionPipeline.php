@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Generation\Streamers\WhisperTextStreamer;
@@ -10,8 +9,16 @@ use Codewithkyrian\Transformers\Tensor\Tensor;
 use Codewithkyrian\Transformers\Utils\Audio;
 use Codewithkyrian\Transformers\Utils\GenerationConfig;
 use Codewithkyrian\Transformers\Utils\Image;
-use function Codewithkyrian\Transformers\Utils\array_pop_key;
+use InvalidArgumentException;
+
+use function array_map;
 use function Codewithkyrian\Transformers\Utils\array_keys_to_snake_case;
+use function Codewithkyrian\Transformers\Utils\array_pop_key;
+use function count;
+use function floor;
+use function is_a;
+use function is_array;
+use function is_null;
 
 /**
  * Pipeline that aims at extracting spoken text contained within some audio.
@@ -92,7 +99,7 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
             'unispeech',
             'unispeech-sat',
             'hubert' => $this->__invokeWav2Vec2($inputs, ...$args),
-            default => throw new \InvalidArgumentException("Model type {$this->model->config->modelType} not supported for Automatic Speech Recognition"),
+            default => throw new InvalidArgumentException("Model type {$this->model->config->modelType} not supported for Automatic Speech Recognition"),
         };
     }
 
@@ -112,10 +119,10 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
         $streamer = array_pop_key($args, 'streamer');
 
         if (!is_null($streamer) && !is_a($streamer, WhisperTextStreamer::class)) {
-            throw new \InvalidArgumentException('`streamer` must be an instance of `WhisperTextStreamer`');
+            throw new InvalidArgumentException('`streamer` must be an instance of `WhisperTextStreamer`');
         }
 
-//        if (!is_null($streamer)) trigger_error('`streamer` is not supported yet for Whisper', E_USER_WARNING);
+        //        if (!is_null($streamer)) trigger_error('`streamer` is not supported yet for Whisper', E_USER_WARNING);
 
         $kwargs = array_keys_to_snake_case($args);
 
@@ -123,7 +130,7 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
 
         if ($language || $task || $returnTimestamps) {
             if (isset($args['forcedDecoderIds'])) {
-                throw new \InvalidArgumentException('Cannot specify `forcedDecoderIds` when specifying `language`, `task`, or `returnTimestamps`');
+                throw new InvalidArgumentException('Cannot specify `forcedDecoderIds` when specifying `language`, `task`, or `returnTimestamps`');
             }
 
             $decoderPromptIds = $this->tokenizer->getDecoderPromptIds(language: $language, task: $task, noTimestamps: !$returnTimestamps);
@@ -160,7 +167,7 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
                 if ($strideLengthSecs === null) {
                     $strideLengthSecs = $chunkLengthSecs / 6;
                 } elseif ($chunkLengthSecs <= $strideLengthSecs) {
-                    throw new \InvalidArgumentException('`strideLengthSecs` must be less than `chunkLengthSecs`');
+                    throw new InvalidArgumentException('`strideLengthSecs` must be less than `chunkLengthSecs`');
                 }
 
                 $window = $chunkLengthSecs * $samplingRate;
@@ -184,10 +191,10 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
                         'stride' => [
                             $subAudio->size(),
                             $isFirstChunk ? 0 : $stride,
-                            $isLastChunk ? 0 : $stride
+                            $isLastChunk ? 0 : $stride,
                         ],
                         'input_features' => $feature['input_features'],
-                        'is_last' => $isLastChunk
+                        'is_last' => $isLastChunk,
                     ];
 
                     $offset += $jump;
@@ -197,8 +204,8 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
                     [
                         'stride' => [$audioTensor->size(), 0, 0],
                         'input_features' => ($this->processor)($audioTensor)['input_features'],
-                        'is_last' => true
-                    ]
+                        'is_last' => true,
+                    ],
                 ];
 
             }
@@ -218,16 +225,17 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
                 }
 
                 // convert stride to seconds
-                $chunk['stride'] = array_map(fn($x) => $x / $samplingRate, $chunk['stride']);
+                $chunk['stride'] = array_map(static fn ($x) => $x / $samplingRate, $chunk['stride']);
 
                 $streamer?->putChunk($chunk);
             }
 
             // Merge text chunks
-            [$fullText, $optional] = $this->tokenizer->decodeASR($chunks,
+            [$fullText, $optional] = $this->tokenizer->decodeASR(
+                $chunks,
                 timePrecision: $timePrecision,
                 returnTimestamps: $returnTimestamps,
-                forceFullSequences: $forceFullSequences
+                forceFullSequences: $forceFullSequences,
             );
             $toReturn[] = ['text' => $fullText, ...$optional];
         }

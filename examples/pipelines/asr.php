@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Codewithkyrian\Transformers\Generation\Streamers\TextStreamer;
 use Codewithkyrian\Transformers\Generation\Streamers\WhisperTextStreamer;
+
 use function Codewithkyrian\Transformers\Pipelines\pipeline;
 use function Codewithkyrian\Transformers\Utils\{memoryUsage, timeUsage};
 
@@ -26,10 +26,11 @@ $audioUrl = __DIR__ . '/../sounds/ted_60.wav';
 //$audioUrl = __DIR__ . '/../sounds/sample-1.mp3';
 
 $streamer = WhisperTextStreamer::make()
-->onStream(fn($text) => print($text));
+->onStream(static fn ($text) => print($text));
 
 
-$output = $transcriber($audioUrl,
+$output = $transcriber(
+    $audioUrl,
     maxNewTokens: 256,
     chunkLengthSecs: 24,
     streamer: $streamer,

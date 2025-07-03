@@ -2,26 +2,30 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Generation\LogitsProcessors;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
 use Rindow\Math\Matrix\NDArrayPhp;
+
+use function array_key_exists;
+use function array_slice;
+use function count;
+use function end;
+use function json_encode;
+
+use const INF;
 
 /**
  * A logits processor that disallows ngrams of a certain size to be repeated.
  */
 class NoRepeatNGramLogitsProcessor extends LogitsProcessor
 {
-
     public function __construct(protected int $noRepeatNgramSize)
     {
     }
 
     /**
      * Generate n-grams from a sequence of token ids.
-     * @param array $prevInputIds
-     * @return array
      */
     private function getNgrams(array $prevInputIds): array
     {
@@ -46,9 +50,6 @@ class NoRepeatNGramLogitsProcessor extends LogitsProcessor
     }
 
     /** Generate n-grams from a sequence of token ids.
-     * @param array $bannedNgrams
-     * @param array $prevInputIds
-     * @return array
      */
     private function getGeneratedNgrams(array $bannedNgrams, array $prevInputIds): array
     {

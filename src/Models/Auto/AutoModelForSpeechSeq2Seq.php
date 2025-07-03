@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Auto;
+
+use Codewithkyrian\Transformers\Models\Pretrained\WhisperForConditionalGeneration;
 
 class AutoModelForSpeechSeq2Seq extends PretrainedMixin
 {
-    const MODEL_CLASS_MAPPING = [
-        "whisper" => \Codewithkyrian\Transformers\Models\Pretrained\WhisperForConditionalGeneration::class,
+    public const MODEL_CLASS_MAPPING = [
+        "whisper" => WhisperForConditionalGeneration::class,
     ];
 
-    const MODEL_CLASS_MAPPINGS = [
+    public const MODEL_CLASS_MAPPINGS = [
         self::MODEL_CLASS_MAPPING,
     ];
 }

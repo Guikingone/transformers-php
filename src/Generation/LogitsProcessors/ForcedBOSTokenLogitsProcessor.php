@@ -2,25 +2,26 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Generation\LogitsProcessors;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
+
+use function count;
+
+use const INF;
 
 /**
  * A LogitsProcessor that forces a BOS token at the beginning of the generated sequence.
  */
 class ForcedBOSTokenLogitsProcessor extends LogitsProcessor
 {
-
     public function __construct(
-        protected int $bosTokenId
-    )
-    {
+        protected int $bosTokenId,
+    ) {
     }
 
     /**
-     * @inheritDoc
+     *
      */
     public function __invoke(array $inputIds, Tensor $logits): Tensor
     {

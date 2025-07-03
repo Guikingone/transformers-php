@@ -2,15 +2,18 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Decoders;
+
+use function array_keys;
+use function array_map;
+use function count;
+use function str_replace;
 
 class BPEDecoder extends Decoder
 {
     protected string $suffix;
 
     /**
-     * @param array $config
      */
     public function __construct(array $config)
     {

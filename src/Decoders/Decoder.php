@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Decoders;
 
 use Codewithkyrian\Transformers\Tokenizers\AddedToken;
+use InvalidArgumentException;
+
+use function implode;
 
 /**
  * The base class for token decoders.
@@ -30,8 +32,6 @@ abstract class Decoder
     /**
      * Creates a decoder instance based on the provided configuration.
      *
-     * @param ?array $config
-     * @return ?self
      */
     public static function fromConfig(?array $config): ?self
     {
@@ -50,7 +50,7 @@ abstract class Decoder
             'Sequence' => new DecoderSequence($config),
             'CTC' => new CTCDecoder($config),
             'BPEDecoder' => new BPEDecoder($config),
-            default => throw new \InvalidArgumentException("Unknown decoder type: {$config['type']}"),
+            default => throw new InvalidArgumentException("Unknown decoder type: {$config['type']}"),
         };
     }
 
@@ -58,7 +58,6 @@ abstract class Decoder
      * Decodes a list of tokens.
      *
      * @param string[] $tokens
-     * @return string
      */
     public function decode(array $tokens): string
     {
@@ -77,7 +76,6 @@ abstract class Decoder
      * Decodes a list of tokens.
      *
      * @param string[] $tokens
-     * @return string
      */
     public function __invoke(array $tokens): string
     {

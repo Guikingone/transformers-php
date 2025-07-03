@@ -10,10 +10,42 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerTrait;
 use Stringable;
 use UnexpectedValueException;
+
+use function chmod;
+use function date;
 use function dirname;
+use function fclose;
+use function flock;
+use function fopen;
+use function fwrite;
+use function getcwd;
 use function ini_get;
+use function is_dir;
 use function is_resource;
 use function is_string;
+use function json_encode;
+use function max;
+use function min;
+use function mkdir;
+use function preg_match;
+use function preg_replace;
+use function restore_error_handler;
+use function set_error_handler;
+use function sprintf;
+use function str_contains;
+use function str_starts_with;
+use function stream_set_chunk_size;
+use function strpos;
+use function strtolower;
+use function strtr;
+use function substr;
+use function trim;
+
+use const JSON_PRESERVE_ZERO_FRACTION;
+use const JSON_UNESCAPED_SLASHES;
+use const JSON_UNESCAPED_UNICODE;
+use const LOCK_EX;
+use const LOCK_UN;
 
 class StreamLogger implements LoggerInterface
 {
@@ -48,10 +80,10 @@ class StreamLogger implements LoggerInterface
     private bool $retrying = false;
 
     /**
-     * @param  resource|string  $stream  If a missing path can't be created, an UnexpectedValueException will be thrown on first write
-     * @param  int|null  $filePermission  Optional file permissions (default (0644) are only for owner read/write)
-     * @param  bool  $useLocking  Try to lock log file before doing any writes
-     * @param  string  $fileOpenMode  The fopen() mode used when opening a file, if $stream is a file path
+     * @param resource|string $stream If a missing path can't be created, an UnexpectedValueException will be thrown on first write
+     * @param int|null $filePermission Optional file permissions (default (0644) are only for owner read/write)
+     * @param bool $useLocking Try to lock log file before doing any writes
+     * @param string $fileOpenMode The fopen() mode used when opening a file, if $stream is a file path
      *
      * @throws InvalidArgumentException If stream is not a resource or string
      */
@@ -132,7 +164,7 @@ class StreamLogger implements LoggerInterface
                     $context,
                     JSON_UNESCAPED_SLASHES |
                     JSON_UNESCAPED_UNICODE |
-                    JSON_PRESERVE_ZERO_FRACTION
+                    JSON_PRESERVE_ZERO_FRACTION,
                 ),
             ];
             fwrite($stream, strtr(static::LOG_FORMAT, $params));
@@ -201,10 +233,10 @@ class StreamLogger implements LoggerInterface
             set_error_handler(function (...$args) {
                 return $this->customErrorHandler(...$args);
             });
-            $status = mkdir($dir, 0777, true);
+            $status = mkdir($dir, 0o777, true);
             restore_error_handler();
             if ($status === false && ! is_dir($dir) && ! str_contains((string) $this->errorMessage, 'File exists')) {
-                throw new UnexpectedValueException(sprintf('There is no existing directory at "%s" and it could not be created: '.$this->errorMessage, $dir));
+                throw new UnexpectedValueException(sprintf('There is no existing directory at "%s" and it could not be created: ' . $this->errorMessage, $dir));
             }
         }
         $this->dirCreated = true;
@@ -230,10 +262,10 @@ class StreamLogger implements LoggerInterface
         switch (strtolower($match['unit'])) {
             case 'g':
                 $limit *= 1024;
-            // no break
+                // no break
             case 'm':
                 $limit *= 1024;
-            // no break
+                // no break
             case 'k':
                 $limit *= 1024;
         }
@@ -244,7 +276,7 @@ class StreamLogger implements LoggerInterface
     /**
      * Makes sure if a relative path is passed in it is turned into an absolute path
      *
-     * @param  string  $streamUrl  stream URL or path without protocol
+     * @param string $streamUrl stream URL or path without protocol
      */
     public static function canonicalizePath(string $streamUrl): string
     {
@@ -261,12 +293,12 @@ class StreamLogger implements LoggerInterface
 
         // already absolute
         if (str_starts_with($streamUrl, '/') || substr($streamUrl, 1, 1) === ':' || str_starts_with($streamUrl, '\\\\')) {
-            return $prefix.$streamUrl;
+            return $prefix . $streamUrl;
         }
 
-        $streamUrl = getcwd().'/'.$streamUrl;
+        $streamUrl = getcwd() . '/' . $streamUrl;
 
-        return $prefix.$streamUrl;
+        return $prefix . $streamUrl;
     }
 
     public function __destruct()

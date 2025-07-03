@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Pretrained;
 
 use Codewithkyrian\Transformers\Models\ModelArchitecture;
@@ -19,9 +18,8 @@ class SiglipVisionModel extends CLIPPretrainedModel
         string $revision = 'main',
         ?string $modelFilename = null,
         ModelArchitecture $modelArchitecture = ModelArchitecture::EncoderOnly,
-        ?callable $onProgress = null
-    ): PretrainedModel
-    {
+        ?callable $onProgress = null,
+    ): PretrainedModel {
         // Update default model file name if not provided
         $modelFilename ??= 'vision_model';
         return parent::fromPretrained($modelNameOrPath, $quantized, $config, $cacheDir, $token, $revision, $modelFilename, $modelArchitecture, $onProgress);

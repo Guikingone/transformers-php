@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\FeatureExtractors;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
 use Codewithkyrian\Transformers\Utils\Audio;
+
 use function Codewithkyrian\Transformers\Utils\timeUsage;
+use function count;
+use function floor;
 
 class ASTFeatureExtractor extends FeatureExtractor
 {
@@ -30,7 +32,7 @@ class ASTFeatureExtractor extends FeatureExtractor
             $samplingRate,
             null,
             "kaldi",
-            true
+            true,
         );
 
         // Do padding:
@@ -65,11 +67,11 @@ class ASTFeatureExtractor extends FeatureExtractor
             logMel: 'log',
             removeDcOffset: true,
             maxNumFrames: $this->config['max_length'],
-            transpose: true
+            transpose: true,
         );
 
         return [
-            'input_values' => $features->add(-$this->mean)->multiply(1 / $this->std)->unsqueeze(0)
+            'input_values' => $features->add(-$this->mean)->multiply(1 / $this->std)->unsqueeze(0),
         ];
     }
 }

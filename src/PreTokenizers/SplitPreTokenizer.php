@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PreTokenizers;
 
 use function Codewithkyrian\Transformers\Utils\createPattern;
+use function preg_match_all;
+use function strlen;
+use function substr;
+
+use const PREG_OFFSET_CAPTURE;
 
 class SplitPreTokenizer extends PreTokenizer
 {
@@ -25,32 +29,32 @@ class SplitPreTokenizer extends PreTokenizer
         if ($this->config['invert']) {
             preg_match_all("/$this->pattern/u", $text, $matches);
             return $matches[0];
-        } else {
-            $result = [];
-            $offset = 0;
-
-            preg_match_all("/$this->pattern/u", $text, $matches, PREG_OFFSET_CAPTURE);
-
-            foreach ($matches[0] as $match) {
-                $fullMatch = $match[0];
-                $matchIndex = $match[1];
-
-                if ($offset < $matchIndex) {
-                    $result[] = substr($text, $offset, $matchIndex - $offset);
-                }
-
-                if (strlen($fullMatch) > 0) {
-                    $result[] = $fullMatch;
-                }
-
-                $offset = $matchIndex + strlen($fullMatch);
-            }
-
-            if ($offset < strlen($text)) {
-                $result[] = substr($text, $offset);
-            }
-
-            return $result;
         }
+        $result = [];
+        $offset = 0;
+
+        preg_match_all("/$this->pattern/u", $text, $matches, PREG_OFFSET_CAPTURE);
+
+        foreach ($matches[0] as $match) {
+            $fullMatch = $match[0];
+            $matchIndex = $match[1];
+
+            if ($offset < $matchIndex) {
+                $result[] = substr($text, $offset, $matchIndex - $offset);
+            }
+
+            if (strlen($fullMatch) > 0) {
+                $result[] = $fullMatch;
+            }
+
+            $offset = $matchIndex + strlen($fullMatch);
+        }
+
+        if ($offset < strlen($text)) {
+            $result[] = substr($text, $offset);
+        }
+
+        return $result;
+
     }
 }

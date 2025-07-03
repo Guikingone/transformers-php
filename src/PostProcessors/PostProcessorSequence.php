@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\PostProcessors;
 
+use function array_map;
+
 /**
  * A post-processor that applies multiple post-processors in sequence.
  */
 class PostProcessorSequence extends PostProcessor
 {
-
     /**
      * List of post-processors to apply.
      */
@@ -19,15 +20,15 @@ class PostProcessorSequence extends PostProcessor
      * Creates a new instance of PostProcessorSequence.
      *
      * @param array $config The configuration array.
-     *  - 'processors' (array): The list of post-processors to apply.
+     *                      - 'processors' (array): The list of post-processors to apply.
      */
     public function __construct(array $config)
     {
         parent::__construct($config);
 
         $this->processors = array_map(
-            fn ($processorConfig) => PostProcessor::fromConfig($processorConfig),
-            $config['processors']
+            static fn ($processorConfig) => PostProcessor::fromConfig($processorConfig),
+            $config['processors'],
         );
     }
 
@@ -36,7 +37,7 @@ class PostProcessorSequence extends PostProcessor
      *
      * @param array $tokens The list of tokens for the first sequence.
      * @param string[]|null $tokenPair The input tokens for the second sequence in a pair.
-     * * @param bool $addSpecialTokens Whether to add the special tokens associated with the corresponding model.
+     *                                 * @param bool $addSpecialTokens Whether to add the special tokens associated with the corresponding model.
      *
      * @return PostProcessedOutput An array containing the post-processed tokens and token_type_ids.
      */
@@ -64,5 +65,3 @@ class PostProcessorSequence extends PostProcessor
         return new PostProcessedOutput($tokens, $tokenTypeIds);
     }
 }
-
-?>

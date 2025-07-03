@@ -27,5 +27,3 @@ $pipeline = pipeline('question-answering', 'Xenova/distilbert-base-cased-distill
 $result = $pipeline($question, $context, topK: 3);
 
 dd($result);
-
-

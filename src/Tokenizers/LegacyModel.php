@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Tokenizers;
 
 use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
@@ -12,7 +11,6 @@ use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
  */
 class LegacyModel extends TokenizerModel
 {
-
     protected ?string $bosToken;
     protected ?int $bosTokenId;
 
@@ -26,12 +24,12 @@ class LegacyModel extends TokenizerModel
     {
         parent::__construct($config);
 
-//        $vocab = $moreConfig['vocab'] ?? $this->config['vocab'];
-//        $this->tokenToIds = self::toMap(
-//                $moreConfig['target_lang'] ?? false
-//                ? $vocab[$moreConfig['target_lang']]
-//                : $vocab
-//        );
+        //        $vocab = $moreConfig['vocab'] ?? $this->config['vocab'];
+        //        $this->tokenToIds = self::toMap(
+        //                $moreConfig['target_lang'] ?? false
+        //                ? $vocab[$moreConfig['target_lang']]
+        //                : $vocab
+        //        );
 
         $vocab = $moreConfig['target_lang'] ?? false
             ? $config['vocab'][$moreConfig['target_lang']]

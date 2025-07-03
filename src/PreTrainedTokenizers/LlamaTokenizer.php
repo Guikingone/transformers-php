@@ -2,14 +2,19 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PreTrainedTokenizers;
 
 use Codewithkyrian\Transformers\PreTokenizers\MetaspacePreTokenizer;
 
+use function array_slice;
+use function count;
+use function in_array;
+use function mb_strlen;
+use function str_replace;
+
 class LlamaTokenizer extends PreTrainedTokenizer
 {
-    const SPIECE_UNDERLINE = "▁";
+    public const SPIECE_UNDERLINE = "▁";
 
     protected string $defaultChatTemplate = "{% if messages[0]['role'] == 'system' %}{% set loop_messages = messages[1:] %}{% set system_message = messages[0]['content'] %}{% elif USE_DEFAULT_PROMPT == true and not '<<SYS>>' in messages[0]['content'] %}{% set loop_messages = messages %}{% set system_message = 'DEFAULT_SYSTEM_MESSAGE' %}{% else %}{% set loop_messages = messages %}{% set system_message = false %}{% endif %}{% for message in loop_messages %}{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}{% endif %}{% if loop.index0 == 0 and system_message != false %}{% set content = '<<SYS>>\n' + system_message + '\n<</SYS>>\n\n' + message['content'] %}{% else %}{% set content = message['content'] %}{% endif %}{% if message['role'] == 'user' %}{{ bos_token + '[INST] ' + content.strip() + ' [/INST]' }}{% elif message['role'] == 'system' %}{{ '<<SYS>>\n' + content.strip() + '\n<</SYS>>\n\n' }}{% elif message['role'] == 'assistant' %}{{ ' '  + content.strip() + ' ' + eos_token }}{% endif %}{% endfor %}";
 
@@ -45,10 +50,6 @@ class LlamaTokenizer extends PreTrainedTokenizer
      * Helper function to handle legacy encoding of SPM tokenizers.
      *  Adapted from https://github.com/huggingface/transformers/blob/e6dcf8abd6f65bb4b6dfc1831b20d9ba49ce00e2/src/transformers/models/t5/tokenization_t5.py#L374-L387
      *
-     * @param ?string $text
-     * @param string|null $textPair
-     * @param bool $addSpecialTokens
-     * @return ?array
      */
     public function encodeText(?string $text, string $textPair = null, bool $addSpecialTokens = true): ?array
     {

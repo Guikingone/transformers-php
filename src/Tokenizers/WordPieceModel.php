@@ -2,10 +2,16 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Tokenizers;
 
 use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
+
+use function array_key_exists;
+use function array_merge;
+use function array_slice;
+use function count;
+use function implode;
+use function str_split;
 
 /**
  * A subclass of TokenizerModel that uses WordPiece encoding to encode tokens.

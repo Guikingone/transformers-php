@@ -2,14 +2,20 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Decoders;
+
+use function hexdec;
+use function is_nan;
+use function mb_convert_encoding;
+use function pack;
+use function str_ends_with;
+use function str_starts_with;
+use function strlen;
+use function substr;
 
 class ByteFallback extends Decoder
 {
-
     /**
-     * @param array $config
      */
     public function __construct(array $config)
     {

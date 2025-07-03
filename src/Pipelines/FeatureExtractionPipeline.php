@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
+use Error;
+
 use function Codewithkyrian\Transformers\Utils\array_pop_key;
 
 /**
@@ -88,7 +89,7 @@ class FeatureExtractionPipeline extends Pipeline
                 break;
 
             default:
-                throw new \Error("Pooling method not supported. Please use 'mean',  'cls', or 'none'.");
+                throw new Error("Pooling method not supported. Please use 'mean',  'cls', or 'none'.");
         }
 
         if ($normalize) {

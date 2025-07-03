@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Decoders;
+
+use function str_replace;
+use function str_starts_with;
+use function substr;
 
 /**
  * MetaspaceDecoder class extends the Decoder class and decodes Metaspace tokenization.
@@ -21,7 +24,6 @@ class MetaspaceDecoder extends Decoder
     protected string $replacement;
 
     /**
-     * @param array $config
      */
     public function __construct(array $config)
     {

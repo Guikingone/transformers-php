@@ -12,8 +12,6 @@ use function normalizer_normalize;
  */
 class NFKD extends Normalizer
 {
-
-
     public function normalize(string $text): string
     {
         return normalizer_normalize($text, \Normalizer::NFKD);

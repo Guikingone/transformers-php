@@ -6,5 +6,4 @@ namespace Codewithkyrian\Transformers\PreTrainedTokenizers;
 
 class SiglipTokenizer extends PretrainedTokenizer
 {
-
 }

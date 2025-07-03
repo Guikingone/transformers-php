@@ -9,6 +9,6 @@ use Codewithkyrian\Transformers\Utils\StreamLogger;
 require_once './vendor/autoload.php';
 
 Transformers::setup()
-    ->setCacheDir('/Users/Kyrian/.transformers')
+    ->setCacheDir(__DIR__ . '/.cache')
     ->setImageDriver(ImageDriver::VIPS)
-    ->setLogger(new StreamLogger(STDOUT));
+    ->setLogger(new StreamLogger(\STDOUT));

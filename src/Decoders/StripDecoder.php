@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Decoders;
+
+use function array_map;
+use function mb_strlen;
+use function mb_substr;
 
 class StripDecoder extends Decoder
 {
@@ -12,7 +15,6 @@ class StripDecoder extends Decoder
     protected int $stop;
 
     /**
-     * @param array $config
      */
     public function __construct(array $config)
     {
@@ -32,9 +34,9 @@ class StripDecoder extends Decoder
                 if ($char === $this->content) {
                     $startCut = $i + 1;
                     continue;
-                } else {
-                    break;
                 }
+                break;
+
             }
 
             $stopCut = mb_strlen($token);
@@ -43,9 +45,9 @@ class StripDecoder extends Decoder
                 if ($token[$index] ?? null === $this->content) {
                     $stopCut = $index;
                     continue;
-                } else {
-                    break;
                 }
+                break;
+
             }
 
             return mb_substr($token, $startCut, $stopCut - $startCut);

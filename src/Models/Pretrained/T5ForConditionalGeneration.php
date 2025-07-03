@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Pretrained;
 
 use Codewithkyrian\Transformers\Models\ModelArchitecture;
@@ -27,9 +26,8 @@ class T5ForConditionalGeneration extends T5PretrainedModel
         InferenceSession         $session,
         public InferenceSession  $decoderMergedSession,
         public ModelArchitecture $modelArchitecture,
-        public GenerationConfig  $generationConfig
-    )
-    {
+        public GenerationConfig  $generationConfig,
+    ) {
         parent::__construct($config, $session, $modelArchitecture);
 
         $this->numDecoderLayers = $this->config['num_decoder_layers'];

@@ -2,12 +2,20 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Decoders;
 
 use Codewithkyrian\Transformers\Tokenizers\AddedToken;
 use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
 use SplFixedArray;
+
+use function array_filter;
+use function array_map;
+use function implode;
+use function mb_convert_encoding;
+use function pack;
+use function preg_split;
+
+use const PREG_SPLIT_NO_EMPTY;
 
 class ByteLevelDecoder extends Decoder
 {
@@ -283,7 +291,7 @@ class ByteLevelDecoder extends Decoder
 
         $textArray = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY);
 
-        $byteArray = array_map(fn($x) => self::UNICODE_TO_BYTES[$x], $textArray);
+        $byteArray = array_map(static fn ($x) => self::UNICODE_TO_BYTES[$x], $textArray);
 
         $binaryString = pack('C*', ...$byteArray);
 
@@ -298,7 +306,7 @@ class ByteLevelDecoder extends Decoder
         foreach ($tokens as $token) {
             // No need to check skip_special_tokens since the tokens are already filtered
 
-            $addedToken = array_filter($this->addedTokens, fn (AddedToken $x) => $x->content === $token);
+            $addedToken = array_filter($this->addedTokens, static fn (AddedToken $x) => $x->content === $token);
 
             if (!empty($addedToken)) {
                 if (!empty($currentSubText)) {

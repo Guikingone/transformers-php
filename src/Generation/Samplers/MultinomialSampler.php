@@ -2,19 +2,18 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Generation\Samplers;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
+
+use function log;
+use function min;
 
 class MultinomialSampler extends Sampler
 {
     /**
      * Sample from the logits.
      *
-     * @param Tensor $logits
-     * @param int $index
-     * @return array
      */
     public function sample(Tensor $logits, int $index): array
     {

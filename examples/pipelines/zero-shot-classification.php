@@ -25,7 +25,7 @@ The second half was a back-and-forth affair, with neither team able to establish
 $result = $classifier(
     $input,
     ['politics', 'public health', 'economics', 'elections', 'sports', 'entertainment', 'technology', 'business', 'finance', 'education', 'science', 'religion', 'history', 'culture', 'environment', 'weather'],
-    multiLabel: true
+    multiLabel: true,
 );
 
 
@@ -38,6 +38,6 @@ $result = $classifier(
 //
 //$result = $classifier('Apple just announced the newest iPhone 13', ["technology", "sports", "politics"]);
 
-dd( $result, timeUsage(), memoryUsage());
+dd($result, timeUsage(), memoryUsage());
 
 // Improved from 11.7687s to 2.9687s, 3.5x faster (75% improvement)

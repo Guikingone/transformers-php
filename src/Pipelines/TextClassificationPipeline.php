@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Models\Output\SequenceClassifierOutput;
@@ -71,8 +70,8 @@ class TextClassificationPipeline extends Pipeline
         $problemType = $this->model->config['problem_type'] ?? 'single_label_classification';
 
         $activationFunction = $problemType == 'multi_label_classification' ?
-            fn(Tensor $batch) => $batch->sigmoid() :
-            fn(Tensor $batch) => $batch->softmax();
+            static fn (Tensor $batch) => $batch->sigmoid() :
+            static fn (Tensor $batch) => $batch->softmax();
 
         $id2label = $this->model->config['id2label'];
         $toReturn = [];

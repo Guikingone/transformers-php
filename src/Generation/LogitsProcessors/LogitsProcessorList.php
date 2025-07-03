@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Generation\LogitsProcessors;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
+use IteratorAggregate;
 use Traversable;
 
-class LogitsProcessorList implements \IteratorAggregate
+use function count;
+
+class LogitsProcessorList implements IteratorAggregate
 {
     /** @var LogitsProcessor[] Array of logits processor functions */
     private array $processors = [];

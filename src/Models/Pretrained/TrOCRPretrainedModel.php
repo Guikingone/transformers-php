@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Pretrained;
 
 use Codewithkyrian\Transformers\Models\ModelArchitecture;
@@ -23,9 +22,8 @@ class TrOCRPretrainedModel extends PretrainedModel
         AutoConfig               $config,
         InferenceSession         $session,
         public ModelArchitecture $modelArchitecture,
-        public GenerationConfig  $generationConfig
-    )
-    {
+        public GenerationConfig  $generationConfig,
+    ) {
         parent::__construct($config, $session, $modelArchitecture);
 
 

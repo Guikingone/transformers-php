@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PreTokenizers;
+
+use function preg_split;
+
+use const PREG_SPLIT_DELIM_CAPTURE;
+use const PREG_SPLIT_NO_EMPTY;
 
 /**
  * A PreTokenizer that splits text into wordpieces using a basic tokenization scheme

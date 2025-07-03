@@ -4,6 +4,60 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Utils;
 
+use Exception;
+use RuntimeException;
+
+use function array_diff;
+use function curl_close;
+use function curl_error;
+use function curl_exec;
+use function curl_getinfo;
+use function curl_init;
+use function curl_setopt;
+use function curl_version;
+use function defined;
+use function fclose;
+use function flush;
+use function fopen;
+use function in_array;
+use function ini_get;
+use function max;
+use function preg_replace;
+use function restore_error_handler;
+use function rewind;
+use function set_error_handler;
+use function str_starts_with;
+use function stream_get_contents;
+
+use const CURL_HTTP_VERSION_2_0;
+use const CURL_VERSION_HTTP2;
+use const CURL_VERSION_LIBZ;
+use const CURLINFO_RESPONSE_CODE;
+use const CURLOPT_CAINFO;
+use const CURLOPT_CAPATH;
+use const CURLOPT_CONNECTTIMEOUT;
+use const CURLOPT_CUSTOMREQUEST;
+use const CURLOPT_ENCODING;
+use const CURLOPT_FILE;
+use const CURLOPT_FOLLOWLOCATION;
+use const CURLOPT_HTTP_VERSION;
+use const CURLOPT_HTTPHEADER;
+use const CURLOPT_NOPROGRESS;
+use const CURLOPT_POSTFIELDS;
+use const CURLOPT_PROGRESSFUNCTION;
+use const CURLOPT_PROTOCOLS;
+use const CURLOPT_SSL_VERIFYHOST;
+use const CURLOPT_SSL_VERIFYPEER;
+use const CURLOPT_SSLCERT;
+use const CURLOPT_SSLKEY;
+use const CURLOPT_SSLKEYPASSWD;
+use const CURLOPT_TIMEOUT;
+use const CURLOPT_URL;
+use const CURLOPT_USERAGENT;
+use const CURLOPT_WRITEHEADER;
+use const CURLPROTO_HTTP;
+use const CURLPROTO_HTTPS;
+
 class Downloader
 {
     private static array $options = [
@@ -31,7 +85,7 @@ class Downloader
      * @param string $url URL to download
      * @param string $to Path to copy to
      * @param array $options Stream context options e.g. https://www.php.net/manual/en/context.http.php
-     *                                     although not all options are supported when using the default curl downloader
+     *                       although not all options are supported when using the default curl downloader
      * @param callable|null $onProgress Callback to notify about the download progress
      * @return false|string
      */
@@ -41,7 +95,7 @@ class Downloader
 
         $headerHandle = fopen('php://temp/maxmemory:32768', 'w+b');
         if (false === $headerHandle) {
-            throw new \RuntimeException('Failed to open a temp stream to store curl headers');
+            throw new RuntimeException('Failed to open a temp stream to store curl headers');
         }
 
         $errorMessage = '';
@@ -55,7 +109,7 @@ class Downloader
         $bodyHandle = fopen($to, 'w+b');
         restore_error_handler();
         if (false === $bodyHandle) {
-            throw new \Exception("The \"$url\" file could not be written to $to: $errorMessage");
+            throw new Exception("The \"$url\" file could not be written to $to: $errorMessage");
         }
 
         curl_setopt($curlHandle, CURLOPT_URL, $url);
@@ -76,13 +130,13 @@ class Downloader
 
         $version = curl_version();
         $features = $version['features'];
-        if (str_starts_with($url, 'https://') && \defined('CURL_VERSION_HTTP2') && \defined('CURL_HTTP_VERSION_2_0') && (CURL_VERSION_HTTP2 & $features) !== 0) {
+        if (str_starts_with($url, 'https://') && defined('CURL_VERSION_HTTP2') && defined('CURL_HTTP_VERSION_2_0') && (CURL_VERSION_HTTP2 & $features) !== 0) {
             curl_setopt($curlHandle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
         }
 
         // curl 8.7.0 - 8.7.1 has a bug whereas automatic accept-encoding header results in an error when reading the response
         // https://github.com/composer/composer/issues/11913
-        if (isset($version['version']) && in_array($version['version'], ['8.7.0', '8.7.1'], true) && \defined('CURL_VERSION_LIBZ') && (CURL_VERSION_LIBZ & $features) !== 0) {
+        if (isset($version['version']) && in_array($version['version'], ['8.7.0', '8.7.1'], true) && defined('CURL_VERSION_LIBZ') && (CURL_VERSION_LIBZ & $features) !== 0) {
             curl_setopt($curlHandle, CURLOPT_ENCODING, "gzip");
         }
 
@@ -99,7 +153,9 @@ class Downloader
         }
 
         $progressFn = static function ($resource, $downloadSize, $downloaded, $uploadSize, $uploaded) use ($onProgress): void {
-            if ($onProgress === null || $downloadSize <= 0) return;
+            if ($onProgress === null || $downloadSize <= 0) {
+                return;
+            }
             $onProgress($downloadSize, $downloaded, $uploadSize, $uploaded);
             flush();
         };
@@ -113,7 +169,7 @@ class Downloader
             curl_close($curlHandle);
             fclose($headerHandle);
             fclose($bodyHandle);
-            throw new \Exception("The \"$url\" file could not be downloaded: $error");
+            throw new Exception("The \"$url\" file could not be downloaded: $error");
         }
 
         $statusCode = curl_getinfo($curlHandle, CURLINFO_RESPONSE_CODE);
@@ -122,7 +178,7 @@ class Downloader
             curl_close($curlHandle);
             fclose($headerHandle);
             fclose($bodyHandle);
-            throw new \Exception("The \"$url\" file could not be downloaded: HTTP $statusCode");
+            throw new Exception("The \"$url\" file could not be downloaded: HTTP $statusCode");
         }
 
         curl_close($curlHandle);

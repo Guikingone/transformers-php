@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Output;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
@@ -20,9 +19,8 @@ class BaseModelOutput implements ModelOutput
     public function __construct(
         public readonly Tensor  $lastHiddenState,
         public readonly ?Tensor $hiddenStates = null,
-        public readonly ?Tensor $attentions = null
-    )
-    {
+        public readonly ?Tensor $attentions = null,
+    ) {
     }
 
     public static function fromOutput(array $array): self
@@ -30,7 +28,7 @@ class BaseModelOutput implements ModelOutput
         return new self(
             $array['last_hidden_state'],
             isset($array['hidden_states']) ? Tensor::fromArray($array['hidden_states']) : null,
-            isset($array['attentions']) ? Tensor::fromArray($array['attentions']) : null
+            isset($array['attentions']) ? Tensor::fromArray($array['attentions']) : null,
         );
     }
 }

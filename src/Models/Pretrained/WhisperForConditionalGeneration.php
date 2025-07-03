@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Pretrained;
 
 use Codewithkyrian\Transformers\Generation\LogitsProcessors\LogitsProcessorList;
@@ -15,7 +14,21 @@ use Codewithkyrian\Transformers\Utils\GenerationConfig;
 use Codewithkyrian\Transformers\Utils\InferenceSession;
 use Exception;
 use InvalidArgumentException;
+
+use function abs;
+use function array_fill;
+use function array_map;
+use function array_merge;
+use function array_reverse;
 use function Codewithkyrian\Transformers\Utils\timeUsage;
+use function count;
+use function floor;
+use function range;
+use function sort;
+use function trigger_error;
+
+use const E_USER_WARNING;
+use const INF;
 
 class WhisperForConditionalGeneration extends WhisperPretrainedModel
 {
@@ -34,9 +47,8 @@ class WhisperForConditionalGeneration extends WhisperPretrainedModel
         InferenceSession         $session,
         public InferenceSession  $decoderMergedSession,
         public ModelArchitecture $modelArchitecture,
-        public GenerationConfig  $generationConfig
-    )
-    {
+        public GenerationConfig  $generationConfig,
+    ) {
         parent::__construct($config, $session, $modelArchitecture);
 
         $this->numDecoderLayers = $this->config['decoder_layers'];
@@ -53,9 +65,8 @@ class WhisperForConditionalGeneration extends WhisperPretrainedModel
         ?GenerationConfig    $generationConfig = null,
         ?LogitsProcessorList $logitsProcessor = null,
         Tensor               $inputsAttentionMask = null,
-        ?Streamer            $streamer = null
-    ): array
-    {
+        ?Streamer            $streamer = null,
+    ): array {
         $generationConfig = $this->getGenerationConfig($generationConfig);
 
         // Whisper has additional options for returning timestamps
@@ -78,7 +89,7 @@ class WhisperForConditionalGeneration extends WhisperPretrainedModel
             if (!isset($generationConfig['alignment_heads'])) {
                 throw new Exception(
                     "Model generation config has no `alignment_heads`, token-level timestamps not available. " .
-                    "See https://gist.github.com/hollance/42e32852f24243b748ae6bc1f985b13a on how to add this property to the generation config."
+                    "See https://gist.github.com/hollance/42e32852f24243b748ae6bc1f985b13a on how to add this property to the generation config.",
                 );
             }
         }
@@ -111,13 +122,12 @@ class WhisperForConditionalGeneration extends WhisperPretrainedModel
         array    $generateOutputs,
         array    $alignmentHeads,
         int|null $numFrames = null,
-        float    $timePrecision = 0.02
-    ): Tensor
-    {
+        float    $timePrecision = 0.02,
+    ): Tensor {
         if (!isset($generateOutputs['cross_attentions'])) {
             throw new Exception(
                 "Model outputs must contain cross attentions to extract timestamps. " .
-                "This is most likely because the model was not exported with `output_attentions=True`."
+                "This is most likely because the model was not exported with `output_attentions=True`.",
             );
         }
 
@@ -134,10 +144,10 @@ class WhisperForConditionalGeneration extends WhisperPretrainedModel
             /** @var Tensor[] $crossAttentions */
             $crossAttentions = [];
             for ($i = 0; $i < $this->config['decoder_layers']; $i++) {
-                $crossAttentions[] = Tensor::concat(array_map(fn($x) => $x[$i], $batch), 2);
+                $crossAttentions[] = Tensor::concat(array_map(static fn ($x) => $x[$i], $batch), 2);
             }
 
-            $weights = Tensor::stack(array_map(function ($alignmentHead) use ($crossAttentions, $numFrames) {
+            $weights = Tensor::stack(array_map(static function ($alignmentHead) use ($crossAttentions, $numFrames) {
                 [$l, $h] = $alignmentHead;
                 return $numFrames
                     ? $crossAttentions[$l]->slice(null, $h, null, [0, $numFrames])
@@ -189,8 +199,8 @@ class WhisperForConditionalGeneration extends WhisperPretrainedModel
             $matrix = $batchedMatrices[$batchIdx]->multiply(-1)->squeeze(0);
             [$textIndices, $timeIndices] = $this->dynamicTimeWarping($matrix);
 
-            $diffs = array_map(fn($i) => $textIndices[$i + 1] - $textIndices[$i], range(0, count($textIndices) - 2));
-            $jumps = array_map(fn($x) => (bool)$x, array_merge([1], $diffs));
+            $diffs = array_map(static fn ($i) => $textIndices[$i + 1] - $textIndices[$i], range(0, count($textIndices) - 2));
+            $jumps = array_map(static fn ($x) => (bool)$x, array_merge([1], $diffs));
 
             $jumpTimes = [];
             for ($i = 0; $i < count($jumps); ++$i) {
@@ -211,11 +221,8 @@ class WhisperForConditionalGeneration extends WhisperPretrainedModel
      * Applies a median filter of width `$windowSize` along the last dimension of the input.
      *
      * The `$input` tensor is assumed to be 3- or 4-dimensional.
-     * @param Tensor $input
-     * @param int $windowSize
-     * @return Tensor
      */
-    function medianFilter(Tensor $input, int $windowSize): Tensor
+    public function medianFilter(Tensor $input, int $windowSize): Tensor
     {
         if ($windowSize % 2 === 0 || $windowSize <= 0) {
             throw new InvalidArgumentException('Window size must be a positive odd number');
@@ -233,7 +240,7 @@ class WhisperForConditionalGeneration extends WhisperPretrainedModel
                 $index = $i + $j;
                 if ($index < 0) {
                     $index = abs($index);
-                } else if ($index >= count($input)) {
+                } elseif ($index >= count($input)) {
                     $index = 2 * (count($input) - 1) - $index;
                 }
 
@@ -252,8 +259,6 @@ class WhisperForConditionalGeneration extends WhisperPretrainedModel
      * Measures
      * similarity between two temporal sequences: the input audio and the output tokens. Used to generate
      * token-level timestamps.
-     * @param Tensor $tensor
-     * @return array
      */
     private function dynamicTimeWarping(Tensor $tensor): array
     {
@@ -275,7 +280,7 @@ class WhisperForConditionalGeneration extends WhisperPretrainedModel
                 if ($c0 < $c1 && $c0 < $c2) {
                     $c = $c0;
                     $t = 0;
-                } else if ($c1 < $c0 && $c1 < $c2) {
+                } elseif ($c1 < $c0 && $c1 < $c2) {
                     $c = $c1;
                     $t = 1;
                 } else {
@@ -312,7 +317,7 @@ class WhisperForConditionalGeneration extends WhisperPretrainedModel
             if ($t === 0) {
                 $i--;
                 $j--;
-            } else if ($t === 1) {
+            } elseif ($t === 1) {
                 $i--;
             } else {
                 $j--;

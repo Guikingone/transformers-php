@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PreTokenizers;
+
+use function str_replace;
+use function str_starts_with;
 
 /**
  * This PreTokenizer replaces spaces with the given replacement character, adds a prefix space if requested,
@@ -43,7 +45,6 @@ class MetaspacePreTokenizer extends PreTokenizer
     /**
      * This method takes a string, replaces spaces with the replacement character,
      *  adds a prefix space if requested, and returns a new list of tokens.
-     * @param string|array $text
      * @param array{ section_index : int} $options
      * @return array|string[]
      */

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Pretrained;
 
 /**
@@ -33,5 +32,4 @@ namespace Codewithkyrian\Transformers\Models\Pretrained;
  */
 class Wav2Vec2Model extends Wav2Vec2PretrainedModel
 {
-
 }

@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PreTrainedTokenizers;
+
+use function trigger_error;
 
 class XLMTokenizer extends PreTrainedTokenizer
 {

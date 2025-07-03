@@ -6,5 +6,4 @@ namespace Codewithkyrian\Transformers\PreTrainedTokenizers;
 
 class CohereTokenizer extends PretrainedTokenizer
 {
-
 }

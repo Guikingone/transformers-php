@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Normalizers;
+
+use function ltrim;
+use function rtrim;
+use function trim;
 
 /**
  * A normalizer that strips leading and/or trailing whitespace from the input text.
  */
 class StripNormalizer extends Normalizer
 {
-
-
     /**
      * Strip leading and/or trailing whitespace from the input text.
      * @param string $text The input text.

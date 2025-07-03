@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\DataStructures;
 
 class CharTrieNode
 {
-
     /**
      * Create a new CharTrieNode.
      * @param bool $isLeaf Whether the node is a leaf node or not.

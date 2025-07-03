@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Processors;
 
 use Codewithkyrian\Transformers\FeatureExtractors\FeatureExtractor;
@@ -10,15 +9,20 @@ use Codewithkyrian\Transformers\Models\Output\ObjectDetectionOutput;
 use Codewithkyrian\Transformers\Utils\Math;
 use Exception;
 
+use function array_keys;
+use function array_map;
+use function count;
+use function max;
+use function min;
+
 /**
  * Represents a Processor that extracts features from an input.
  */
 class Processor
 {
     public function __construct(
-        public FeatureExtractor $featureExtractor
-    )
-    {
+        public FeatureExtractor $featureExtractor,
+    ) {
     }
 
     /**
@@ -49,7 +53,7 @@ class Processor
             $info = [
                 'boxes' => [],
                 'classes' => [],
-                'scores' => []
+                'scores' => [],
             ];
             $logits = $outLogits[$i];
             $bbox = $outBbox[$i];
@@ -90,7 +94,7 @@ class Processor
                     $box = self::centerToCornersFormat($box);
 
                     if ($targetSize !== null) {
-                        $box = array_map(fn($x, $i) => $x * $targetSize[($i + 1) % 2], $box, array_keys($box));
+                        $box = array_map(static fn ($x, $i) => $x * $targetSize[($i + 1) % 2], $box, array_keys($box));
                     }
 
                     $info['boxes'][] = $box;
@@ -114,7 +118,7 @@ class Processor
     {
         [$centerX, $centerY, $width, $height] = $arr;
 
-        $clampFn = fn(float $value, float $min, float $max) => max($min, min($max, $value));
+        $clampFn = static fn (float $value, float $min, float $max) => max($min, min($max, $value));
 
         $topLeftX = $clampFn($centerX - $width / 2, 0.0, 1.0);
         $topLeftY = $clampFn($centerY - $height / 2, 0.0, 1.0);

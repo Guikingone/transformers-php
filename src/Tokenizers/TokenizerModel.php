@@ -8,8 +8,20 @@ use ArrayObject;
 use Codewithkyrian\Transformers\Exceptions\HubException;
 use Codewithkyrian\Transformers\Utils\Hub;
 use Exception;
+
 use function Codewithkyrian\Jinja\slice;
 use function Codewithkyrian\Transformers\Utils\array_pop_key;
+use function count;
+use function implode;
+use function is_int;
+use function mb_ord;
+use function mb_strlen;
+use function mb_strtolower;
+use function mb_substr;
+use function preg_replace;
+use function preg_split;
+
+use const PREG_SPLIT_NO_EMPTY;
 
 abstract class TokenizerModel
 {
@@ -123,10 +135,6 @@ abstract class TokenizerModel
      * Loads a tokenizer from the specified path.
      *
      * @param string $modelNameOrPath The path to the tokenizer model directory
-     * @param string|null $cacheDir
-     * @param string $revision
-     * @param mixed $legacy
-     * @param callable|null $onProgress
      *
      * @return array {tokenizerJson: array, tokenizerConfig: array}
      * @throws HubException
@@ -136,7 +144,7 @@ abstract class TokenizerModel
         ?string   $cacheDir,
         string    $revision,
         mixed     $legacy,
-        ?callable $onProgress = null
+        ?callable $onProgress = null,
     ): array {
         $tokenizerJson = Hub::getJson(
             $modelNameOrPath,
@@ -144,7 +152,7 @@ abstract class TokenizerModel
             cacheDir: $cacheDir,
             revision: $revision,
             fatal: false,
-            onProgress: $onProgress
+            onProgress: $onProgress,
         );
 
         $tokenizerConfig = Hub::getJson(
@@ -153,7 +161,7 @@ abstract class TokenizerModel
             cacheDir: $cacheDir,
             revision: $revision,
             fatal: false,
-            onProgress: $onProgress
+            onProgress: $onProgress,
         );
 
         if ($legacy != null) {
@@ -260,7 +268,7 @@ abstract class TokenizerModel
      *
      * @return string[] The encoded token IDs.
      */
-    protected abstract function encode(array $tokens): array;
+    abstract protected function encode(array $tokens): array;
 
     /**
      * Helper function to fuse consecutive values in an array equal to the specified value.

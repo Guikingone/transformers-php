@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Decoders;
 
 use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
 
+use function str_replace;
+use function str_starts_with;
+
 class WordPieceDecoder extends Decoder
 {
-
     protected bool $cleanup;
 
     public function __construct(array $config)

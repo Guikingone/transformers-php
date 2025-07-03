@@ -31,15 +31,16 @@ class Transformers
      */
     public static function setup(): static
     {
-        return new static;
+        return new static();
     }
 
-    public static function apply() {}
+    public static function apply()
+    {
+    }
 
     /**
      * Set the default cache directory for transformers models and tokenizers
      *
-     * @param string $cacheDir
      *
      * @return $this
      */
@@ -54,7 +55,6 @@ class Transformers
      * Set the remote host for downloading models and tokenizers. This is useful for using a custom mirror
      * or a local server for downloading models and tokenizers
      *
-     * @param string $remoteHost
      *
      * @return $this
      */
@@ -69,7 +69,6 @@ class Transformers
      * Set the remote path template for downloading models and tokenizers. This is useful for using a custom mirror
      * or a local server for downloading models and tokenizers
      *
-     * @param string $remotePathTemplate
      *
      * @return $this
      */
@@ -84,7 +83,6 @@ class Transformers
      * Set the authentication token for downloading models and tokenizers. This is useful for using a private model
      * repository in Hugging Face
      *
-     * @param string $authToken
      *
      * @return $this
      */
@@ -99,7 +97,6 @@ class Transformers
      * Set the user agent for downloading models and tokenizers. This is useful for using a custom user agent
      * for downloading models and tokenizers
      *
-     * @param string $userAgent
      *
      * @return $this
      */
@@ -113,7 +110,6 @@ class Transformers
     /**
      * Set the image driver for processing images.
      *
-     * @param ImageDriver $imageDriver
      *
      * @return $this
      */
@@ -127,11 +123,10 @@ class Transformers
     /**
      * Set the logger for debugging.
      *
-     * @param LoggerInterface $logger
      *
      * @return $this
      */
-    public function setLogger(LoggerInterface $logger) : static
+    public function setLogger(LoggerInterface $logger): static
     {
         self::$logger = $logger;
 

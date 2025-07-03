@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Normalizers;
 
+use function preg_replace;
+use function str_replace;
+
 /**
  * Replace normalizer that replaces occurrences of a pattern with a given string or regular expression.
  */
 class Replace extends Normalizer
 {
-
     public function normalize(string $text): string
     {
         $pattern = $this->config['pattern'] ?? null;

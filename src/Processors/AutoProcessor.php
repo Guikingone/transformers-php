@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Processors;
 
 use Codewithkyrian\Transformers\Exceptions\HubException;
 use Codewithkyrian\Transformers\FeatureExtractors\ImageFeatureExtractor;
 use Codewithkyrian\Transformers\Utils\Hub;
+use Exception;
 use Symfony\Component\Console\Output\OutputInterface;
+
+use function class_exists;
 
 /**
  * Helper class which is used to instantiate pretrained processors with the `fromPretrained` function.
@@ -29,7 +31,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class AutoProcessor
 {
-
     /**
      * Instantiate one of the processor classes of the library from a pretrained model.
      *
@@ -37,15 +38,10 @@ class AutoProcessor
      *  (either passed as an argument or loaded from `$modelNameOrPath` if possible)
      *
      * @param string $modelNameOrPath The name or path of the pretrained model. Can be either:
-     *   - A string, the *model id* of a pretrained tokenizer hosted inside a model repo on huggingface.co.
-     *     Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
-     *     user or organization name, like `dbmdz/bert-base-german-cased`.
-     *   - A path to a *directory* containing tokenizer files, e.g., `./my_model_directory/`.
-     * @param array|null $config
-     * @param string|null $cacheDir
-     * @param string $revision
-     * @param callable|null $onProgress
-     * @return Processor
+     *                                - A string, the *model id* of a pretrained tokenizer hosted inside a model repo on huggingface.co.
+     *                                Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
+     *                                user or organization name, like `dbmdz/bert-base-german-cased`.
+     *                                - A path to a *directory* containing tokenizer files, e.g., `./my_model_directory/`.
      * @throws HubException
      */
     public static function fromPretrained(
@@ -53,9 +49,8 @@ class AutoProcessor
         ?array           $config = null,
         ?string          $cacheDir = null,
         string           $revision = 'main',
-        ?callable $onProgress = null
-    ): Processor
-    {
+        ?callable $onProgress = null,
+    ): Processor {
         $preprocessorConfig = $config ?? Hub::getJson($modelNameOrPath, 'preprocessor_config.json', $cacheDir, $revision, onProgress: $onProgress);
 
         $featureExtractorKey = $preprocessorConfig['feature_extractor_type'] ?? $preprocessorConfig['image_processor_type'];
@@ -63,17 +58,14 @@ class AutoProcessor
         $featureExtractorClass = "\\Codewithkyrian\\Transformers\\FeatureExtractors\\{$featureExtractorKey}";
 
 
-        if(!class_exists($featureExtractorClass))
-        {
-            if(isset($preprocessorConfig['size']))
-            {
-//                $output?->writeln("Feature extractor type `{$featureExtractorKey}` not found, assuming ImageFeatureExtractor due to size parameter in config.");
+        if (!class_exists($featureExtractorClass)) {
+            if (isset($preprocessorConfig['size'])) {
+                //                $output?->writeln("Feature extractor type `{$featureExtractorKey}` not found, assuming ImageFeatureExtractor due to size parameter in config.");
 
                 // Assume ImageFeatureExtractor
                 $featureExtractorClass = ImageFeatureExtractor::class;
-            }
-            else{
-                throw new \Exception("Unknown Feature Extractor type: {$featureExtractorKey}");
+            } else {
+                throw new Exception("Unknown Feature Extractor type: {$featureExtractorKey}");
             }
         }
 

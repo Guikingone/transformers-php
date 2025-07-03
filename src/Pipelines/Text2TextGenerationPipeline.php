@@ -2,13 +2,18 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Generation\Streamers\Streamer;
 use Codewithkyrian\Transformers\Utils\GenerationConfig;
-use function Codewithkyrian\Transformers\Utils\array_pop_key;
+
+use function array_map;
 use function Codewithkyrian\Transformers\Utils\array_keys_to_snake_case;
+use function Codewithkyrian\Transformers\Utils\array_pop_key;
+use function is_array;
+use function method_exists;
+use function preg_replace;
+use function strtolower;
 
 /**
  * A pipeline for generating text using a model that performs text-to-text generation tasks.
@@ -45,7 +50,7 @@ class Text2TextGenerationPipeline extends Pipeline
         // Add global prefix, if present
         $prefix = $this->model->config['prefix'] ?? null;
         if ($prefix) {
-            $inputs = array_map(fn($x) => $prefix . $x, $inputs);
+            $inputs = array_map(static fn ($x) => $prefix . $x, $inputs);
         }
 
         // Handle task specific params
@@ -57,7 +62,7 @@ class Text2TextGenerationPipeline extends Pipeline
             $taskPrefix = $taskSpecificParams[$this->task->value]['prefix'] ?? null;
 
             if ($taskPrefix) {
-                $inputs = array_map(fn($x) => $taskPrefix . $x, $inputs);
+                $inputs = array_map(static fn ($x) => $taskPrefix . $x, $inputs);
             }
 
             // TODO: update generation config
@@ -79,8 +84,8 @@ class Text2TextGenerationPipeline extends Pipeline
 
         // Decode token ids to text
         return array_map(
-            fn($text) => [$this->key => $text],
-            $tokenizer->batchDecode($outputTokenIds, skipSpecialTokens: true)
+            fn ($text) => [$this->key => $text],
+            $tokenizer->batchDecode($outputTokenIds, skipSpecialTokens: true),
         );
     }
 

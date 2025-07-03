@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\FeatureExtractors;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
 use Codewithkyrian\Transformers\Utils\Audio;
+
 use function Codewithkyrian\Transformers\Utils\timeUsage;
+use function trigger_error;
+
+use const E_USER_WARNING;
 
 class WhisperFeatureExtractor extends FeatureExtractor
 {
@@ -43,7 +46,7 @@ class WhisperFeatureExtractor extends FeatureExtractor
                 'remember to specify `chunkLengthSecs` and/or `strideLengthSecs` in the pipeline options.', E_USER_WARNING);
 
             $waveform = $waveform->sliceWithBounds([0], [$this->config['n_samples']]);
-        } else if ($waveform->size() < $this->config['n_samples']) {
+        } elseif ($waveform->size() < $this->config['n_samples']) {
             $padLength = $this->config['n_samples'] - $waveform->size();
             $padding = Tensor::zeros([$padLength], dtype: $waveform->dtype());
             $waveform = Tensor::concat([$waveform, $padding]);
@@ -68,7 +71,7 @@ class WhisperFeatureExtractor extends FeatureExtractor
             ->multiply(1.0 / 4.0);
 
         return [
-            'input_features' => $features->unsqueeze(0)
+            'input_features' => $features->unsqueeze(0),
         ];
     }
 }

@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Normalizers;
+
+use InvalidArgumentException;
+
+use function func_get_args;
 
 /**
  * A base class for text normalization.
@@ -32,7 +35,7 @@ abstract class Normalizer
             'StripAccents' => new StripAccents($config),
             'Lowercase' => new Lowercase($config),
             'Prepend' => new Prepend($config),
-            default => throw new \InvalidArgumentException('Unknown normalizer type: ' . $config['type'] ?? null),
+            default => throw new InvalidArgumentException('Unknown normalizer type: ' . $config['type'] ?? null),
         };
     }
 
@@ -40,6 +43,6 @@ abstract class Normalizer
 
     public function __invoke(): string
     {
-          return $this->normalize(...func_get_args());
+        return $this->normalize(...func_get_args());
     }
 }

@@ -21,15 +21,51 @@ use RuntimeException;
 use Serializable;
 use Traversable;
 
+use function array_key_exists;
+use function array_product;
+use function array_reduce;
+use function array_reverse;
+use function array_shift;
+use function array_splice;
+use function array_unshift;
+use function array_values;
+use function count;
+use function current;
+use function exp;
+use function floor;
+use function get_class;
+use function gettype;
+use function implode;
+use function intdiv;
+use function is_array;
+use function is_bool;
+use function is_int;
+use function is_numeric;
+use function is_scalar;
+use function json_encode;
+use function max;
+use function min;
+use function pow;
+use function random_bytes;
+use function round;
+use function serialize;
+use function sqrt;
+use function str_starts_with;
+use function strlen;
+use function substr;
+use function unpack;
+use function unserialize;
+use function usort;
+
 class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
 {
     use ComplexUtils;
 
-    const RANGE_STYLE_DEFAULT = 0;
-    const RANGE_STYLE_1 = 1;
-    static public int $rangeStyle = self::RANGE_STYLE_DEFAULT;
+    public const RANGE_STYLE_DEFAULT = 0;
+    public const RANGE_STYLE_1 = 1;
+    public static int $rangeStyle = self::RANGE_STYLE_DEFAULT;
 
-    const SERIALIZE_NDARRAY_KEYWORD = 'Tensor:';
+    public const SERIALIZE_NDARRAY_KEYWORD = 'Tensor:';
 
     protected static MatrixOperator $mo;
     protected static Service $service;
@@ -65,8 +101,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
         int   $dtype = null,
         array $shape = null,
         int   $offset = null,
-    )
-    {
+    ) {
         if ($array === null && $dtype === null && $shape === null && $offset === null) {
             // Empty definition for Unserialize
             return;
@@ -83,10 +118,12 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
             $this->buffer = self::newBuffer($size, $dtype);
             $this->offset = 0;
         } elseif ($this->isBuffer($array)) {
-            if (!is_int($offset))
+            if (!is_int($offset)) {
                 throw new InvalidArgumentException("Must specify offset with the buffer");
-            if ($shape === null)
+            }
+            if ($shape === null) {
                 throw new InvalidArgumentException("Invalid dimension size");
+            }
             $this->buffer = $array;
             $this->offset = $offset;
             $size = (int)array_product($shape);
@@ -124,8 +161,9 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
             $shape ??= [];
             $this->assertShape($shape);
             $size = (int)array_product($shape);
-            if ($size != 1)
+            if ($size != 1) {
                 throw new InvalidArgumentException("Invalid dimension size");
+            }
         } else {
             throw new InvalidArgumentException("Invalid type of array");
         }
@@ -133,14 +171,15 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
         $this->assertShape($shape);
         $this->shape = $shape;
 
-        if (count($this->buffer) - $this->offset < $size)
+        if (count($this->buffer) - $this->offset < $size) {
             throw new InvalidArgumentException("Invalid dimension size");
+        }
 
         $this->dtype = $dtype;
     }
 
 
-    function countRecursive($array): int
+    public function countRecursive($array): int
     {
         $count = 0;
 
@@ -176,7 +215,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
 
     protected function isComplex(int $dtype = null): bool
     {
-        $dtype = $dtype ?? $this->dtype;
+        $dtype ??= $this->dtype;
         return $this->cistype($dtype);
     }
 
@@ -193,11 +232,13 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
         foreach ($shape as $num) {
             if (!is_int($num)) {
                 throw new InvalidArgumentException(
-                    "Invalid shape numbers. It gives ".gettype($num));
+                    "Invalid shape numbers. It gives " . gettype($num),
+                );
             }
             if ($num < 0) {
                 throw new InvalidArgumentException(
-                    "Invalid shape numbers. It gives ".$num);
+                    "Invalid shape numbers. It gives " . $num,
+                );
             }
         }
     }
@@ -282,7 +323,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
     {
         if (!isset(self::$service)) {
             self::$service = new TensorService();
-//            self::$service = new MatlibPhp();
+            //            self::$service = new MatlibPhp();
         }
 
         return self::$service;
@@ -330,7 +371,6 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
     /**
      * Returns how many dimensions the tensor has.
      *
-     * @return int
      */
     public function ndim(): int
     {
@@ -339,8 +379,9 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
 
     public function count(): int
     {
-        if (count($this->shape) == 0)
+        if (count($this->shape) == 0) {
             return 0;
+        }
 
         return $this->shape[0];
     }
@@ -361,8 +402,8 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
         $this->assertShape($shape);
 
         if ($this->size() != array_product($shape)) {
-            throw new InvalidArgumentException("Unmatched size to reshape: ".
-                "[".implode(',', $this->shape())."]=>[".implode(',', $shape)."]");
+            throw new InvalidArgumentException("Unmatched size to reshape: " .
+                "[" . implode(',', $this->shape()) . "]=>[" . implode(',', $shape) . "]");
         }
 
         return new self($this->buffer(), $this->dtype(), $shape, $this->offset());
@@ -371,7 +412,9 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
 
     public static function fromArray(array|NDArray $array, ?int $dtype = null, $shape = null): ?static
     {
-        if (empty($array)) return null;
+        if (empty($array)) {
+            return null;
+        }
 
         if ($array instanceof NDArray) {
             return new static($array->buffer(), $array->dtype(), $shape ?? $array->shape(), $array->offset());
@@ -392,7 +435,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
     {
         $dtype ??= NDArray::float32;
         $size = array_product($shape);
-        
+
         $buffer = Tensor::newBuffer($size, $dtype);
         $buffer->load(random_bytes($size * TensorBuffer::$valueSize[$dtype]));
         return new static($buffer, shape: $shape, offset: 0);
@@ -422,7 +465,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
      */
     public function toBufferArray(): array
     {
-        $fmt = self::$pack[$this->dtype].'*';
+        $fmt = self::$pack[$this->dtype] . '*';
 
         return array_values(unpack($fmt, $this->buffer->dump()));
     }
@@ -455,7 +498,6 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
      * @param array $shape The shape of the one matrix to return.
      * @param ?int $dtype The data type of the one matrix to return. Eg: float32, int32, etc. If null, defaults to float32.
      *
-     * @return static
      */
     public static function ones(array $shape, ?int $dtype = null): static
     {
@@ -486,7 +528,6 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
      * @param array $shape The shape of the zero matrix to return.
      * @param int|null $dtype The data type of the zero matrix to return. Eg: float32, int32, etc. If null, defaults to float32.
      *
-     * @return static
      */
     public static function zeros(array $shape, ?int $dtype = null): static
     {
@@ -565,8 +606,9 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
     public static function safeIndex(int $index, int $size, ?int $axis = null): int
     {
         if ($index < -$size || $index >= $size) {
-            throw new InvalidArgumentException("IndexError: index $index is out of bounds for axis"
-                .($axis === null ? '' : ' '.$axis)." with size $size"
+            throw new InvalidArgumentException(
+                "IndexError: index $index is out of bounds for axis"
+                . ($axis === null ? '' : ' ' . $axis) . " with size $size",
             );
         }
 
@@ -618,7 +660,6 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
      *
      * @param Tensor|float|int $other The NDArray to add to this NDArray.
      *
-     * @return static
      */
     public function add(Tensor|float|int $other): static
     {
@@ -637,13 +678,12 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
     /**
      * Return a new Tensor with the sigmoid function applied to each element.
      *
-     * @return self
      */
     public function sigmoid(): self
     {
         $mo = self::mo();
 
-        $ndArray = $mo->f(fn ($x) => 1 / (1 + exp(-$x)), $this);
+        $ndArray = $mo->f(static fn ($x) => 1 / (1 + exp(-$x)), $this);
 
         return new static($ndArray->buffer(), $ndArray->dtype(), $ndArray->shape(), $ndArray->offset());
     }
@@ -673,7 +713,6 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
      *
      * @param Tensor|float|int $value The constant to multiply by.
      *
-     * @return self
      */
     public function multiply(Tensor|float|int $value): self
     {
@@ -848,14 +887,13 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
      * @param int|null $axis The axis or axes along which to perform the reduction. If null (default), reduces all dimensions.
      * @param bool $keepShape If true, retains reduced shape with length 1.
      *
-     * @return static
      */
     public function norm(int $ord = 2, ?int $axis = null, bool $keepShape = false): static
     {
         $mo = self::mo();
 
         if ($axis === null) {
-            $val = pow(array_reduce($this->toBufferArray(), fn ($carry, $item) => $carry + pow($item, $ord), 0), 1 / $ord);
+            $val = pow(array_reduce($this->toBufferArray(), static fn ($carry, $item) => $carry + pow($item, $ord), 0), 1 / $ord);
 
             return new Tensor([$val], $this->dtype(), []);
         }
@@ -917,7 +955,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
     {
         $mo = self::mo();
 
-        $result = $mo->f(fn ($x) => max($min, min($max, $x)), $this);
+        $result = $mo->f(static fn ($x) => max($min, min($max, $x)), $this);
 
         return new static($result->buffer(), $result->dtype(), $result->shape(), $result->offset());
     }
@@ -931,7 +969,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
     {
         $mo = self::mo();
 
-        $result = $mo->f(fn ($x) => round($x, $precision), $this);
+        $result = $mo->f(static fn ($x) => round($x, $precision), $this);
 
         return new static($result->buffer(), $result->dtype(), $result->shape(), $result->offset());
     }
@@ -941,7 +979,6 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
      *
      * @param int $dtype The new dtype.
      *
-     * @return static
      */
     public function to(int $dtype): static
     {
@@ -1003,7 +1040,11 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
             $std = sqrt(
                 $mo->sum(
                     $mo->la()->pow(
-                        $mo->la()->increment($this, -$mean), 2)) / ($this->size() - $correction));
+                        $mo->la()->increment($this, -$mean),
+                        2,
+                    ),
+                ) / ($this->size() - $correction),
+            );
 
             return [$std, $mean];
         }
@@ -1137,14 +1178,14 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
             } elseif (is_array($slice) && count($slice) === 2) {
                 // An array of length 2 means take a range of elements
                 if ($slice[0] > $slice[1]) {
-                    throw new InvalidArgumentException("Invalid slice: ".json_encode($slice));
+                    throw new InvalidArgumentException("Invalid slice: " . json_encode($slice));
                 }
 
                 $start[] = max($slice[0], 0);
                 $size[] = min($slice[1], $this->shape()[$sliceIndex]);
 
             } else {
-                throw new InvalidArgumentException("Invalid slice: ".json_encode($slice));
+                throw new InvalidArgumentException("Invalid slice: " . json_encode($slice));
             }
         }
 
@@ -1267,7 +1308,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
         $offsetTV = $topValues->offset();
         $offsetTI = $topIndices->offset();
 
-        $meanHeapify = function (array &$heap, int $i, int $k) {
+        $meanHeapify = static function (array &$heap, int $i, int $k) {
             $smallest = $i;
             $left = 2 * $i + 1;
             $right = 2 * $i + 2;
@@ -1321,7 +1362,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
 
             if ($sorted) {
                 // Sort the heap to get the top k elements in descending order
-                usort($heap, fn ($a, $b) => $b['value'] <=> $a['value']);
+                usort($heap, static fn ($a, $b) => $b['value'] <=> $a['value']);
             }
 
             // Extract top K values and indices from the heap
@@ -1417,17 +1458,19 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
 
     public function offsetExists($offset): bool
     {
-        if (count($this->shape) == 0)
+        if (count($this->shape) == 0) {
             return false;
+        }
 
         if (is_array($offset)) {
             if (count($offset) != 2 ||
                 !array_key_exists(0, $offset) || !array_key_exists(1, $offset) ||
                 $offset[0] > $offset[1]) {
                 $det = '';
-                if (is_numeric($offset[0]) && is_numeric($offset[1]))
-                    $det = ':['.implode(',', $offset).']';
-                throw new OutOfRangeException("Illegal range specification.".$det);
+                if (is_numeric($offset[0]) && is_numeric($offset[1])) {
+                    $det = ':[' . implode(',', $offset) . ']';
+                }
+                throw new OutOfRangeException("Illegal range specification." . $det);
             }
             $start = $offset[0];
             $limit = $offset[1];
@@ -1442,21 +1485,23 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
             $limit = $offset->limit();
             $delta = $offset->delta();
             if ($start >= $limit || $delta != 1) {
-                $det = ":[$start,$limit".(($delta != 1) ? ",$delta" : "").']';
-                throw new OutOfRangeException("Illegal range specification.".$det);
+                $det = ":[$start,$limit" . (($delta != 1) ? ",$delta" : "") . ']';
+                throw new OutOfRangeException("Illegal range specification." . $det);
             }
         } else {
             throw new OutOfRangeException("Dimension must be integer");
         }
-        if ($start < 0 || $limit > $this->shape[0])
+        if ($start < 0 || $limit > $this->shape[0]) {
             return false;
+        }
         return true;
     }
 
     public function offsetGet($offset): mixed
     {
-        if (!$this->offsetExists($offset))
+        if (!$this->offsetExists($offset)) {
             throw new OutOfRangeException("Index is out of range");
+        }
 
         // For single index specification e.g. $tensor[1]
         if (is_numeric($offset)) {
@@ -1490,7 +1535,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
             $start = $offset->start();
             $limit = $offset->limit();
             if ($offset->delta() != 1) {
-                throw new OutOfRangeException("Illegal range specification.:delta=".$offset->delta());
+                throw new OutOfRangeException("Illegal range specification.:delta=" . $offset->delta());
             }
         }
 
@@ -1507,15 +1552,20 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
 
         array_unshift($shape, $rowsCount);
 
-        return new self($this->buffer, $this->dtype,
-            $shape, $this->offset + $start * $itemSize);
+        return new self(
+            $this->buffer,
+            $this->dtype,
+            $shape,
+            $this->offset + $start * $itemSize,
+        );
     }
 
 
     public function offsetSet($offset, $value): void
     {
-        if (!$this->offsetExists($offset))
+        if (!$this->offsetExists($offset)) {
             throw new OutOfRangeException("Index is out of range");
+        }
 
         // For range specification e.g. $tensor[1:3]
         if (is_array($offset)) {
@@ -1534,8 +1584,9 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
                     throw new InvalidArgumentException("Must be complex type");
                 }
             } else {
-                if (!is_scalar($value))
+                if (!is_scalar($value)) {
                     throw new InvalidArgumentException("Must be scalar type");
+                }
             }
             $this->buffer[$this->offset + $offset] = $value;
             return;
@@ -1562,8 +1613,9 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
 
     public function getIterator(): Traversable
     {
-        if (count($this->shape) == 0)
+        if (count($this->shape) == 0) {
             return new EmptyIterator();
+        }
 
         $count = $this->shape[0];
 
@@ -1585,7 +1637,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
 
     public function serialize(): ?string
     {
-        return static::SERIALIZE_NDARRAY_KEYWORD.serialize($this->__serialize());
+        return static::SERIALIZE_NDARRAY_KEYWORD . serialize($this->__serialize());
     }
 
     public function __serialize()
@@ -1657,7 +1709,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
                 $this->buffer[$key] = $value;
             }
         } else {
-            throw new RuntimeException('Illegal save mode: '.$mode);
+            throw new RuntimeException('Illegal save mode: ' . $mode);
         }
     }
 
@@ -1665,7 +1717,8 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
     {
         if (self::service()->serviceLevel() >= Service::LV_ADVANCED) {
             $newBuffer = self::service()->buffer()->Buffer(
-                count($this->buffer), $this->buffer->dtype()
+                count($this->buffer),
+                $this->buffer->dtype(),
             );
 
             $newBuffer->load($this->buffer->dump());
@@ -1674,7 +1727,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
         } elseif (self::service()->serviceLevel() >= Service::LV_BASIC) {
             $this->buffer = clone $this->buffer;
         } else {
-            throw new RuntimeException('Unknown buffer type is uncloneable:'.get_class($this->buffer));
+            throw new RuntimeException('Unknown buffer type is uncloneable:' . get_class($this->buffer));
         }
     }
 

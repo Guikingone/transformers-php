@@ -2,13 +2,20 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Models\Output\QuestionAnsweringModelOutput;
 use Codewithkyrian\Transformers\Utils\Math;
 
+use function array_filter;
+use function array_map;
+use function array_search;
+use function array_slice;
 use function Codewithkyrian\Transformers\Utils\array_pop_key;
+use function count;
+use function min;
+use function range;
+use function usort;
 
 /**
  * Question answering pipeline
@@ -48,32 +55,32 @@ class QuestionAnsweringPipeline extends Pipeline
             // Compute softmax for start and end logits and filter based on separator index
             $s1 = array_filter(
                 array_map(
-                    fn($x) => [$x[0], $x[1]],
-                    array_map(null, $startLogits->softmax()->toArray(), range(0, count($startLogits) - 1))
+                    static fn ($x) => [$x[0], $x[1]],
+                    array_map(null, $startLogits->softmax()->toArray(), range(0, count($startLogits) - 1)),
                 ),
-                fn($x) => $x[1] > $sepIndex
+                static fn ($x) => $x[1] > $sepIndex,
             );
 
 
             $e1 = array_filter(
                 array_map(
-                    fn($x) => [$x[0], $x[1]],
-                    array_map(null, $endLogits->softmax()->toArray(), range(0, count($endLogits) - 1))
+                    static fn ($x) => [$x[0], $x[1]],
+                    array_map(null, $endLogits->softmax()->toArray(), range(0, count($endLogits) - 1)),
                 ),
-                fn($x) => $x[1] > $sepIndex
+                static fn ($x) => $x[1] > $sepIndex,
             );
 
             // Compute the Cartesian product of start and end logits
             $product = Math::product($s1, $e1);
 
             // Filter options and compute values
-            $options = array_filter($product, fn($x) => $x[0][1] <= $x[1][1]);
+            $options = array_filter($product, static fn ($x) => $x[0][1] <= $x[1][1]);
 
             // Map options to desired format and sort
-            $options = array_map(fn($x) => [$x[0][1], $x[1][1], $x[0][0] * $x[1][0]], $options);
+            $options = array_map(static fn ($x) => [$x[0][1], $x[1][1], $x[0][0] * $x[1][0]], $options);
 
             // Sort by score
-            usort($options, fn($a, $b) => $b[2] <=> $a[2]);
+            usort($options, static fn ($a, $b) => $b[2] <=> $a[2]);
 
             $minLength = min(count($options), $topK);
 

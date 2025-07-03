@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Normalizers;
 
 /**
@@ -10,7 +9,6 @@ namespace Codewithkyrian\Transformers\Normalizers;
  */
 class Prepend extends Normalizer
 {
-
     /**
      *  Prepends the input string.
      */

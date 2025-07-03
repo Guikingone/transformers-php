@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Output;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
 
-class ObjectDetectionOutput  implements ModelOutput
+class ObjectDetectionOutput implements ModelOutput
 {
     /**
      * These values are normalized in [0, 1], relative to the size of each individual image in the batch (disregarding possible padding).

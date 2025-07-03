@@ -8,6 +8,10 @@ use FFI;
 use FFI\CData;
 use RuntimeException;
 
+use function strlen;
+
+use const PHP_OS_FAMILY;
+
 class Libc
 {
     protected static FFI $ffi;
@@ -30,7 +34,7 @@ class Libc
             self::$ffi = match (PHP_OS_FAMILY) {
                 'Windows' => FFI::cdef(
                     "\nsize_t mbstowcs(void *wcstr, const char *mbstr, size_t count);",
-                    'msvcrt.dll'
+                    'msvcrt.dll',
                 ),
                 default => FFI::cdef()
             };
@@ -49,7 +53,7 @@ class Libc
         $length = self::ffi()->mbstowcs($wcStr, $mbStr, $count);
 
         if ($length != strlen($mbStr)) {
-            throw new RuntimeException('Expected mbstowcs to return '.strlen($mbStr).", got $length");
+            throw new RuntimeException('Expected mbstowcs to return ' . strlen($mbStr) . ", got $length");
         }
 
         return $wcStr;

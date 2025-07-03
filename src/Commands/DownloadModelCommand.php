@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Commands;
 
 use Codewithkyrian\Transformers\Models\Auto\AutoModel;
@@ -18,12 +17,20 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
+
 use function Codewithkyrian\Transformers\Pipelines\pipeline;
+use function exec;
+use function filter_var;
+use function random_int;
+use function round;
+
+use const FILTER_VALIDATE_BOOLEAN;
+use const PHP_OS_FAMILY;
 
 #[AsCommand(
     name: 'download-model',
     description: 'Download a pre-trained model from Hugging Face.',
-    aliases: ['download']
+    aliases: ['download'],
 )]
 class DownloadModelCommand extends Command
 {
@@ -41,7 +48,7 @@ class DownloadModelCommand extends Command
             'cache-dir',
             'c',
             InputOption::VALUE_OPTIONAL,
-            'The directory to cache the model in.'
+            'The directory to cache the model in.',
         );
 
         $this->addOption(
@@ -49,7 +56,7 @@ class DownloadModelCommand extends Command
             null,
             InputOption::VALUE_OPTIONAL,
             'Whether to download the quantized version of the model.',
-            true
+            true,
         );
 
         $this->addOption(
@@ -57,7 +64,7 @@ class DownloadModelCommand extends Command
             null,
             InputOption::VALUE_OPTIONAL,
             'The filename of the exact model weights version to download.',
-            null
+            null,
         );
 
         $this->addOption(
@@ -65,7 +72,7 @@ class DownloadModelCommand extends Command
             null,
             InputOption::VALUE_OPTIONAL,
             'The host to download the model from.',
-            null
+            null,
         );
 
     }
@@ -83,8 +90,12 @@ class DownloadModelCommand extends Command
 
         $transformers = Transformers::setup();
 
-        if ($cacheDir != null) $transformers->setCacheDir($cacheDir);
-        if ($host != null) $transformers->setRemoteHost($host);
+        if ($cacheDir != null) {
+            $transformers->setCacheDir($cacheDir);
+        }
+        if ($host != null) {
+            $transformers->setRemoteHost($host);
+        }
 
         try {
             $task = $task ? Task::tryFrom($task) : null;
@@ -112,7 +123,9 @@ class DownloadModelCommand extends Command
             $output->writeln('✔ Model files downloaded successfully.');
 
             $random = random_int(1, 100);
-            if ($random <= 30) $this->askToStar($input, $output);
+            if ($random <= 30) {
+                $this->askToStar($input, $output);
+            }
 
             return Command::SUCCESS;
         } catch (Exception $e) {

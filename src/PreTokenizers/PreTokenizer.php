@@ -2,8 +2,13 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PreTokenizers;
+
+use InvalidArgumentException;
+
+use function array_map;
+use function array_merge;
+use function is_array;
 
 /**
  * A callable class representing a pre-tokenizer used in tokenization.
@@ -29,7 +34,7 @@ abstract class PreTokenizer
             'Punctuation' => new PunctuationPreTokenizer($config),
             'Digits' => new DigitsPreTokenizer($config),
             'Replace' => new ReplacePreTokenizer($config),
-            default => throw new \InvalidArgumentException("Unknown pre-tokenizer type {$config['type']}"),
+            default => throw new InvalidArgumentException("Unknown pre-tokenizer type {$config['type']}"),
         };
     }
 
@@ -40,7 +45,7 @@ abstract class PreTokenizer
      * @param array $options Additional options for the pre-tokenization logic.
      * @return string[] The pre-tokenized text.
      */
-    protected abstract function preTokenizeText(string|array $text, array $options): array;
+    abstract protected function preTokenizeText(string|array $text, array $options): array;
 
 
     /** Tokenizes the given text into pre-tokens.
@@ -57,10 +62,10 @@ abstract class PreTokenizer
             }, $text);
 
             return array_merge(...$result);
-        } else {
-            // If $text is not an array, apply pre_tokenize_text directly
-            return $this->preTokenizeText($text, $options);
         }
+        // If $text is not an array, apply pre_tokenize_text directly
+        return $this->preTokenizeText($text, $options);
+
     }
 
     /** Tokenizes the given text into pre-tokens.

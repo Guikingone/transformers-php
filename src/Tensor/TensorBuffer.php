@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Codewithkyrian\Transformers\Tensor;
 
 use FFI;
@@ -10,6 +12,14 @@ use LogicException;
 use OutOfRangeException;
 use TypeError;
 
+use function file_get_contents;
+use function gettype;
+use function intdiv;
+use function is_array;
+use function is_int;
+use function is_object;
+use function strlen;
+
 class complex_t
 {
     public float $real;
@@ -18,8 +28,8 @@ class complex_t
 
 class TensorBuffer implements LinearBuffer
 {
-    const MAX_BYTES = 2147483648; // 2**31
-    static protected ?FFI $ffi = null;
+    public const MAX_BYTES = 2147483648; // 2**31
+    protected static ?FFI $ffi = null;
 
     /** @var array<int,string> $typeString */
     protected static $typeString = [
@@ -113,7 +123,7 @@ class TensorBuffer implements LinearBuffer
 
     protected function isComplex(int $dtype = null): bool
     {
-        $dtype = $dtype ?? $this->dtype;
+        $dtype ??= $this->dtype;
         return $dtype == NDArray::complex64 || $dtype == NDArray::complex128;
     }
 
@@ -190,7 +200,9 @@ class TensorBuffer implements LinearBuffer
     {
         $byteSize = self::$valueSize[$this->dtype] * $this->size;
 
-        if ($byteSize === 0) return '';
+        if ($byteSize === 0) {
+            return '';
+        }
 
         $buf = self::$ffi->new("char[$byteSize]");
 

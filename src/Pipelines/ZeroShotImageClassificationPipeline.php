@@ -2,11 +2,16 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
+
+use function array_map;
+use function array_merge;
 use function Codewithkyrian\Transformers\Utils\prepareImages;
+use function is_array;
+use function str_replace;
+use function usort;
 
 /**
  * Zero shot image classification pipeline. This pipeline predicts the class of
@@ -35,10 +40,11 @@ class ZeroShotImageClassificationPipeline extends Pipeline
         $preparedImages = prepareImages($inputs);
 
         // Insert label into hypothesis template
-        $texts = array_map(fn($x) => str_replace('{}', $x, $hypothesisTemplate), $candidateLabels);
+        $texts = array_map(static fn ($x) => str_replace('{}', $x, $hypothesisTemplate), $candidateLabels);
 
         // Run tokenization
-        $textInputs = $this->tokenizer->tokenize($texts,
+        $textInputs = $this->tokenizer->tokenize(
+            $texts,
             padding: $this->model->config['model_type'] === 'siglip' ? 'max_length' : true,
             truncation: true,
         );
@@ -51,8 +57,8 @@ class ZeroShotImageClassificationPipeline extends Pipeline
         $output = $this->model->__invoke(array_merge($textInputs, ['pixel_values' => $pixelValues]));
 
         $activationFn = $this->model->config['model_type'] === 'siglip' ?
-            fn(Tensor $batch) => $batch->sigmoid():
-            fn(Tensor $batch) => $batch->softmax();
+            static fn (Tensor $batch) => $batch->sigmoid() :
+            static fn (Tensor $batch) => $batch->softmax();
 
         // Compare each image with each candidate label
         $toReturn = [];
@@ -65,10 +71,10 @@ class ZeroShotImageClassificationPipeline extends Pipeline
             foreach ($scores as $i => $score) {
                 $result[] = [
                     'score' => $score,
-                    'label' => $candidateLabels[$i]
+                    'label' => $candidateLabels[$i],
                 ];
             }
-            usort($result, fn($a, $b) => $b['score'] <=> $a['score']); // sort by score in descending order
+            usort($result, static fn ($a, $b) => $b['score'] <=> $a['score']); // sort by score in descending order
             $toReturn[] = $result;
         }
 

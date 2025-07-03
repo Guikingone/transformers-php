@@ -6,6 +6,7 @@ namespace Codewithkyrian\Transformers\Pipelines;
 
 use function Codewithkyrian\Transformers\Utils\memoryUsage;
 use function Codewithkyrian\Transformers\Utils\timeUsage;
+use function ini_set;
 
 require_once './bootstrap.php';
 

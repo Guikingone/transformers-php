@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Tensor;
 
 use FFI;
@@ -10,6 +9,9 @@ use FFI\Exception as FFIException;
 use Rindow\Math\Matrix\Drivers\MatlibPHP\PhpLapack;
 use Rindow\OpenBLAS\FFI\Blas;
 use RuntimeException;
+
+use function extension_loaded;
+use function file_get_contents;
 
 /**
  */
@@ -20,13 +22,11 @@ class OpenBLASFactory
 
     /**
      * @param array<string> $libFiles
-     * @param array<string> $lapackeLibs
      */
     public function __construct(
         string $headerFile,
         array  $libFiles,
-    )
-    {
+    ) {
         if (self::$ffi !== null) {
             return;
         }

@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PreTokenizers;
+
+use function array_map;
+use function array_reduce;
 
 class PreTokenizerSequence extends PreTokenizer
 {
@@ -15,8 +17,8 @@ class PreTokenizerSequence extends PreTokenizer
     public function __construct(array $config)
     {
         $this->preTokenizers = array_map(
-            fn(array $config) => PreTokenizer::fromConfig($config),
-            $config['pretokenizers']
+            static fn (array $config) => PreTokenizer::fromConfig($config),
+            $config['pretokenizers'],
         );
     }
 
@@ -24,8 +26,8 @@ class PreTokenizerSequence extends PreTokenizer
     {
         return array_reduce(
             $this->preTokenizers,
-            fn($text, PreTokenizer $preTokenizer) => $preTokenizer->preTokenize($text, $options),
-            [$text]
+            static fn ($text, PreTokenizer $preTokenizer) => $preTokenizer->preTokenize($text, $options),
+            [$text],
         );
     }
 }

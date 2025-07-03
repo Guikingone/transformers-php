@@ -2,12 +2,27 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Generation\AggregationStrategy;
 use Codewithkyrian\Transformers\Models\Output\TokenClassifierOutput;
 use Exception;
+
+use function array_column;
+use function array_filter;
+use function array_map;
+use function array_search;
+use function array_sum;
+use function count;
+use function end;
+use function explode;
+use function implode;
+use function in_array;
+use function is_array;
+use function max;
+use function str_starts_with;
+use function strlen;
+use function substr;
 
 /**
  * Named Entity Recognition pipeline using any `ModelForTokenClassification`.
@@ -101,10 +116,10 @@ class TokenClassificationPipeline extends Pipeline
             $entities = $this->aggregateWords($entities, $aggregationStrategy);
 
             if ($aggregationStrategy === AggregationStrategy::NONE) {
-                $entities = array_filter($entities, fn($token) => !in_array($token['entity'], $ignoreLabels));
+                $entities = array_filter($entities, static fn ($token) => !in_array($token['entity'], $ignoreLabels));
             } else {
                 $entities = $this->groupEntities($entities);
-                $entities = array_filter($entities, fn($token) => !in_array($token['entity_group'], $ignoreLabels));
+                $entities = array_filter($entities, static fn ($token) => !in_array($token['entity_group'], $ignoreLabels));
             }
 
             $toReturn[] = $entities;
@@ -120,7 +135,6 @@ class TokenClassificationPipeline extends Pipeline
      * company| B-ENT I-ENT
      * @param array $entities The entities to aggregate.
      * @param AggregationStrategy $aggregationStrategy The strategy to use for aggregation.
-     * @return array
      */
     protected function aggregateWords(array $entities, AggregationStrategy $aggregationStrategy): array
     {
@@ -183,8 +197,8 @@ class TokenClassificationPipeline extends Pipeline
             'entity' => $entity,
             'score' => $score,
             'word' => $word,
-//            'start' => $entities[0]['start'],
-//            'end' => end($entities)['end'],
+            //            'start' => $entities[0]['start'],
+            //            'end' => end($entities)['end'],
             'start' => null,
             'end' => null,
         ];
@@ -225,17 +239,15 @@ class TokenClassificationPipeline extends Pipeline
             return ["B", substr($entityName, 2)];
         } elseif (str_starts_with($entityName, "I-")) {
             return ["I", substr($entityName, 2)];
-        } else {
-            return ["I", $entityName]; // Default to "I" for continuation
         }
+        return ["I", $entityName]; // Default to "I" for continuation
+
     }
 
     /**
      * Group together the adjacent tokens with the same entity predicted.
      *
      * Example: 'New York' is a single entity, but it's split into two tokens. This function groups them together.
-     * @param array $entities
-     * @return array
      */
     public function groupSubEntities(array $entities): array
     {
@@ -249,7 +261,7 @@ class TokenClassificationPipeline extends Pipeline
             'score' => $averageScore,
             'word' => $word,
             'start' => null,
-            'end' => null
+            'end' => null,
         ];
     }
 

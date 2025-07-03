@@ -2,15 +2,20 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\DataStructures;
+
+use function array_fill;
+use function array_map;
+use function array_reverse;
+use function count;
+use function mb_strlen;
+use function mb_substr;
 
 /**
  * A lattice data structure to be used for tokenization.
  */
 class TokenLattice
 {
-
     /** @var int The length of the input sentence. */
     public int $len;
 
@@ -34,8 +39,8 @@ class TokenLattice
     public function __construct(
         public string $sentence,
         public ?int    $bosTokenId,
-        public ?int    $eosTokenId)
-    {
+        public ?int    $eosTokenId,
+    ) {
         $this->len = mb_strlen($sentence);
         $this->beginNodes = array_fill(0, $this->len + 1, []);
         $this->endNodes = array_fill(0, $this->len + 1, []);
@@ -119,7 +124,6 @@ class TokenLattice
     }
 
     /**
-     * @param TokenLatticeNode $node
      * @return string The array of nodes representing the most likely sequence of tokens.
      */
     public function piece(TokenLatticeNode $node): string
@@ -142,6 +146,6 @@ class TokenLattice
     public function tokenIds(): array
     {
         $nodes = $this->viterbi();
-        return array_map(fn($x) => $x->tokenId, $nodes);
+        return array_map(static fn ($x) => $x->tokenId, $nodes);
     }
 }

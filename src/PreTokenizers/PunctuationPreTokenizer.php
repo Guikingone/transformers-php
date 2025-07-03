@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PreTokenizers;
+
+use function preg_match_all;
 
 class PunctuationPreTokenizer extends PreTokenizer
 {

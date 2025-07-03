@@ -9,41 +9,49 @@ use Codewithkyrian\Transformers\Utils\Hub;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Response;
+
 use function Codewithkyrian\Transformers\Utils\ensureDirectory;
 use function Codewithkyrian\Transformers\Utils\joinPaths;
+use function file_exists;
+use function file_get_contents;
+use function file_put_contents;
+use function is_dir;
+use function mkdir;
+use function rmdir;
+use function unlink;
 
-beforeEach(function () {
+beforeEach(static function () {
     Transformers::setup()
         ->setCacheDir('tests/models')
         ->apply();
 });
 
-it('joins paths correctly', function () {
+it('joins paths correctly', static function () {
     $result = joinPaths('path', 'to', 'file');
     expect($result)->toBe('path/to/file');
 });
 
-it('joins paths correctly with leading slash', function () {
+it('joins paths correctly with leading slash', static function () {
     $result = joinPaths('/path', 'to', 'file');
     expect($result)->toBe('/path/to/file');
 });
 
-it('joins paths correctly with trailing slash', function () {
+it('joins paths correctly with trailing slash', static function () {
     $result = joinPaths('path', 'to', 'file/');
     expect($result)->toBe('path/to/file');
 });
 
-it('joins paths correctly with empty string', function () {
+it('joins paths correctly with empty string', static function () {
     $result = joinPaths('path', '', 'file');
     expect($result)->toBe('path/file');
 });
 
-it('joins paths correctly with empty string and slashes', function () {
+it('joins paths correctly with empty string and slashes', static function () {
     $result = joinPaths('path', '', '/file');
     expect($result)->toBe('path/file');
 });
 
-it('ensures directory creation', function () {
+it('ensures directory creation', static function () {
     $filePath = 'cache/test/file.txt';
     ensureDirectory($filePath);
 
@@ -54,10 +62,10 @@ it('ensures directory creation', function () {
     rmdir('cache');
 });
 
-it('combines part files correctly', function () {
+it('combines part files correctly', static function () {
     // Allow test write access
     if (!is_dir('cache/test')) {
-        mkdir('cache/test', 0777, true);
+        mkdir('cache/test', 0o777, true);
     }
 
     // Create sample part files

@@ -13,10 +13,14 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 
+use function exec;
+
+use const PHP_OS_FAMILY;
+
 #[AsCommand(
     name: 'install',
     description: 'Initialize Transformers PHP and downloads the required shared libraries.',
-    aliases: ['initialize', 'init']
+    aliases: ['initialize', 'init'],
 )]
 class InstallCommand extends Command
 {

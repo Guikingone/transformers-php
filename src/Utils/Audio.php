@@ -2,21 +2,40 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Utils;
 
-use Codewithkyrian\Transformers\FFI\TransformersUtils;
 use Codewithkyrian\Transformers\FFI\Samplerate;
 use Codewithkyrian\Transformers\FFI\Sndfile;
+use Codewithkyrian\Transformers\FFI\TransformersUtils;
 use Codewithkyrian\Transformers\Tensor\Tensor;
 use FFI;
 use InvalidArgumentException;
 use RuntimeException;
 use SplFixedArray;
 
+use function array_map;
+use function array_product;
+use function cos;
+use function count;
+use function exp;
+use function floor;
+use function is_array;
+use function log;
+use function log10;
+use function max;
+use function min;
+use function pow;
+use function range;
+use function round;
+use function sqrt;
+
+use const M_PI;
+
 class Audio
 {
-    public function __construct(protected $sndfile, protected $sfinfo) {}
+    public function __construct(protected $sndfile, protected $sfinfo)
+    {
+    }
 
     public static function read(string $filename): static
     {
@@ -147,7 +166,7 @@ class Audio
      * @param bool $triangularizeInMelSpace If this option is enabled, the triangular filter is applied in mel space rather than frequency space.
      *
      * @return array Triangular filter bank matrix, which is a 2D array of shape (`num_frequency_bins`, `num_mel_filters`).
-     * This is a projection matrix to go from a spectrogram to a mel spectrogram.
+     *               This is a projection matrix to go from a spectrogram to a mel spectrogram.
      */
     public static function melFilterBank(
         int     $nFrequencyBins,
@@ -157,9 +176,8 @@ class Audio
         float   $samplingRate,
         ?string $norm = null,
         string  $melScale = "htk",
-        bool    $triangularizeInMelSpace = false
-    ): array
-    {
+        bool    $triangularizeInMelSpace = false,
+    ): array {
         if ($norm !== null && $norm !== "slaney") {
             throw new InvalidArgumentException('norm must be one of null or "slaney"');
         }
@@ -173,7 +191,7 @@ class Audio
 
         if ($triangularizeInMelSpace) {
             $fft_bin_width = $samplingRate / ($nFrequencyBins * 2);
-            $fftFreqs = self::hertzToMel(array_map(fn ($i) => $i * $fft_bin_width, range(0, $nFrequencyBins - 1)), $melScale);
+            $fftFreqs = self::hertzToMel(array_map(static fn ($i) => $i * $fft_bin_width, range(0, $nFrequencyBins - 1)), $melScale);
             $filterFreqs = $melFreqs;
         } else {
             $fftFreqs = self::linspace(0, floor($samplingRate / 2), $nFrequencyBins);
@@ -252,13 +270,13 @@ class Audio
     private static function linspace(float $start, float $end, int $num): array
     {
         $step = ($end - $start) / ($num - 1);
-        return array_map(fn ($i) => $start + $step * $i, range(0, $num - 1));
+        return array_map(static fn ($i) => $start + $step * $i, range(0, $num - 1));
     }
 
     public static function hertzToMel(array|float|int $hz, string $melScale = "htk"): float|int|array
     {
         if (is_array($hz)) {
-            return array_map(fn ($i) => self::hertzToMel($i, $melScale), $hz);
+            return array_map(static fn ($i) => self::hertzToMel($i, $melScale), $hz);
         }
 
         if ($melScale === "htk") {
@@ -283,7 +301,7 @@ class Audio
     public static function melToHertz(array|float|int $mel, string $melScale = "htk"): float|int|array
     {
         if (is_array($mel)) {
-            return array_map(fn ($i) => self::melToHertz($i, $melScale), $mel);
+            return array_map(static fn ($i) => self::melToHertz($i, $melScale), $mel);
         }
 
         if ($melScale === "htk") {
@@ -313,9 +331,8 @@ class Audio
         float  $factor,
         float  $reference,
         float  $minValue,
-        ?float $dbRange
-    ): Tensor
-    {
+        ?float $dbRange,
+    ): Tensor {
         if ($reference <= 0) {
             throw new InvalidArgumentException('reference must be greater than zero');
         }
@@ -327,10 +344,10 @@ class Audio
         $reference = max($minValue, $reference);
         $logReference = log10($reference);
 
-//        for ($i = 0; $i < count($spectrogram); $i++) {
-//            $spectrogram->buffer()[$i] = $factor * log10(max($minValue, $spectrogram->buffer()[$i]) - $logReference);
-//        }
-        $spectrogram->u(fn ($x) => $factor * log10(max($minValue, $x) - $logReference));
+        //        for ($i = 0; $i < count($spectrogram); $i++) {
+        //            $spectrogram->buffer()[$i] = $factor * log10(max($minValue, $spectrogram->buffer()[$i]) - $logReference);
+        //        }
+        $spectrogram->u(static fn ($x) => $factor * log10(max($minValue, $x) - $logReference));
 
         if ($dbRange !== null) {
             if ($dbRange <= 0) {
@@ -339,10 +356,10 @@ class Audio
 
             $maxValue = $spectrogram->max() - $dbRange;
 
-//            for ($i = 0; $i < count($spectrogram); $i++) {
-//                $spectrogram->buffer()[$i] = max($spectrogram->buffer()[$i], $maxValue);
-//            }
-            $spectrogram->u(fn ($x) => max($x, $maxValue));
+            //            for ($i = 0; $i < count($spectrogram); $i++) {
+            //                $spectrogram->buffer()[$i] = max($spectrogram->buffer()[$i], $maxValue);
+            //            }
+            $spectrogram->u(static fn ($x) => max($x, $maxValue));
         }
 
         return $spectrogram;
@@ -363,9 +380,8 @@ class Audio
         Tensor $spectrogram,
         float  $reference = 1.0,
         float  $minValue = 1e-5,
-        ?float $dbRange = null
-    ): Tensor
-    {
+        ?float $dbRange = null,
+    ): Tensor {
         return self::dBConversionHelper($spectrogram, 20.0, $reference, $minValue, $dbRange);
     }
 
@@ -384,9 +400,8 @@ class Audio
         Tensor $spectrogram,
         float  $reference = 1.0,
         float  $minValue = 1e-5,
-        ?float $dbRange = null
-    ): Tensor
-    {
+        ?float $dbRange = null,
+    ): Tensor {
         return self::dBConversionHelper($spectrogram, 10.0, $reference, $minValue, $dbRange);
     }
 
@@ -425,9 +440,8 @@ class Audio
         ?bool   $removeDcOffset = null,
         ?int    $maxNumFrames = null, // -1 for c
         bool    $doPad = true,
-        bool    $transpose = false
-    ): Tensor
-    {
+        bool    $transpose = false,
+    ): Tensor {
         $fftLength ??= $frameLength;
         if ($frameLength > $fftLength) {
             throw new InvalidArgumentException("frameLength ($frameLength) may not be larger than fftLength ($fftLength)");
@@ -453,7 +467,7 @@ class Audio
             $padded = TransformersUtils::padReflect(
                 $waveform->buffer()->addr($waveform->offset()),
                 $waveform->size(),
-                $paddedLength
+                $paddedLength,
             );
 
             $paddedStr = FFI::string($padded, FFI::sizeof($padded));
@@ -549,7 +563,7 @@ class Audio
      * @param string $name The name of the window function.
      * @param bool $periodic Whether the window is periodic or symmetric.
      * @param int|null $frameLength The length of the analysis frames in samples.
-     * Provide a value for `frame_length` if the window is smaller than the frame length, so that it will be zero-padded.
+     *                              Provide a value for `frame_length` if the window is smaller than the frame length, so that it will be zero-padded.
      * @param bool $center Whether to center the window inside the FFT buffer. Only used when `frameLength` is provided.
      *
      * @return Tensor The window of shape `(windowLength)` or `(frameLength)`.
@@ -559,9 +573,8 @@ class Audio
         string $name,
         bool   $periodic = true,
         int    $frameLength = null,
-        bool   $center = true
-    ): Tensor
-    {
+        bool   $center = true,
+    ): Tensor {
 
         $length = $periodic ? $windowLength + 1 : $windowLength;
 

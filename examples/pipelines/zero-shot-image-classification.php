@@ -10,7 +10,7 @@ require_once './bootstrap.php';
 
 $classifier = pipeline('zero-shot-image-classification', 'Xenova/clip-vit-base-patch32');
 
-$url = __DIR__. '/../images/tiger.jpg';
+$url = __DIR__ . '/../images/tiger.jpg';
 
 $output = $classifier($url, ['tiger', 'horse', 'dog']);
 

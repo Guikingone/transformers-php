@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Auto;
+
+use Codewithkyrian\Transformers\Models\Pretrained\VisionEncoderDecoderModel;
 
 class AutoModelForVision2Seq extends PretrainedMixin
 {
-    const MODEL_CLASS_MAPPING = [
-        'vision-encoder-decoder' => \Codewithkyrian\Transformers\Models\Pretrained\VisionEncoderDecoderModel::class
+    public const MODEL_CLASS_MAPPING = [
+        'vision-encoder-decoder' => VisionEncoderDecoderModel::class,
     ];
 
-    const MODEL_CLASS_MAPPINGS = [
+    public const MODEL_CLASS_MAPPINGS = [
         self::MODEL_CLASS_MAPPING,
     ];
 }

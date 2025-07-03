@@ -2,15 +2,17 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PostProcessors;
+
+use function array_fill;
+use function array_merge;
+use function count;
 
 /**
  * Post processor that replaces special tokens in a template with actual tokens.
  */
 class TemplateProcessing extends PostProcessor
 {
-
     /**
      * @var array The template for a single sequence of tokens.
      */
@@ -35,9 +37,8 @@ class TemplateProcessing extends PostProcessor
      * @param string[] $tokens The input tokens.
      * @param string[]|null $tokenPair The input tokens for the second sequence in a pair.
      * @param bool $addSpecialTokens Whether to add the special tokens associated with the corresponding model.
-     * @return PostProcessedOutput
      */
-    public function postProcess(array $tokens, array $tokenPair = null,  bool $addSpecialTokens = true): PostProcessedOutput
+    public function postProcess(array $tokens, array $tokenPair = null, bool $addSpecialTokens = true): PostProcessedOutput
     {
         $type = $tokenPair === null ? $this->single : $this->pair;
 

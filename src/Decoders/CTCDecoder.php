@@ -2,10 +2,16 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Decoders;
 
 use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
+
+use function array_filter;
+use function count;
+use function end;
+use function implode;
+use function str_replace;
+use function trim;
 
 /**
  * The CTC (Connectionist Temporal Classification) decoder.
@@ -27,7 +33,6 @@ class CTCDecoder extends Decoder
     protected mixed $cleanup;
 
     /**
-     * @param array $config
      */
     public function __construct(array $config)
     {
@@ -43,7 +48,7 @@ class CTCDecoder extends Decoder
      * @param array $tokens Array of tokens to be decoded.
      * @return string The decoded string.
      */
-    function convertTokensToString(array $tokens): string
+    public function convertTokensToString(array $tokens): string
     {
         if (empty($tokens)) {
             return '';

@@ -5,9 +5,23 @@ declare(strict_types=1);
 namespace Codewithkyrian\Transformers\Utils;
 
 use Codewithkyrian\TransformersLibsLoader\Library;
+use Exception;
+use PharData;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+
+use function count;
+use function explode;
+use function file_get_contents;
+use function implode;
+use function php_uname;
+use function round;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
+
+use const PHP_OS_FAMILY;
 
 class LibsChecker
 {
@@ -37,7 +51,7 @@ class LibsChecker
             $event->getComposer()->getConfig()->get('vendor-dir')
             : 'vendor';
 
-        require $vendorDir.'/autoload.php';
+        require $vendorDir . '/autoload.php';
 
         $libsDir = basePath('libs');
         $installationNeeded = false;
@@ -84,9 +98,9 @@ class LibsChecker
             $baseUrl = "https://github.com/CodeWithKyrian/transformers-php/releases/download/$version";
             $filename = "transformersphp-$version-$os-$arch";
             $downloadUrl = "$baseUrl/$filename.$extension";
-            $downloadPath = tempnam(sys_get_temp_dir(), 'transformers-php').".$extension";
+            $downloadPath = tempnam(sys_get_temp_dir(), 'transformers-php') . ".$extension";
 
-            $onProgress = function ($downloadSize, $downloaded, $uploadSize, $uploaded) use ($output, $filename) {
+            $onProgress = static function ($downloadSize, $downloaded, $uploadSize, $uploaded) use ($output, $filename) {
                 $progressBar = self::getProgressBar($filename, $output);
                 $percent = round(($downloaded / $downloadSize) * 100, 2);
                 $progressBar->setProgress((int)$percent);
@@ -101,7 +115,7 @@ class LibsChecker
                 $progressBar->finish();
                 $progressBar->clear();
                 $output->writeln("  - Downloading <info>$filename</info>");
-            } catch (\Exception) {
+            } catch (Exception) {
             } finally {
                 unset($progressBar);
             }
@@ -109,7 +123,7 @@ class LibsChecker
             if ($downloadSuccess) {
                 $output->writeln("  - Installing <info>$filename</info> : Extracting archive");
 
-                $archive = new \PharData($downloadPath);
+                $archive = new PharData($downloadPath);
                 if ($extension != 'zip') {
                     $archive = $archive->decompress();
                 }
@@ -119,15 +133,15 @@ class LibsChecker
 
                 $output->writeln("✔ TransformersPHP libraries installed successfully!");
                 return;
-            } else {
-                $output->writeln("  - Failed to download <info>$filename</info> trying a lower version...");
-                $version = self::getLowerVersion($version);
             }
+            $output->writeln("  - Failed to download <info>$filename</info> trying a lower version...");
+            $version = self::getLowerVersion($version);
+
 
             $attempts++;
         } while ($version !== null && $attempts < $maxRetries);
 
-        throw new \Exception("Could not find the required binaries after $maxRetries attempts.");
+        throw new Exception("Could not find the required binaries after $maxRetries attempts.");
     }
 
     private static function getLowerVersion(string $version): ?string

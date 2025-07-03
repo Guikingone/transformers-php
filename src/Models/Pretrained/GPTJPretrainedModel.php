@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Pretrained;
 
 use Codewithkyrian\Transformers\Models\ModelArchitecture;
@@ -19,9 +18,8 @@ class GPTJPretrainedModel extends PretrainedModel
         AutoConfig        $config,
         InferenceSession  $session,
         ModelArchitecture $modelArchitecture = ModelArchitecture::EncoderOnly,
-                          ...$args
-    )
-    {
+        ...$args,
+    ) {
         parent::__construct($config, $session, $modelArchitecture, $args);
 
         // config doesn't contain pad_token_id, so we assume it is the eos_token_id

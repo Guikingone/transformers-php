@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PreTokenizers;
+
+use function str_replace;
 
 class ReplacePreTokenizer extends PreTokenizer
 {
-
     protected ?string $pattern;
     protected string $content;
     public function __construct(array $config)
@@ -17,8 +17,7 @@ class ReplacePreTokenizer extends PreTokenizer
     }
     public function preTokenizeText(string|array $text, array $options): array
     {
-        if($this->pattern === null)
-        {
+        if ($this->pattern === null) {
             return [$text];
         }
 

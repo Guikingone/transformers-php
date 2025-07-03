@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Generation\LogitsProcessors;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
+
+use function count;
+
+use const INF;
 
 /**
  *  A LogitsProcessor that suppresses a list of tokens as soon as the `generate` function starts
@@ -16,13 +19,12 @@ class SuppressTokensAtBeginLogitsProcessor extends LogitsProcessor
 {
     public function __construct(
         protected array $beginSuppressTokens,
-        protected int   $beginIndex = 0
-    )
-    {
+        protected int   $beginIndex = 0,
+    ) {
     }
 
     /**
-     * @inheritDoc
+     *
      */
     public function __invoke(array $inputIds, Tensor $logits): Tensor
     {

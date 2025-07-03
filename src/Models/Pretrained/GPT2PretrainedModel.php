@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Pretrained;
 
 use Codewithkyrian\Transformers\Models\ModelArchitecture;
@@ -20,9 +19,8 @@ class GPT2PretrainedModel extends PretrainedModel
         AutoConfig               $config,
         InferenceSession         $session,
         public ModelArchitecture $modelArchitecture,
-        public GenerationConfig  $generationConfig
-    )
-    {
+        public GenerationConfig  $generationConfig,
+    ) {
         parent::__construct($config, $session, $modelArchitecture);
 
         // config doesn't contain pad_token_id, so we assume it is the eos_token_id

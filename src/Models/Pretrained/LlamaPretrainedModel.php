@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Pretrained;
 
 use Codewithkyrian\Transformers\Models\ModelArchitecture;
 use Codewithkyrian\Transformers\Utils\AutoConfig;
 use Codewithkyrian\Transformers\Utils\GenerationConfig;
 use Codewithkyrian\Transformers\Utils\InferenceSession;
-
 
 /**
  * The bare LLama Model outputting raw hidden-states without any specific head on top.
@@ -24,9 +22,8 @@ class LlamaPretrainedModel extends PretrainedModel
         AutoConfig               $config,
         InferenceSession         $session,
         public ModelArchitecture $modelArchitecture,
-        public GenerationConfig  $generationConfig
-    )
-    {
+        public GenerationConfig  $generationConfig,
+    ) {
         parent::__construct($config, $session, $modelArchitecture);
 
         // config doesn't contain pad_token_id, so we assume it is the eos_token_id

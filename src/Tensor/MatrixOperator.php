@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Tensor;
 
 use Interop\Polite\Math\Matrix\NDArray;

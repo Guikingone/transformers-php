@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Models\Output\MaskedLMOutput;
 use Codewithkyrian\Transformers\Pipelines\Pipeline;
 use Codewithkyrian\Transformers\Utils\Math;
+use Error;
 
+use function array_search;
 use function Codewithkyrian\Transformers\Utils\array_pop_key;
+use function is_array;
 
 /**
  * Masked language modeling prediction pipeline.
@@ -50,7 +52,7 @@ class FillMaskPipeline extends Pipeline
             $maskTokenIndex = array_search($this->tokenizer->maskTokenId, $ids);
 
             if ($maskTokenIndex === false) {
-                throw new \Error("Mask token ({$this->tokenizer->maskToken}) not found in text.");
+                throw new Error("Mask token ({$this->tokenizer->maskToken}) not found in text.");
             }
 
             $logits = $outputs->logits[$i][$maskTokenIndex];

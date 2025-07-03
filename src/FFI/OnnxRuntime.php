@@ -10,7 +10,11 @@ use FFI;
 use FFI\CData;
 use FFI\CType;
 use RuntimeException;
+
 use function Codewithkyrian\Transformers\Utils\basePath;
+use function count;
+use function file_get_contents;
+use function is_null;
 
 class OnnxRuntime
 {
@@ -30,7 +34,7 @@ class OnnxRuntime
         if (!isset(self::$ffi)) {
             self::$ffi = FFI::cdef(
                 file_get_contents(Library::OnnxRuntime->header(basePath('includes'))),
-                Library::OnnxRuntime->library(basePath('libs'))
+                Library::OnnxRuntime->library(basePath('libs')),
             );
         }
 

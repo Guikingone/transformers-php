@@ -4,8 +4,21 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Normalizers;
 
-use Codewithkyrian\Transformers\DataStructures\CharTrie;
-use Generator;
+use function array_map;
+use function base64_decode;
+use function class_exists;
+use function count;
+use function explode;
+use function implode;
+use function mb_ord;
+use function mb_str_split;
+use function mb_strlen;
+use function mb_strpos;
+use function mb_substr;
+use function ord;
+use function preg_replace;
+use function substr;
+use function unpack;
 
 class Precompiled extends Normalizer
 {
@@ -141,8 +154,9 @@ class Precompiled extends Normalizer
 
 class DoubleArray
 {
-
-    public function __construct(protected array $array) {}
+    public function __construct(protected array $array)
+    {
+    }
 
     public function commonPrefixSearch($key): array
     {

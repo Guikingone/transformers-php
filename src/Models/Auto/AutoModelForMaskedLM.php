@@ -2,23 +2,31 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Auto;
+
+use Codewithkyrian\Transformers\Models\Pretrained\AlbertForMaskedLM;
+use Codewithkyrian\Transformers\Models\Pretrained\BertForMaskedLM;
+use Codewithkyrian\Transformers\Models\Pretrained\DebertaForMaskedLM;
+use Codewithkyrian\Transformers\Models\Pretrained\DebertaV2ForMaskedLM;
+use Codewithkyrian\Transformers\Models\Pretrained\DistilBertForMaskedLM;
+use Codewithkyrian\Transformers\Models\Pretrained\MobileBertForMaskedLM;
+use Codewithkyrian\Transformers\Models\Pretrained\RobertaForMaskedLM;
+use Codewithkyrian\Transformers\Models\Pretrained\RoFormerForMaskedLM;
 
 class AutoModelForMaskedLM extends PretrainedMixin
 {
-    const MODEL_CLASS_MAPPING = [
-        "albert" => \Codewithkyrian\Transformers\Models\Pretrained\AlbertForMaskedLM::class,
-        "bert" => \Codewithkyrian\Transformers\Models\Pretrained\BertForMaskedLM::class,
-        "deberta" => \Codewithkyrian\Transformers\Models\Pretrained\DebertaForMaskedLM::class,
-        "deberta-v2" => \Codewithkyrian\Transformers\Models\Pretrained\DebertaV2ForMaskedLM::class,
-        "distilbert" => \Codewithkyrian\Transformers\Models\Pretrained\DistilBertForMaskedLM::class,
-        "mobilebert" => \Codewithkyrian\Transformers\Models\Pretrained\MobileBertForMaskedLM::class,
-        "roberta" => \Codewithkyrian\Transformers\Models\Pretrained\RobertaForMaskedLM::class,
-        "roformer" => \Codewithkyrian\Transformers\Models\Pretrained\RoFormerForMaskedLM::class,
+    public const MODEL_CLASS_MAPPING = [
+        "albert" => AlbertForMaskedLM::class,
+        "bert" => BertForMaskedLM::class,
+        "deberta" => DebertaForMaskedLM::class,
+        "deberta-v2" => DebertaV2ForMaskedLM::class,
+        "distilbert" => DistilBertForMaskedLM::class,
+        "mobilebert" => MobileBertForMaskedLM::class,
+        "roberta" => RobertaForMaskedLM::class,
+        "roformer" => RoFormerForMaskedLM::class,
     ];
 
-    const MODEL_CLASS_MAPPINGS = [
+    public const MODEL_CLASS_MAPPINGS = [
         self::MODEL_CLASS_MAPPING,
     ];
 }

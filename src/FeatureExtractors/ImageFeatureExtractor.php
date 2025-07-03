@@ -2,13 +2,28 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\FeatureExtractors;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
 use Codewithkyrian\Transformers\Utils\Image;
 use Exception;
 use Imagine\Image\Point;
+
+use function abs;
+use function array_column;
+use function array_map;
+use function ceil;
+use function count;
+use function floor;
+use function intdiv;
+use function is_array;
+use function is_int;
+use function json_encode;
+use function max;
+use function min;
+use function round;
+
+use const PHP_ROUND_HALF_EVEN;
 
 class ImageFeatureExtractor extends FeatureExtractor
 {
@@ -151,9 +166,8 @@ class ImageFeatureExtractor extends FeatureExtractor
         string    $tensorFormat = 'CHW', // 'HWC' or 'CHW
         string    $mode = 'constant',
         bool      $center = false,
-        int       $constantValues = 0
-    ): Tensor
-    {
+        int       $constantValues = 0,
+    ): Tensor {
         if ($tensorFormat === 'CHW') {
             [$imageChannels, $imageHeight, $imageWidth] = $imageTensor->shape();
         } else {
@@ -215,7 +229,9 @@ class ImageFeatureExtractor extends FeatureExtractor
                     $b = $this->calculateReflectOffset($i, $h1) * $imageWidth;
 
                     for ($j = 0; $j < $paddedImageWidth; ++$j) {
-                        if ($i < $imageHeight && $j < $imageWidth) continue; // Do not overwrite original image
+                        if ($i < $imageHeight && $j < $imageWidth) {
+                            continue;
+                        } // Do not overwrite original image
 
                         $c = ($a + $j) * $imageChannels;
                         $d = ($b + $this->calculateReflectOffset($j, $w1)) * $imageChannels;
@@ -323,9 +339,9 @@ class ImageFeatureExtractor extends FeatureExtractor
             return [$newWidth, $newHeight];
         } elseif ($this->sizeDivisibility != null) {
             return $this->enforceSizeDivisibility([$srcWidth, $srcHeight], $this->sizeDivisibility);
-        } else {
-            throw new Exception("Could not resize image due to unsupported 'size' parameter passed: ".json_encode($size));
         }
+        throw new Exception("Could not resize image due to unsupported 'size' parameter passed: " . json_encode($size));
+
     }
 
 
@@ -346,9 +362,8 @@ class ImageFeatureExtractor extends FeatureExtractor
         ?bool $doNormalize = null,
         ?bool $doPad = null,
         ?bool $doConvertRGB = null,
-        ?bool $doConvertGrayscale = null
-    ): array
-    {
+        ?bool $doConvertGrayscale = null,
+    ): array {
         if ($this->doCropMargin) {
             // Specific to nougat processors. This is done before resizing,
             // and can be interpreted as a pre-preprocessing step.
@@ -400,7 +415,7 @@ class ImageFeatureExtractor extends FeatureExtractor
         if ($doNormalize ?? $this->doNormalize) {
             if (is_array($this->imageMean)) {
                 // Negate the mean values to add instead of subtract
-                $negatedMean = array_map(fn ($mean) => -$mean, $this->imageMean);
+                $negatedMean = array_map(static fn ($mean) => -$mean, $this->imageMean);
                 $imageMean = Tensor::repeat($negatedMean, $image->height() * $image->width(), 1);
             } else {
                 $imageMean = Tensor::fill([$image->channels * $image->height() * $image->width()], -$this->imageMean);
@@ -409,7 +424,7 @@ class ImageFeatureExtractor extends FeatureExtractor
 
             if (is_array($this->imageStd)) {
                 // Inverse the standard deviation values to multiple instead of divide
-                $inversedStd = array_map(fn ($std) => 1 / $std, $this->imageStd);
+                $inversedStd = array_map(static fn ($std) => 1 / $std, $this->imageStd);
                 $imageStd = Tensor::repeat($inversedStd, $image->height() * $image->width(), 1);
             } else {
                 $imageStd = Tensor::fill([$image->channels * $image->height() * $image->width()], 1 / $this->imageStd);
@@ -421,7 +436,7 @@ class ImageFeatureExtractor extends FeatureExtractor
             $imageStd = $imageStd->reshape($imageTensor->shape());
 
             if (count($imageMean) !== $image->channels || count($imageStd) !== $image->channels) {
-                throw new Exception("When set to arrays, the length of `imageMean` (".count($imageMean).") and `imageStd` (".count($imageStd).") must match the number of channels in the image ({$image->channels}).");
+                throw new Exception("When set to arrays, the length of `imageMean` (" . count($imageMean) . ") and `imageStd` (" . count($imageStd) . ") must match the number of channels in the image ({$image->channels}).");
             }
 
             // Normalize pixel data
@@ -470,7 +485,7 @@ class ImageFeatureExtractor extends FeatureExtractor
         return [
             'pixel_values' => Tensor::stack($pixelValues),
             'original_sizes' => $originalSizes,
-            'reshaped_input_sizes' => $reshapedInputSizes
+            'reshaped_input_sizes' => $reshapedInputSizes,
         ];
     }
 
@@ -500,7 +515,6 @@ class ImageFeatureExtractor extends FeatureExtractor
      * @param int $minVal The minimum value to constrain to.
      * @param int|null $maxVal The maximum value to constrain to.
      *
-     * @return int
      */
     private function constraintToMultipleOf(int $val, int $multiple, int $minVal = 0, ?int $maxVal = null): int
     {

@@ -2,19 +2,15 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Generation\Samplers;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
 
 class GreedySampler extends Sampler
 {
-
     /**
      * Sample the maximum probability of a given logits tensor.
      *
-     * @param Tensor $logits
-     * @param int $index
      * @return array An array with a single tuple, containing the index of the maximum value and a meaningless score (since this is a greedy search).
      */
     public function sample(Tensor $logits, int $index): array
@@ -25,7 +21,7 @@ class GreedySampler extends Sampler
         // Note: score is meaningless in this context, since we are performing
         // greedy search (p = 1 => log(p) = 0)
         return [
-            [$logs->argMax(), 0]
+            [$logs->argMax(), 0],
         ];
     }
 }

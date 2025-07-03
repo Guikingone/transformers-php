@@ -2,17 +2,23 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Normalizers;
 
 use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
+
+use function implode;
+use function mb_ord;
+use function mb_strlen;
+use function mb_strtolower;
+use function mb_substr;
+use function normalizer_normalize;
+use function preg_match;
 
 /**
  * A class representing a normalizer used in BERT tokenization.
  */
 class BertNormalizer extends Normalizer
 {
-
     /**
      * Strips accents from the given text.
      * @param string $text The text to strip accents from.
@@ -48,7 +54,7 @@ class BertNormalizer extends Normalizer
      * @return string The cleaned text.
      * @private
      */
-    function cleanText(string $text): string
+    public function cleanText(string $text): string
     {
         $output = [];
         for ($i = 0; $i < mb_strlen($text); ++$i) {

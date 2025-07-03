@@ -6,6 +6,7 @@ require_once './bootstrap.php';
 
 use Codewithkyrian\Transformers\Generation\Streamers\StdOutStreamer;
 use Codewithkyrian\Transformers\Generation\Streamers\TextStreamer;
+
 use function Codewithkyrian\Transformers\Pipelines\pipeline;
 use function Codewithkyrian\Transformers\Utils\memoryUsage;
 use function Codewithkyrian\Transformers\Utils\timeUsage;
@@ -26,14 +27,15 @@ $messages = [
 
 $input = $generator->tokenizer->applyChatTemplate($messages, addGenerationPrompt: true, tokenize: false);
 
-$output = $generator($input,
+$output = $generator(
+    $input,
     streamer: $streamer,
     maxNewTokens: 256,
     doSample: true,
     returnFullText: false,
-//    temperature: 0.7,
-//    repetitionPenalty: 1.3,
-//    earlyStopping: true
+    //    temperature: 0.7,
+    //    repetitionPenalty: 1.3,
+    //    earlyStopping: true
 );
 
 //$generator = pipeline('text-generation', 'Xenova/codegen-350M-mono');

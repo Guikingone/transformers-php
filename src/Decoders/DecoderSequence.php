@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Decoders;
+
+use function array_map;
+use function array_reduce;
 
 class DecoderSequence extends Decoder
 {
@@ -13,15 +15,14 @@ class DecoderSequence extends Decoder
     protected array $decoders;
 
     /**
-     * @param array $config
      */
     public function __construct(array $config)
     {
         parent::__construct($config);
 
         $this->decoders = array_map(
-            fn(array $decoderConfig) => Decoder::fromConfig($decoderConfig),
-            $config['decoders']
+            static fn (array $decoderConfig) => Decoder::fromConfig($decoderConfig),
+            $config['decoders'],
         );
     }
 
@@ -29,8 +30,8 @@ class DecoderSequence extends Decoder
     {
         return array_reduce(
             $this->decoders,
-            fn(array $tokens, Decoder $decoder) => $decoder->decodeChain($tokens),
-            $tokens
+            static fn (array $tokens, Decoder $decoder) => $decoder->decodeChain($tokens),
+            $tokens,
         );
     }
 }

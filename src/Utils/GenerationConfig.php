@@ -2,13 +2,19 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Utils;
+
+use ArrayAccess;
+
+use function array_filter;
+use function array_merge;
+use function get_object_vars;
+use function property_exists;
 
 /**
  * Class representing a configuration for a generation task.
  */
-class GenerationConfig implements \ArrayAccess
+class GenerationConfig implements ArrayAccess
 {
     /** @var int The maximum length the generated tokens can have. Corresponds to the length of the input prompt + `max_new_tokens`. Its effect is overridden by `max_new_tokens`, if also set. */
     public int $max_length;
@@ -201,7 +207,7 @@ class GenerationConfig implements \ArrayAccess
 
     public function toArray(): array
     {
-        $objectProps = array_filter(get_object_vars($this), fn($value) => $value !== null);
+        $objectProps = array_filter(get_object_vars($this), static fn ($value) => $value !== null);
         unset($objectProps['kwargs']);
         return array_merge($objectProps, $this->kwargs);
     }

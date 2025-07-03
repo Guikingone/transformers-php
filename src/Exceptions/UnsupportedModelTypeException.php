@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Exceptions;
 
-class UnsupportedModelTypeException extends \Exception implements TransformersException
+use Exception;
+
+class UnsupportedModelTypeException extends Exception implements TransformersException
 {
     public static function make(string $modelType): self
     {

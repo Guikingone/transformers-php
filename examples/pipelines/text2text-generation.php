@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once './bootstrap.php';
 
 use Codewithkyrian\Transformers\Generation\Streamers\TextStreamer;
+
 use function Codewithkyrian\Transformers\{Pipelines\pipeline, Utils\memoryUsage, Utils\timeUsage};
 
 ini_set('memory_limit', -1);

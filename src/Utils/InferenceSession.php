@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * This file is a heavily modified version of the original file from the onnxruntime-php repository.
  *
@@ -15,6 +17,24 @@ use Codewithkyrian\Transformers\Tensor\Tensor;
 use Exception;
 use FFI;
 use FFI\CData;
+use InvalidArgumentException;
+
+use function array_combine;
+use function array_flip;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function count;
+use function get_resource_type;
+use function in_array;
+use function is_null;
+use function is_resource;
+use function stream_get_contents;
+use function strlen;
+use function trigger_error;
+
+use const E_USER_WARNING;
+use const PHP_OS_FAMILY;
 
 class InferenceSession
 {
@@ -40,10 +60,9 @@ class InferenceSession
         $optimizedModelFilepath = null,
         $profileFilePrefix = null,
         $sessionConfigEntries = null,
-        $providers = []
-    )
-    {
-//        $providers = ['CoreMLExecutionProvider', 'CPUExecutionProvider'];
+        $providers = [],
+    ) {
+        //        $providers = ['CoreMLExecutionProvider', 'CPUExecutionProvider'];
         // session options
         $sessionOptions = OnnxRuntime::CreateSessionOptions();
 
@@ -117,7 +136,7 @@ class InferenceSession
             } elseif ($provider == 'CPUExecutionProvider') {
                 break;
             } else {
-                throw new \InvalidArgumentException('Provider not supported: ' . $provider);
+                throw new InvalidArgumentException('Provider not supported: ' . $provider);
             }
         }
         $this->session = $this->loadSession($path, $sessionOptions);
@@ -139,7 +158,7 @@ class InferenceSession
         $refs = [];
 
         $inputTensor = $this->convertInputTensorToOnnxTensor($inputFeed, $refs);
-        $outputNames ??= array_map(fn($v) => $v['name'], $this->outputs);
+        $outputNames ??= array_map(static fn ($v) => $v['name'], $this->outputs);
 
         $inputNodeNames = $this->createNodeNames(array_keys($inputFeed), $refs);
         $outputNodeNames = $this->createNodeNames($outputNames, $refs);
@@ -211,7 +230,7 @@ class InferenceSession
         $description = OnnxRuntime::ModelMetadataGetDescription($metadata, $this->allocator);
         $domain = OnnxRuntime::ModelMetadataGetDomain($metadata, $this->allocator);
         $graphName = OnnxRuntime::ModelMetadataGetGraphName($metadata, $this->allocator);
-//        $graphDescription = OnnxRuntime::ModelMetadataGetGraphDescription($metadata, $this->allocator);
+        //        $graphDescription = OnnxRuntime::ModelMetadataGetGraphDescription($metadata, $this->allocator);
         $producerName = OnnxRuntime::ModelMetadataGetProducerName($metadata, $this->allocator);
         $version = OnnxRuntime::ModelMetadataGetVersion($metadata);
 
@@ -220,9 +239,9 @@ class InferenceSession
             'description' => $description,
             'domain' => $domain,
             'graph_name' => $graphName,
-//            'graph_description' => $graphDescription,
+            //            'graph_description' => $graphDescription,
             'producer_name' => $producerName,
-            'version' => $version
+            'version' => $version,
         ];
 
         // TODO use finally
@@ -339,7 +358,7 @@ class InferenceSession
                 OnnxRuntime::FillStringTensor($inputTensor[$idx], $inputTensorValues, $size);
             } else {
 
-                $inputTypes = array_flip(array_map(fn($v) => "tensor($v)", $this->elementDataTypes()));
+                $inputTypes = array_flip(array_map(static fn ($v) => "tensor($v)", $this->elementDataTypes()));
 
                 if (isset($inputTypes[$inp['type']])) {
                     $typeEnum = $inputTypes[$inp['type']];
@@ -453,9 +472,9 @@ class InferenceSession
                     $keys = $this->createFromOnnxValue($mapKeys);
                     $values = $this->createFromOnnxValue($mapValues);
                     return array_combine($keys, $values);
-                } else {
-                    $this->unsupportedType('element', $elemType);
                 }
+                $this->unsupportedType('element', $elemType);
+
             } else {
                 $this->unsupportedType('ONNX', $outType->cdata);
             }
@@ -513,9 +532,9 @@ class InferenceSession
             $v = $this->nodeInfo($valueTypeInfo)['type'];
 
             return ['type' => "map($k,$v)", 'shape' => []];
-        } else {
-            $this->unsupportedType('ONNX', $onnxType->cdata);
         }
+        $this->unsupportedType('ONNX', $onnxType->cdata);
+
     }
 
     private function castTypes(): array
@@ -618,9 +637,9 @@ class InferenceSession
             Libc::mbStringToWcString($dest, $str, $max);
 
             return $dest;
-        } else {
-            return $str;
         }
+        return $str;
+
     }
 
     private static function env()

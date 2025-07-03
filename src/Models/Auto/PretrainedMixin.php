@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Auto;
 
 use Codewithkyrian\Transformers\Exceptions\UnsupportedModelTypeException;
@@ -10,6 +9,8 @@ use Codewithkyrian\Transformers\Models\ModelArchitecture;
 use Codewithkyrian\Transformers\Models\Pretrained\PretrainedModel;
 use Codewithkyrian\Transformers\Transformers;
 use Codewithkyrian\Transformers\Utils\AutoConfig;
+
+use function in_array;
 
 /**
  * Base class of all AutoModels. Contains the `from_pretrained` function
@@ -22,13 +23,13 @@ abstract class PretrainedMixin
      *
      * @var array<string, array<string, string>> The model class mappings.
      */
-    const MODEL_CLASS_MAPPINGS = [];
+    public const MODEL_CLASS_MAPPINGS = [];
 
     /**
      * Whether to attempt to instantiate the base class (`PretrainedModel`) if
      * the model type is not found in the mapping.
      */
-    const BASE_IF_FAIL = false;
+    public const BASE_IF_FAIL = false;
 
     /**
      * Instantiate a model from a pretrained model configuration.
@@ -43,21 +44,22 @@ abstract class PretrainedMixin
      * @return PretrainedModel The instantiated pretrained model.
      */
     public static function fromPretrained(
-        string    $modelNameOrPath,
-        bool      $quantized = true,
-        ?array    $config = null,
-        ?string   $cacheDir = null,
-        string    $revision = 'main',
-        ?string   $modelFilename = null,
-        ?callable $onProgress = null
-    ): PretrainedModel
-    {
+        string $modelNameOrPath,
+        bool $quantized = true,
+        ?array $config = null,
+        ?string$cacheDir = null,
+        string $revision = 'main',
+        ?string $modelFilename = null,
+        ?callable $onProgress = null,
+    ): PretrainedModel {
         $config = AutoConfig::fromPretrained($modelNameOrPath, $config, $cacheDir, $revision, $onProgress);
 
         foreach (static::MODEL_CLASS_MAPPINGS as $modelClassMapping) {
             $modelClass = $modelClassMapping[$config->modelType] ?? null;
 
-            if ($modelClass === null) continue;
+            if ($modelClass === null) {
+                continue;
+            }
 
             $modelArchitecture = self::getModelArchitecture($modelClass);
 
@@ -69,7 +71,7 @@ abstract class PretrainedMixin
                 revision: $revision,
                 modelFilename: $modelFilename,
                 modelArchitecture: $modelArchitecture,
-                onProgress: $onProgress
+                onProgress: $onProgress,
             );
         }
 
@@ -83,11 +85,11 @@ abstract class PretrainedMixin
                 cacheDir: $cacheDir,
                 revision: $revision,
                 modelFilename: $modelFilename,
-                onProgress: $onProgress
+                onProgress: $onProgress,
             );
-        } else {
-            throw UnsupportedModelTypeException::make($config->modelType);
         }
+
+        throw UnsupportedModelTypeException::make($config->modelType);
     }
 
     protected static function getModelArchitecture($modelClass): ModelArchitecture
@@ -107,6 +109,7 @@ abstract class PretrainedMixin
             in_array($modelClass, AutoModelForAudioClassification::MODEL_CLASS_MAPPING) => ModelArchitecture::EncoderOnly,
             in_array($modelClass, AutoModelForSpeechSeq2Seq::MODEL_CLASS_MAPPING) => ModelArchitecture::Seq2SeqLM,
             in_array($modelClass, AutoModelForCTC::MODEL_CLASS_MAPPING) => ModelArchitecture::EncoderOnly,
+            in_array($modelClass, AutoModelForTextToWaveform::MODEL_CLASS_MAPPING) => ModelArchitecture::EncoderOnly,
 
             default => ModelArchitecture::EncoderOnly,
         };

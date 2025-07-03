@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PostProcessors;
+
+use function array_fill;
+use function array_merge;
+use function count;
 
 /**
  * A post-processor that adds special tokens to the beginning and end of the input.
@@ -21,7 +24,6 @@ class BertProcessing extends PostProcessor
     protected string $sep;
 
     /**
-     * @param array $config
      */
     public function __construct(array $config)
     {
@@ -37,7 +39,6 @@ class BertProcessing extends PostProcessor
      * @param string[] $tokens The input tokens.
      * @param string[]|null $tokenPair The input tokens for the second sequence in a pair.
      * @param bool $addSpecialTokens Whether to add the special tokens associated with the corresponding model.
-     * @return PostProcessedOutput
      */
     public function postProcess(array $tokens, array $tokenPair = null, bool $addSpecialTokens = true): PostProcessedOutput
     {

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Tokenizers;
 
 class BPENode
@@ -16,7 +15,6 @@ class BPENode
         public float  $bias,
         public ?BPENode $prev = null,
         public ?BPENode $next = null,
-    )
-    {
+    ) {
     }
 }

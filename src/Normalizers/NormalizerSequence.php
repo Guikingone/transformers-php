@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Normalizers;
+
+use function array_map;
+use function array_reduce;
 
 /**
  * A Normalizer that applies a sequence of Normalizers.
@@ -20,8 +22,8 @@ class NormalizerSequence extends Normalizer
         parent::__construct($config);
 
         $this->normalizers = array_map(
-            fn(array $config) => Normalizer::fromConfig($config),
-            $config['normalizers']
+            static fn (array $config) => Normalizer::fromConfig($config),
+            $config['normalizers'],
         );
     }
 
@@ -29,8 +31,8 @@ class NormalizerSequence extends Normalizer
     {
         return array_reduce(
             $this->normalizers,
-            fn(string $text, Normalizer $normalizer) => $normalizer->normalize($text),
-            $text
+            static fn (string $text, Normalizer $normalizer) => $normalizer->normalize($text),
+            $text,
         );
     }
 }

@@ -2,16 +2,27 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Generation\Streamers\Streamer;
 use Codewithkyrian\Transformers\Utils\GenerationConfig;
+use Exception;
+
+use function array_fill;
+use function array_map;
+use function array_merge;
 use function Codewithkyrian\Transformers\Utils\array_every;
-use function Codewithkyrian\Transformers\Utils\array_pop_key;
 use function Codewithkyrian\Transformers\Utils\array_keys_to_snake_case;
+use function Codewithkyrian\Transformers\Utils\array_pop_key;
 use function Codewithkyrian\Transformers\Utils\camelCaseToSnakeCase;
 use function Codewithkyrian\Transformers\Utils\timeUsage;
+use function count;
+use function floor;
+use function is_array;
+use function is_string;
+use function ltrim;
+use function mb_strlen;
+use function substr;
 
 /**
  * Language generation pipeline using any `ModelWithLMHead` or `ModelForCausalLM`.
@@ -74,7 +85,7 @@ class TextGenerationPipeline extends Pipeline
 
         if (is_string($inputs)) {
             $texts = $inputs = [$inputs];
-        } elseif (is_array($inputs) && array_every($inputs, fn($x) => is_string($x))) {
+        } elseif (is_array($inputs) && array_every($inputs, static fn ($x) => is_string($x))) {
             $isBatched = true;
             $texts = $inputs;
         } else {
@@ -83,12 +94,12 @@ class TextGenerationPipeline extends Pipeline
             } elseif (is_array($inputs) && array_every($inputs, [$this, 'isChat'])) {
                 $isBatched = true;
             } else {
-                throw new \Exception('Input must be a string, an array of strings, a Chat, or an array of Chats');
+                throw new Exception('Input must be a string, an array of strings, a Chat, or an array of Chats');
             }
             $isChatInput = true;
 
             // If the input is a chat, apply the chat template
-            $texts = array_map(fn($x) => $this->tokenizer->applyChatTemplate($x, addGenerationPrompt: true, tokenize: false), $inputs);
+            $texts = array_map(fn ($x) => $this->tokenizer->applyChatTemplate($x, addGenerationPrompt: true, tokenize: false), $inputs);
         }
 
         // By default, do not add special tokens
@@ -101,22 +112,23 @@ class TextGenerationPipeline extends Pipeline
             $texts,
             padding: true,
             addSpecialTokens: $addSpecialTokens,
-            truncation: true
+            truncation: true,
         );
 
         $streamer?->setTokenizer($this->tokenizer)?->setPromptTokens($inputIds[0]->toArray());
 
-        $outputTokenIds = $this->model->generate($inputIds,
+        $outputTokenIds = $this->model->generate(
+            $inputIds,
             generationConfig: $generationConfig,
             inputsAttentionMask: $attentionMask,
-            streamer: $streamer
+            streamer: $streamer,
         );
 
         $decoded = $this->tokenizer->batchDecode($outputTokenIds, skipSpecialTokens: true);
 
         $promptLengths = null;
         if (!$returnFullText && $inputIds->shape()[count($inputIds->shape()) - 1] > 0) {
-            $promptLengths = array_map(fn($x) => mb_strlen($x), $this->tokenizer->batchDecode($inputIds->toArray(), skipSpecialTokens: true));
+            $promptLengths = array_map(static fn ($x) => mb_strlen($x), $this->tokenizer->batchDecode($inputIds->toArray(), skipSpecialTokens: true));
         }
 
         $toReturn = array_fill(0, count($inputs), []);
@@ -135,7 +147,7 @@ class TextGenerationPipeline extends Pipeline
             $toReturn[$textIndex][] = [
                 'generated_text' => $isChatInput
                     ? array_merge($inputs[$textIndex], [
-                        ['role' => 'assistant', 'content' => $decoded[$i]]
+                        ['role' => 'assistant', 'content' => $decoded[$i]],
                     ])
                     : $decoded[$i],
             ];
@@ -146,9 +158,9 @@ class TextGenerationPipeline extends Pipeline
     }
 
     // Detect chat mode
-    function isChat($x): bool
+    public function isChat($x): bool
     {
-        return is_array($x) && array_every($x, fn($item) => isset($item['role']) && isset($item['content']));
+        return is_array($x) && array_every($x, static fn ($item) => isset($item['role']) && isset($item['content']));
     }
 
 }

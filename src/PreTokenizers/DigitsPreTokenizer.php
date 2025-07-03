@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PreTokenizers;
+
+use function preg_match_all;
+
+use const PREG_SPLIT_NO_EMPTY;
 
 class DigitsPreTokenizer extends PreTokenizer
 {
-
     protected string $pattern;
 
     public function __construct(protected array $config)

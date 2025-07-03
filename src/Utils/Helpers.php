@@ -6,12 +6,37 @@ namespace Codewithkyrian\Transformers\Utils;
 
 use Codewithkyrian\Transformers\Transformers;
 
+use function array_map;
+use function count;
+use function dirname;
+use function floor;
+use function implode;
+use function is_array;
+use function is_dir;
+use function log;
+use function ltrim;
+use function memory_get_peak_usage;
+use function memory_get_usage;
+use function microtime;
+use function mkdir;
+use function pow;
+use function preg_quote;
+use function preg_replace;
+use function print_r;
+use function round;
+use function rtrim;
+use function str_replace;
+use function strtolower;
+use function trim;
+
+use const DIRECTORY_SEPARATOR;
+
 function memoryUsage(): string
 {
     $mem = memory_get_usage(true);
     $unit = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 
-    return @round($mem / pow(1024, ($i = floor(log($mem, 1024)))), 2).' '.$unit[$i];
+    return @round($mem / pow(1024, ($i = floor(log($mem, 1024)))), 2) . ' ' . $unit[$i];
 }
 
 function memoryPeak(): string
@@ -19,7 +44,7 @@ function memoryPeak(): string
     $mem = memory_get_peak_usage(true);
     $unit = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 
-    return @round($mem / pow(1024, ($i = floor(log($mem, 1024)))), 2).' '.$unit[$i];
+    return @round($mem / pow(1024, ($i = floor(log($mem, 1024)))), 2) . ' ' . $unit[$i];
 }
 
 
@@ -37,8 +62,8 @@ function timeUsage(bool $milliseconds = false, bool $sinceLastCall = true, bool 
 
     $timeDiff = $milliseconds ? $timeDiff * 1000 : $timeDiff;
 
-//    return @round($timeDiff, 4) . ($milliseconds ? ' ms' : ' s');
-    return $returnString ? @round($timeDiff, 4).($milliseconds ? ' ms' : ' s') : @round($timeDiff, 4);
+    //    return @round($timeDiff, 4) . ($milliseconds ? ' ms' : ' s');
+    return $returnString ? @round($timeDiff, 4) . ($milliseconds ? ' ms' : ' s') : @round($timeDiff, 4);
 }
 
 function array_some(array $array, callable $callback): bool
@@ -111,7 +136,7 @@ function joinPaths(string ...$args): string
 function ensureDirectory($filePath): void
 {
     if (!is_dir(dirname($filePath))) {
-        mkdir(dirname($filePath), 0755, true);
+        mkdir(dirname($filePath), 0o755, true);
     }
 }
 
@@ -150,7 +175,7 @@ function prepareImages(mixed $images): array
 function getBoundingBox(array $box, bool $asInteger): array
 {
     if ($asInteger) {
-        $box = array_map(fn ($x) => (int)$x, $box);
+        $box = array_map(static fn ($x) => (int)$x, $box);
     }
 
     [$xmin, $ymin, $xmax, $ymax] = $box;
@@ -164,7 +189,6 @@ function getBoundingBox(array $box, bool $asInteger): array
  *
  * @param string $dir Directory to append to base path
  *
- * @return string
  */
 function basePath(string $dir = ""): string
 {
@@ -189,8 +213,8 @@ function createPattern(array $pattern, bool $invert = true): ?string
 
         // NOTE: if invert is true, we wrap the pattern in a group so that it is kept when performing split
         return $invert ? $escaped : "($escaped)";
-    } else {
-        Transformers::getLogger()?->error('Unknown pattern type: '.print_r($pattern, true));
-        return null;
     }
+    Transformers::getLogger()?->error('Unknown pattern type: ' . print_r($pattern, true));
+    return null;
+
 }

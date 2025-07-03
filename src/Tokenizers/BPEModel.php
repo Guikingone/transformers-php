@@ -2,11 +2,22 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Tokenizers;
 
 use SplDoublyLinkedList;
 use SplPriorityQueue;
+
+use function array_flip;
+use function array_key_exists;
+use function array_map;
+use function count;
+use function explode;
+use function mb_strlen;
+use function preg_split;
+use function sprintf;
+use function unpack;
+
+use const PREG_SPLIT_NO_EMPTY;
 
 /**
  * BPE class for encoding text into Byte-Pair-Encoding (BPE) tokens.
@@ -57,7 +68,7 @@ class BPEModel extends TokenizerModel
 
         $this->bpeRanks = array_flip($config['merges']);
 
-        $this->merges = array_map(fn($merge) => explode(' ', $merge), $config['merges']);
+        $this->merges = array_map(static fn ($merge) => explode(' ', $merge), $config['merges']);
 
         $this->endOfWordSuffix = $config['end_of_word_suffix'] ?? null;
         $this->continuingSubwordSuffix = $config['continuing_subword_suffix'] ?? null;
@@ -208,7 +219,7 @@ class BPEModel extends TokenizerModel
      * @param string[] $tokens The input tokens to encode.
      * @return string[] The resulting subword tokens after applying the BPE algorithm to the input sequence of tokens.
      */
-    function encode(array $tokens): array
+    public function encode(array $tokens): array
     {
         $outputTokens = [];
 
@@ -219,8 +230,7 @@ class BPEModel extends TokenizerModel
             foreach ($bpeTokenList as $bpeToken) {
                 if (array_key_exists($bpeToken, $this->tokenToIds)) {
                     $outputTokens[] = $bpeToken;
-                }
-                else {
+                } else {
                     if ($this->byteFallback) {
                         $bytes = unpack('C*', $bpeToken);
 

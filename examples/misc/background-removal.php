@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Codewithkyrian\Transformers\Models\Auto\AutoModel;
 use Codewithkyrian\Transformers\Processors\AutoProcessor;
 use Codewithkyrian\Transformers\Utils\Image;
+
 use function Codewithkyrian\Transformers\Utils\{memoryPeak, memoryUsage, timeUsage};
 
 require_once './bootstrap.php';
@@ -16,7 +17,7 @@ $url = __DIR__ . '/../images/woman-w-bag.jpeg';
 
 $image = Image::read($url);
 
-$fileName = pathinfo($url, PATHINFO_FILENAME);
+$fileName = pathinfo($url, \PATHINFO_FILENAME);
 
 ['pixel_values' => $pixelValues] = $processor($image);
 

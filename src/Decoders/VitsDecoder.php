@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Decoders;
 
+use function count;
+
 class VitsDecoder extends Decoder
 {
-
     protected function decodeChain(array $tokens): array
     {
         $decoded = '';

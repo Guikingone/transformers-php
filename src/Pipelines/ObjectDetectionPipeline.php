@@ -2,13 +2,16 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Models\Output\ObjectDetectionOutput;
 use Exception;
+
+use function array_map;
 use function Codewithkyrian\Transformers\Utils\getBoundingBox;
 use function Codewithkyrian\Transformers\Utils\prepareImages;
+use function count;
+use function is_array;
 
 /**
  * Object detection pipeline using any `AutoModelForObjectDetection`.
@@ -28,7 +31,6 @@ use function Codewithkyrian\Transformers\Utils\prepareImages;
  */
 class ObjectDetectionPipeline extends Pipeline
 {
-
     public function __invoke(array|string $inputs, ...$args): array
     {
         $threshold = $args['threshold'] ?? 0.9;
@@ -44,7 +46,7 @@ class ObjectDetectionPipeline extends Pipeline
         $preparedImages = prepareImages($inputs);
 
 
-        $imageSizes = $percentage ? null : array_map(fn($x) => [$x->height(), $x->width()], $preparedImages);
+        $imageSizes = $percentage ? null : array_map(static fn ($x) => [$x->height(), $x->width()], $preparedImages);
 
         ['pixel_values' => $pixelValues, 'pixel_mask' => $pixelMask] = ($this->processor)($preparedImages);
 

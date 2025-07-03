@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Normalizers;
 
 use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
@@ -12,7 +11,6 @@ use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
  */
 class StripAccents extends Normalizer
 {
-
     public function normalize(string $text): string
     {
         return TokenizerModel::removeAccents($text);

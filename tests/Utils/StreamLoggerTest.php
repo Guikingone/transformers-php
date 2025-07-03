@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Codewithkyrian\Transformers\Utils\StreamLogger;
 
 beforeEach(function () {
@@ -27,7 +29,7 @@ it('handles context correctly in log messages', function () {
     rewind($this->outputBuffer);
     $output = stream_get_contents($this->outputBuffer);
 
-    $expectedContext = json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
+    $expectedContext = json_encode($context, \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_PRESERVE_ZERO_FRACTION);
 
     expect($output)->toContain('warning: User action recorded')
         ->and($output)->toContain($expectedContext);
@@ -58,7 +60,7 @@ it('handles empty context gracefully', function () {
 });
 
 it('handles stringable objects in the message', function () {
-    $stringable = new class {
+    $stringable = new class() {
         public function __toString(): string
         {
             return 'Stringable message content';

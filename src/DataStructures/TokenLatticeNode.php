@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\DataStructures;
 
 class TokenLatticeNode
@@ -26,8 +25,8 @@ class TokenLatticeNode
         public int   $nodeId,
         public int   $pos,
         public int   $length,
-        public float $score)
-    {
+        public float $score,
+    ) {
     }
 
     /**

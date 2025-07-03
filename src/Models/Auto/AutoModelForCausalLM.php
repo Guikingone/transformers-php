@@ -2,22 +2,29 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Auto;
+
+use Codewithkyrian\Transformers\Models\Pretrained\CodeGenForCausalLM;
+use Codewithkyrian\Transformers\Models\Pretrained\GPT2LMHeadModel;
+use Codewithkyrian\Transformers\Models\Pretrained\GPTBigCodeForCausalLM;
+use Codewithkyrian\Transformers\Models\Pretrained\GPTJForCausalLM;
+use Codewithkyrian\Transformers\Models\Pretrained\LlamaForCausalLM;
+use Codewithkyrian\Transformers\Models\Pretrained\Qwen2ForCausalLM;
+use Codewithkyrian\Transformers\Models\Pretrained\TrOCRForCausalLM;
 
 class AutoModelForCausalLM extends PretrainedMixin
 {
-    const MODEL_CLASS_MAPPING = [
-        'gpt2' => \Codewithkyrian\Transformers\Models\Pretrained\GPT2LMHeadModel::class,
-        'gptj' => \Codewithkyrian\Transformers\Models\Pretrained\GPTJForCausalLM::class,
-        'gpt_bigcode' => \Codewithkyrian\Transformers\Models\Pretrained\GPTBigCodeForCausalLM::class,
-        'codegen' => \Codewithkyrian\Transformers\Models\Pretrained\CodeGenForCausalLM::class,
-        'llama' => \Codewithkyrian\Transformers\Models\Pretrained\LlamaForCausalLM::class,
-        'trocr' => \Codewithkyrian\Transformers\Models\Pretrained\TrOCRForCausalLM::class,
-        'qwen2' => \Codewithkyrian\Transformers\Models\Pretrained\Qwen2ForCausalLM::class
+    public const MODEL_CLASS_MAPPING = [
+        'gpt2' => GPT2LMHeadModel::class,
+        'gptj' => GPTJForCausalLM::class,
+        'gpt_bigcode' => GPTBigCodeForCausalLM::class,
+        'codegen' => CodeGenForCausalLM::class,
+        'llama' => LlamaForCausalLM::class,
+        'trocr' => TrOCRForCausalLM::class,
+        'qwen2' => Qwen2ForCausalLM::class,
     ];
 
-    const MODEL_CLASS_MAPPINGS = [
+    public const MODEL_CLASS_MAPPINGS = [
         self::MODEL_CLASS_MAPPING,
     ];
 }

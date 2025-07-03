@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
 use Codewithkyrian\Transformers\Utils\Image;
 use Exception;
 use Interop\Polite\Math\Matrix\NDArray;
+
 use function Codewithkyrian\Transformers\Utils\prepareImages;
+use function count;
+use function is_array;
 
 /**
  * Image to Image pipeline using any `AutoModelForImageToImage`. This pipeline generates an image based on a previous image input.
@@ -29,9 +31,7 @@ use function Codewithkyrian\Transformers\Utils\prepareImages;
  */
 class ImageToImagePipeline extends Pipeline
 {
-
     /**
-     * @param array|string $inputs
      * @param mixed ...$args
      * @return Image|Image[]
      * @throws Exception

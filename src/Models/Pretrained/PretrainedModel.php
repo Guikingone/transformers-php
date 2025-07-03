@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Pretrained;
 
 use Codewithkyrian\Transformers\Exceptions\HubException;
@@ -32,7 +31,35 @@ use Codewithkyrian\Transformers\Utils\Hub;
 use Codewithkyrian\Transformers\Utils\InferenceSession;
 use Error;
 use Exception;
+
+use function array_column;
+use function array_diff;
+use function array_fill;
+use function array_key_last;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function array_slice;
+use function array_values;
 use function Codewithkyrian\Transformers\Utils\array_some;
+use function count;
+use function get_called_class;
+use function implode;
+use function in_array;
+use function intval;
+use function is_array;
+use function is_int;
+use function is_null;
+use function property_exists;
+use function sprintf;
+use function str_contains;
+use function str_replace;
+use function str_starts_with;
+use function strrchr;
+use function substr;
+use function usort;
+
+use const INF;
 
 /**
  * A base class for pre-trained models that provides the model configuration and an ONNX session.
@@ -49,8 +76,9 @@ class PretrainedModel
         public AutoConfig        $config,
         public InferenceSession  $session,
         public ModelArchitecture $modelArchitecture = ModelArchitecture::EncoderOnly,
-                                 ...$args
-    ) {}
+        ...$args,
+    ) {
+    }
 
 
     /**
@@ -60,17 +88,16 @@ class PretrainedModel
      *  (either passed as an argument or loaded from `pretrained_model_name_or_path` if possible)
      *
      * @param string $modelNameOrPath The name or path of the pretrained model. Can be either:
-     *  - A string, the *model id* of a pretrained model hosted inside a model repo on huggingface.co.
-     *    Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
-     *    user or organization name, like `dbmdz/bert-base-german-cased`.
-     *  - A path to a *directory* containing model weights, e.g., `./my_model_directory/`.
+     *                                - A string, the *model id* of a pretrained model hosted inside a model repo on huggingface.co.
+     *                                Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
+     *                                user or organization name, like `dbmdz/bert-base-german-cased`.
+     *                                - A path to a *directory* containing model weights, e.g., `./my_model_directory/`.
      * @param bool $quantized Whether to load the quantized version of a model (as opposed to the original one).
      * @param array|AutoConfig|null $config The configuration object used to instantiate the model.
      * @param string|null $cacheDir Path to a directory in which a downloaded pretrained model configuration should
      * @param string|null $token The token to use as an authorization to download from private model repos.
      * @param string $revision The specific model version to use. It can be a branch name, a tag name,
      * @param string|null $modelFilename The name of the model file to load. If not provided, will default to the
-     * @param ModelArchitecture $modelArchitecture
      *
      * @return self The model instantiated from the configuration.
      * @throws HubException
@@ -84,9 +111,8 @@ class PretrainedModel
         string            $revision = 'main',
         ?string           $modelFilename = null,
         ModelArchitecture $modelArchitecture = ModelArchitecture::EncoderOnly,
-        ?callable         $onProgress = null
-    ): self
-    {
+        ?callable         $onProgress = null,
+    ): self {
         if (is_array($config)) {
             $config = AutoConfig::fromPretrained($modelNameOrPath, $config, $cacheDir, $revision, $onProgress);
         }
@@ -95,147 +121,147 @@ class PretrainedModel
 
         switch ($modelArchitecture) {
             case ModelArchitecture::DecoderOnly:
-            {
-                $session = self::constructSession(
-                    modelNameOrPath: $modelNameOrPath,
-                    fileName: $modelFilename ?? "decoder_model_merged$quantizedSuffix",
-                    cacheDir: $cacheDir,
-                    revision: $revision,
-                    onProgress: $onProgress,
-                );
+                {
+                    $session = self::constructSession(
+                        modelNameOrPath: $modelNameOrPath,
+                        fileName: $modelFilename ?? "decoder_model_merged$quantizedSuffix",
+                        cacheDir: $cacheDir,
+                        revision: $revision,
+                        onProgress: $onProgress,
+                    );
 
-                $generatorConfigArr = Hub::getJson(
-                    pathOrRepoID: $modelNameOrPath,
-                    fileName: 'generation_config.json',
-                    cacheDir: $cacheDir,
-                    revision: $revision,
-                    fatal: false,
-                    onProgress: $onProgress
-                );
+                    $generatorConfigArr = Hub::getJson(
+                        pathOrRepoID: $modelNameOrPath,
+                        fileName: 'generation_config.json',
+                        cacheDir: $cacheDir,
+                        revision: $revision,
+                        fatal: false,
+                        onProgress: $onProgress,
+                    );
 
-                $generatorConfig = new GenerationConfig($generatorConfigArr);
+                    $generatorConfig = new GenerationConfig($generatorConfigArr);
 
-                return new static(
-                    config: $config,
-                    session: $session,
-                    modelArchitecture: $modelArchitecture,
-                    generationConfig: $generatorConfig
-                );
-            }
+                    return new static(
+                        config: $config,
+                        session: $session,
+                        modelArchitecture: $modelArchitecture,
+                        generationConfig: $generatorConfig,
+                    );
+                }
 
             case ModelArchitecture::Seq2SeqLM:
             case ModelArchitecture::Vision2Seq:
-            {
-                $encoderSession = self::constructSession(
-                    modelNameOrPath: $modelNameOrPath,
-                    fileName: "encoder_model$quantizedSuffix",
-                    cacheDir: $cacheDir,
-                    revision: $revision,
-                    onProgress: $onProgress,
-                );
+                {
+                    $encoderSession = self::constructSession(
+                        modelNameOrPath: $modelNameOrPath,
+                        fileName: "encoder_model$quantizedSuffix",
+                        cacheDir: $cacheDir,
+                        revision: $revision,
+                        onProgress: $onProgress,
+                    );
 
-                $decoderSession = self::constructSession(
-                    modelNameOrPath: $modelNameOrPath,
-                    fileName: "decoder_model_merged$quantizedSuffix",
-                    cacheDir: $cacheDir,
-                    revision: $revision,
-                    onProgress: $onProgress,
-                );
+                    $decoderSession = self::constructSession(
+                        modelNameOrPath: $modelNameOrPath,
+                        fileName: "decoder_model_merged$quantizedSuffix",
+                        cacheDir: $cacheDir,
+                        revision: $revision,
+                        onProgress: $onProgress,
+                    );
 
-                $generatorConfigArr = Hub::getJson(
-                    pathOrRepoID: $modelNameOrPath,
-                    fileName: 'generation_config.json',
-                    cacheDir: $cacheDir,
-                    revision: $revision,
-                    fatal: false,
-                    onProgress: $onProgress
-                );
+                    $generatorConfigArr = Hub::getJson(
+                        pathOrRepoID: $modelNameOrPath,
+                        fileName: 'generation_config.json',
+                        cacheDir: $cacheDir,
+                        revision: $revision,
+                        fatal: false,
+                        onProgress: $onProgress,
+                    );
 
-                $generatorConfig = new GenerationConfig($generatorConfigArr);
+                    $generatorConfig = new GenerationConfig($generatorConfigArr);
 
-                return new static(
-                    config: $config,
-                    session: $encoderSession,
-                    modelArchitecture: $modelArchitecture,
-                    generationConfig: $generatorConfig,
-                    decoderMergedSession: $decoderSession
-                );
-            }
-
-            case ModelArchitecture::MaskGeneration:
-            {
-                $visionEncoder = self::constructSession(
-                    modelNameOrPath: $modelNameOrPath,
-                    fileName: "vision_encoder$quantizedSuffix",
-                    cacheDir: $cacheDir,
-                    revision: $revision,
-                    onProgress: $onProgress
-                );
-
-                $promptMaskEncoder = self::constructSession(
-                    modelNameOrPath: $modelNameOrPath,
-                    fileName: "prompt_encoder_mask_decoder$quantizedSuffix",
-                    cacheDir: $cacheDir,
-                    revision: $revision,
-                    onProgress: $onProgress
-                );
-
-                return new static(
-                    config: $config,
-                    session: $visionEncoder,
-                    promptMaskEncoderSession: $promptMaskEncoder,
-                    modelArchitecture: $modelArchitecture
-                );
-            }
-
-            case ModelArchitecture::EncoderDecoder:
-            {
-                $encoderSession = self::constructSession(
-                    modelNameOrPath: $modelNameOrPath,
-                    fileName: "encoder_model$quantizedSuffix",
-                    cacheDir: $cacheDir,
-                    revision: $revision,
-                    onProgress: $onProgress
-                );
-
-                $decoderSession = self::constructSession(
-                    modelNameOrPath: $modelNameOrPath,
-                    fileName: "decoder_model_merged$quantizedSuffix",
-                    cacheDir: $cacheDir,
-                    revision: $revision,
-                    onProgress: $onProgress
-                );
-
-                return new static(
-                    config: $config,
-                    session: $encoderSession,
-                    decoderMergedSession: $decoderSession,
-                    modelArchitecture: $modelArchitecture
-                );
-            }
-
-            default:
-            {
-                if ($modelArchitecture != ModelArchitecture::EncoderOnly) {
-                    Transformers::getLogger()?->warning("{$modelArchitecture->value} is not a valid model group. Defaulting to EncoderOnly.");
+                    return new static(
+                        config: $config,
+                        session: $encoderSession,
+                        modelArchitecture: $modelArchitecture,
+                        generationConfig: $generatorConfig,
+                        decoderMergedSession: $decoderSession,
+                    );
                 }
 
+            case ModelArchitecture::MaskGeneration:
+                {
+                    $visionEncoder = self::constructSession(
+                        modelNameOrPath: $modelNameOrPath,
+                        fileName: "vision_encoder$quantizedSuffix",
+                        cacheDir: $cacheDir,
+                        revision: $revision,
+                        onProgress: $onProgress,
+                    );
 
-                $session = self::constructSession(
-                    modelNameOrPath: $modelNameOrPath,
-                    fileName: $modelFilename ?? "model$quantizedSuffix",
-                    cacheDir: $cacheDir,
-                    revision: $revision,
-                    onProgress: $onProgress
-                );
+                    $promptMaskEncoder = self::constructSession(
+                        modelNameOrPath: $modelNameOrPath,
+                        fileName: "prompt_encoder_mask_decoder$quantizedSuffix",
+                        cacheDir: $cacheDir,
+                        revision: $revision,
+                        onProgress: $onProgress,
+                    );
+
+                    return new static(
+                        config: $config,
+                        session: $visionEncoder,
+                        promptMaskEncoderSession: $promptMaskEncoder,
+                        modelArchitecture: $modelArchitecture,
+                    );
+                }
+
+            case ModelArchitecture::EncoderDecoder:
+                {
+                    $encoderSession = self::constructSession(
+                        modelNameOrPath: $modelNameOrPath,
+                        fileName: "encoder_model$quantizedSuffix",
+                        cacheDir: $cacheDir,
+                        revision: $revision,
+                        onProgress: $onProgress,
+                    );
+
+                    $decoderSession = self::constructSession(
+                        modelNameOrPath: $modelNameOrPath,
+                        fileName: "decoder_model_merged$quantizedSuffix",
+                        cacheDir: $cacheDir,
+                        revision: $revision,
+                        onProgress: $onProgress,
+                    );
+
+                    return new static(
+                        config: $config,
+                        session: $encoderSession,
+                        decoderMergedSession: $decoderSession,
+                        modelArchitecture: $modelArchitecture,
+                    );
+                }
+
+            default:
+                {
+                    if ($modelArchitecture != ModelArchitecture::EncoderOnly) {
+                        Transformers::getLogger()?->warning("{$modelArchitecture->value} is not a valid model group. Defaulting to EncoderOnly.");
+                    }
 
 
-                return new static(
-                    config: $config,
-                    session: $session,
-                    modelArchitecture: $modelArchitecture
-                );
-            }
+                    $session = self::constructSession(
+                        modelNameOrPath: $modelNameOrPath,
+                        fileName: $modelFilename ?? "model$quantizedSuffix",
+                        cacheDir: $cacheDir,
+                        revision: $revision,
+                        onProgress: $onProgress,
+                    );
+
+
+                    return new static(
+                        config: $config,
+                        session: $session,
+                        modelArchitecture: $modelArchitecture,
+                    );
+                }
         }
     }
 
@@ -247,12 +273,10 @@ class PretrainedModel
      * @param string|null $cacheDir Path to a directory in which a downloaded pretrained model should
      * @param string $revision The specific model version to use. It can be a branch name, a tag name,
      * @param string $subFolder In case the relevant files are located inside a subfolder of the model repo or
-     * directory, indicate it here.
+     *                          directory, indicate it here.
      * @param bool $fatal Whether to raise an error if the file could not be loaded.
-     * @param callable|null $onProgress
      * @param mixed ...$sessionOptions
      *
-     * @return InferenceSession|null
      * @throws HubException
      */
 
@@ -264,14 +288,15 @@ class PretrainedModel
         string    $subFolder = 'onnx',
         bool      $fatal = true,
         ?callable $onProgress = null,
-                  ...$sessionOptions
-    ): ?InferenceSession
-    {
+        ...$sessionOptions,
+    ): ?InferenceSession {
         $modelFileName = "$fileName.onnx";
 
         $file = Hub::getFile($modelNameOrPath, $modelFileName, $cacheDir, $revision, $subFolder, $fatal, $onProgress);
 
-        if ($file === null) return null;
+        if ($file === null) {
+            return null;
+        }
 
         return new InferenceSession($file, ...$sessionOptions);
     }
@@ -316,7 +341,6 @@ class PretrainedModel
     }
 
     /**
-     * @param InferenceSession $session
      * @param Tensor[] $inputs
      *
      * @return Tensor[]
@@ -356,7 +380,7 @@ class PretrainedModel
                 'Too many inputs were provided (%d > %d). The following inputs will be ignored: "%s".',
                 $numInputsProvided,
                 $numInputsNeeded,
-                implode(', ', $ignored)
+                implode(', ', $ignored),
             );
 
             Transformers::getLogger()?->warning($warning);
@@ -390,12 +414,12 @@ class PretrainedModel
         if ($isPadTokenInInputs && $isPadTokenNotEqualToEosTokenId) {
             $mo = Tensor::mo();
 
-            $data = $mo->f(fn ($x) => $x != $padTokenId, $tokens);
+            $data = $mo->f(static fn ($x) => $x != $padTokenId, $tokens);
 
             return new Tensor($data, $tokens->dtype(), $tokens->shape());
-        } else {
-            return Tensor::onesLike($tokens);
         }
+        return Tensor::onesLike($tokens);
+
     }
 
     /**
@@ -405,7 +429,6 @@ class PretrainedModel
      * @param array $feeds The input to the model.
      * @param bool $useCacheBranch Whether to use the cache branch of the model.
      *
-     * @return void
      */
     public function preparePositionIds(array $inputNames, array &$feeds, bool $useCacheBranch): void
     {
@@ -520,7 +543,7 @@ class PretrainedModel
                         = $decoderFeeds["past_key_values.$i.decoder.value"]
                         = new Tensor([], shape: $decoderShape);
                 }
-            } else if ($this->config->modelType === 'falcon') {
+            } elseif ($this->config->modelType === 'falcon') {
                 // NOTE: Custom implementation for Falcon
                 $shape = [$batchSize * $this->numHeads, 0, $this->dimKv];
 
@@ -528,13 +551,13 @@ class PretrainedModel
                     $decoderFeeds["past_key_values.$i.key"] = new Tensor([], shape: $shape);
                     $decoderFeeds["past_key_values.$i.value"] = new Tensor([], shape: $shape);
                 }
-            } else if ($this->config['multi_query'] ?? null) { // e.g., for `gpt_bigcode`
+            } elseif ($this->config['multi_query'] ?? null) { // e.g., for `gpt_bigcode`
                 $shape = [$batchSize * $this->numHeads, 0, 2 * $this->dimKv];
 
                 for ($i = 0; $i < $this->numLayers; ++$i) {
                     $decoderFeeds["past_key_values.$i.key_value"] = new Tensor([], shape: $shape);
                 }
-            } else if ($this->config['model_type'] === 'bloom') {
+            } elseif ($this->config['model_type'] === 'bloom') {
                 // NOTE: Custom implementation for Bloom
                 $keyShape = [$batchSize * $this->numHeads, $this->dimKv, 0];
                 $valueShape = [$batchSize * $this->numHeads, 0, $this->dimKv];
@@ -560,7 +583,6 @@ class PretrainedModel
      * @param GenerationConfig|null $generationConfig The generation configuration to use. If null, default configuration will be used.
      * @param LogitsProcessorList|null $logitsProcessor An optional logits processor to use. If null, a new LogitsProcessorList instance will be created.
      * @param Tensor|null $inputsAttentionMask An optional attention mask for the inputs.
-     * @param Streamer|null $streamer
      *
      * @return array An array of generated output sequences, where each sequence is an array of token IDs.
      * @throws Exception
@@ -571,8 +593,7 @@ class PretrainedModel
         ?LogitsProcessorList $logitsProcessor = null,
         Tensor               $inputsAttentionMask = null,
         ?Streamer            $streamer = null,
-    ): array
-    {
+    ): array {
         if (!$this->modelArchitecture->canGenerate()) {
             $className = get_called_class();
             $errorMsg = "The current model class {$className} is not is not compatible with \`generate()\`, as it doesn't have a language model head.";
@@ -632,7 +653,7 @@ class PretrainedModel
 
         $beams = $this->getStartBeams($inputs, $generationConfig, $numOutputTokens, $inputsAttentionMask);
 
-        while (array_some($beams, fn ($beam) => !$beam['done']) && $numOutputTokens < $maxOutputTokens) {
+        while (array_some($beams, static fn ($beam) => !$beam['done']) && $numOutputTokens < $maxOutputTokens) {
             $newestBeams = [];
             foreach ($beams as $beam) {
                 if ($beam['done']) {
@@ -692,15 +713,15 @@ class PretrainedModel
 
             // Group and select best beams
             $newestBeams = array_merge(...array_map(
-                function ($group) use ($generationConfig) {
-                    usort($group, fn ($a, $b) => $b['score'] <=> $a['score']);
+                static function ($group) use ($generationConfig) {
+                    usort($group, static fn ($a, $b) => $b['score'] <=> $a['score']);
                     return array_slice(
                         $group,
                         0,
-                        $generationConfig->num_beams
+                        $generationConfig->num_beams,
                     );
                 },
-                $this->groupBeams($newestBeams)
+                $this->groupBeams($newestBeams),
             ));
 
             // Flatten beams
@@ -714,21 +735,21 @@ class PretrainedModel
 
         $groupedBeams = $this->groupBeams($beams);
 
-        $getFlattened = function ($key) use ($groupedBeams, $generationConfig) {
+        $getFlattened = static function ($key) use ($groupedBeams, $generationConfig) {
             $flattened = array_map(
-                function ($batch) use ($key, $generationConfig) {
+                static function ($batch) use ($key, $generationConfig) {
                     if ($generationConfig->num_return_sequences > 1) {
                         return array_slice(
-                            array_map(fn ($beam) => $beam[$key], $batch),
+                            array_map(static fn ($beam) => $beam[$key], $batch),
                             0,
-                            $generationConfig->num_return_sequences
+                            $generationConfig->num_return_sequences,
                         );
-                    } else {
-                        // Only extract the first element's key value
-                        return [$batch[0][$key]];
                     }
+                    // Only extract the first element's key value
+                    return [$batch[0][$key]];
+
                 },
-                $groupedBeams
+                $groupedBeams,
             );
 
             return array_merge(...$flattened); // Flatten the resulting array
@@ -761,9 +782,9 @@ class PretrainedModel
                 'decoder_attentions' => $decoderAttentions,
                 'cross_attentions' => $crossAttentions,
             ];
-        } else {
-            return $sequences;
         }
+        return $sequences;
+
     }
 
     /**
@@ -800,9 +821,8 @@ class PretrainedModel
     protected function getLogitsProcessor(
         GenerationConfig     $generationConfig,
         int                  $inputIdsSeqLength,
-        ?LogitsProcessorList $logitsProcessor = null
-    ): LogitsProcessorList
-    {
+        ?LogitsProcessorList $logitsProcessor = null,
+    ): LogitsProcessorList {
         $processors = new LogitsProcessorList();
 
         if ($generationConfig->repetition_penalty != null && $generationConfig->repetition_penalty !== 1.0) {
@@ -822,10 +842,12 @@ class PretrainedModel
         }
 
         if ($generationConfig->min_new_tokens != null && $generationConfig->eos_token_id != null && $generationConfig->min_new_tokens > 0) {
-            $processors->push(new MinNewTokensLengthLogitsProcessor(
+            $processors->push(
+                new MinNewTokensLengthLogitsProcessor(
                     $inputIdsSeqLength,
                     $generationConfig->min_new_tokens,
-                    $generationConfig->eos_token_id)
+                    $generationConfig->eos_token_id,
+                ),
             );
         }
 
@@ -857,10 +879,10 @@ class PretrainedModel
             $processors->extend($logitsProcessor);
         }
 
-//         `LogitNormalization` should always be the last logit processor, when present
-//        if($generationConfig->renormalize_logits) {
-//            $processors->push(new LogitNormalization());
-//        }
+        //         `LogitNormalization` should always be the last logit processor, when present
+        //        if($generationConfig->renormalize_logits) {
+        //            $processors->push(new LogitNormalization());
+        //        }
 
         return $processors;
 
@@ -881,15 +903,14 @@ class PretrainedModel
         Tensor           $inputTokenIds,
         GenerationConfig $generationConfig,
         int              $numOutputTokens,
-        Tensor           $inputsAttentionMask = null
-    ): array
-    {
+        Tensor           $inputsAttentionMask = null,
+    ): array {
         return $this->modelArchitecture->startBeams(
             $this,
             $inputTokenIds,
             $generationConfig,
             $numOutputTokens,
-            $inputsAttentionMask
+            $inputsAttentionMask,
         );
     }
 
@@ -909,8 +930,6 @@ class PretrainedModel
     /**
      * Helper function to add attentions to beam.
      *
-     * @param array $beam
-     * @param array $output
      *
      * @throws Exception
      */
@@ -919,8 +938,8 @@ class PretrainedModel
         if ($this->config->isEncoderDecoder) {
             if (empty($output['cross_attentions'])) {
                 throw new Exception(
-                    "`output_attentions` is true, but the model did not produce cross-attentions. ".
-                    "This is most likely because the model was not exported with `output_attentions=True`."
+                    "`output_attentions` is true, but the model did not produce cross-attentions. " .
+                    "This is most likely because the model was not exported with `output_attentions=True`.",
                 );
             }
             if (!isset($beam['cross_attentions'])) {
@@ -931,8 +950,8 @@ class PretrainedModel
 
         if (empty($output['decoder_attentions'])) {
             throw new Exception(
-                "`output_attentions` is true, but the model did not produce decoder-attentions. ".
-                "This is most likely because the model was not exported with `output_attentions=True`."
+                "`output_attentions` is true, but the model did not produce decoder-attentions. " .
+                "This is most likely because the model was not exported with `output_attentions=True`.",
             );
         }
         if (!isset($beam['decoder_attentions'])) {
@@ -965,7 +984,7 @@ class PretrainedModel
         $groups = [];
 
         foreach ($beams as $obj) {
-//            $groups[$obj['id']][] = $obj;
+            //            $groups[$obj['id']][] = $obj;
             if (!isset($groups[$obj['id']])) {
                 $groups[$obj['id']] = [$obj];
             } else {

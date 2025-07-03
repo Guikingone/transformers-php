@@ -2,14 +2,19 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Generation\LogitsProcessors;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
 
+use function array_pop;
+use function array_slice;
+use function count;
+use function is_array;
+
+use const INF;
+
 class BadWordsLogitsProcessor extends LogitsProcessor
 {
-
     protected array $badWordsIds;
     protected int|array $eosTokenId;
 
@@ -20,7 +25,7 @@ class BadWordsLogitsProcessor extends LogitsProcessor
     }
 
     /**
-     * @inheritDoc
+     *
      */
     public function __invoke(array $inputIds, Tensor $logits): Tensor
     {

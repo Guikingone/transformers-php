@@ -7,26 +7,30 @@ namespace Tests;
 use Codewithkyrian\Transformers\PretrainedTokenizers\AutoTokenizer;
 use Codewithkyrian\Transformers\Transformers;
 
+use function count;
+use function ini_set;
+use function is_string;
+use function str_replace;
+
 ini_set('memory_limit', -1);
 
-beforeAll(function () {
+beforeAll(static function () {
     Transformers::setup()
         ->setCacheDir('tests/models')
         ->apply();
 });
 
-describe('Tokenizers (dynamic)', function () {
-    it('can tokenize a text', function ($data) {
+describe('Tokenizers (dynamic)', static function () {
+    it('can tokenize a text', static function ($data) {
         ['tokenizerId' => $tokenizerId, 'test' => $test] = $data;
 
         $tokenizer = AutoTokenizer::fromPretrained($tokenizerId);
 
-        if (is_string($test['input']))
-        {
+        if (is_string($test['input'])) {
             // Tokenize the input text
             $encoded = $tokenizer($test['input'], returnTensor: false);
 
-             // Add the input text to the encoded object for easier debugging
+            // Add the input text to the encoded object for easier debugging
             $test['encoded']['input'] = $encoded['input'] = $test['input'];
 
             expect($encoded)->toMatchArray($test['encoded']);
@@ -41,7 +45,7 @@ describe('Tokenizers (dynamic)', function () {
 
             $decodedWithoutSpecial = $tokenizer->decode($encoded['input_ids'], skipSpecialTokens: true);
             expect($decodedWithoutSpecial)->toBe($test['decoded_without_special']);
-        } else{
+        } else {
 
             ['text' => $text, 'text_pair' => $textPair] = $test['input'];
 
@@ -53,8 +57,8 @@ describe('Tokenizers (dynamic)', function () {
     ->with('regular-tokenization');
 });
 
-describe('Chat templates', function () {
-    it('can apply a chat template', function () {
+describe('Chat templates', static function () {
+    it('can apply a chat template', static function () {
         $tokenizer = AutoTokenizer::fromPretrained("Xenova/mistral-tokenizer-v1");
 
         $chat = [
@@ -74,7 +78,7 @@ describe('Chat templates', function () {
             ->toBe([1, 733, 16289, 28793, 22557, 28725, 910, 460, 368, 28804, 733, 28748, 16289, 28793, 28737, 28742, 28719, 2548, 1598, 28723, 1602, 541, 315, 1316, 368, 3154, 28804, 2, 28705, 733, 16289, 28793, 315, 28742, 28715, 737, 298, 1347, 805, 910, 10706, 5752, 1077, 3791, 28808, 733, 28748, 16289, 28793]);
     });
 
-    it('should support user-defined chat template', function () {
+    it('should support user-defined chat template', static function () {
         $tokenizer = AutoTokenizer::fromPretrained("Xenova/llama-tokenizer");
 
         $chat = [
@@ -83,35 +87,35 @@ describe('Chat templates', function () {
             ['role' => 'user', 'content' => "I'd like to show off how chat templating works!"],
         ];
 
-        $chatTemplate = "{% if messages[0]['role'] == 'system' %}".
-            "{% set loop_messages = messages[1:] %}".
-            "{% set system_message = messages[0]['content'] %}".
-            "{% elif USE_DEFAULT_PROMPT == true and not '<<SYS>>' in messages[0]['content'] %}".
-            "{% set loop_messages = messages %}".
-            "{% set system_message = 'DEFAULT_SYSTEM_MESSAGE' %}".
-            "{% else %}".
-            "{% set loop_messages = messages %}".
-            "{% set system_message = false %}".
-            "{% endif %}".
-            "{% if loop_messages|length == 0 and system_message %}".
-            "{{ bos_token + '[INST] <<SYS>>\\n' + system_message + '\\n<</SYS>>\\n\\n [/INST]' }}".
-            "{% endif %}".
-            "{% for message in loop_messages %}".
-            "{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}".
-            "{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}".
-            "{% endif %}".
-            "{% if loop.index0 == 0 and system_message != false %}".
-            "{% set content = '<<SYS>>\\n' + system_message + '\\n<</SYS>>\\n\\n' + message['content'] %}".
-            "{% else %}".
-            "{% set content = message['content'] %}".
-            "{% endif %}".
-            "{% if message['role'] == 'user' %}".
-            "{{ bos_token + '[INST] ' + content.strip() + ' [/INST]' }}".
-            "{% elif message['role'] == 'system' %}".
-            "{{ '<<SYS>>\\n' + content.strip() + '\\n<</SYS>>\\n\\n' }}".
-            "{% elif message['role'] == 'assistant' %}".
-            "{{ ' '  + content.strip() + ' ' + eos_token }}".
-            "{% endif %}".
+        $chatTemplate = "{% if messages[0]['role'] == 'system' %}" .
+            "{% set loop_messages = messages[1:] %}" .
+            "{% set system_message = messages[0]['content'] %}" .
+            "{% elif USE_DEFAULT_PROMPT == true and not '<<SYS>>' in messages[0]['content'] %}" .
+            "{% set loop_messages = messages %}" .
+            "{% set system_message = 'DEFAULT_SYSTEM_MESSAGE' %}" .
+            "{% else %}" .
+            "{% set loop_messages = messages %}" .
+            "{% set system_message = false %}" .
+            "{% endif %}" .
+            "{% if loop_messages|length == 0 and system_message %}" .
+            "{{ bos_token + '[INST] <<SYS>>\\n' + system_message + '\\n<</SYS>>\\n\\n [/INST]' }}" .
+            "{% endif %}" .
+            "{% for message in loop_messages %}" .
+            "{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}" .
+            "{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}" .
+            "{% endif %}" .
+            "{% if loop.index0 == 0 and system_message != false %}" .
+            "{% set content = '<<SYS>>\\n' + system_message + '\\n<</SYS>>\\n\\n' + message['content'] %}" .
+            "{% else %}" .
+            "{% set content = message['content'] %}" .
+            "{% endif %}" .
+            "{% if message['role'] == 'user' %}" .
+            "{{ bos_token + '[INST] ' + content.strip() + ' [/INST]' }}" .
+            "{% elif message['role'] == 'system' %}" .
+            "{{ '<<SYS>>\\n' + content.strip() + '\\n<</SYS>>\\n\\n' }}" .
+            "{% elif message['role'] == 'assistant' %}" .
+            "{{ ' '  + content.strip() + ' ' + eos_token }}" .
+            "{% endif %}" .
             "{% endfor %}";
 
         $chatTemplate = str_replace('USE_DEFAULT_PROMPT', 'true', $chatTemplate);
@@ -123,8 +127,8 @@ describe('Chat templates', function () {
     });
 });
 
-describe('Chat templates (dynamic)', function () {
-    it('can tokenize with chat template', function ($data) {
+describe('Chat templates (dynamic)', static function () {
+    it('can tokenize with chat template', static function ($data) {
         ['tokenizerId' => $tokenizerId, 'test' => $test] = $data;
 
         $tokenizer = AutoTokenizer::fromPretrained($tokenizerId);
@@ -133,17 +137,17 @@ describe('Chat templates (dynamic)', function () {
             $test['messages'],
             addGenerationPrompt: $test['add_generation_prompt'],
             tokenize: $test['tokenize'],
-            returnTensor: false
+            returnTensor: false,
         );
 
         expect($generated)->toEqual($test['target']);
     })->with('template-tokenization');
 });
 
-describe('Tokenizer padding/truncation', function () {
+describe('Tokenizer padding/truncation', static function () {
     $inputs = ['a', 'b c'];
 
-    it('should create a jagged array', function () use ($inputs) {
+    it('should create a jagged array', static function () use ($inputs) {
         $tokenizer = AutoTokenizer::fromPretrained('Xenova/bert-base-uncased');
 
         // Support jagged array if `returnTensor` is false
@@ -152,7 +156,7 @@ describe('Tokenizer padding/truncation', function () {
         $expected = [
             'input_ids' => [[101, 1037, 102], [101, 1038, 1039, 102]],
             'attention_mask' => [[1, 1, 1], [1, 1, 1, 1]],
-            'token_type_ids' => [[0, 0, 0], [0, 0, 0, 0]]
+            'token_type_ids' => [[0, 0, 0], [0, 0, 0, 0]],
         ];
 
         expect($output)->toBe($expected);
@@ -163,17 +167,17 @@ describe('Tokenizer padding/truncation', function () {
         $expected = [
             'input_ids' => [[1037], [1038, 1039]],
             'attention_mask' => [[1], [1, 1]],
-            'token_type_ids' => [[0], [0, 0]]
+            'token_type_ids' => [[0], [0, 0]],
         ];
 
         expect($output)->toBe($expected);
     });
 
-    it('should create a tensor', function () use ($inputs) {
+    it('should create a tensor', static function () use ($inputs) {
         $tokenizer = AutoTokenizer::fromPretrained('Xenova/bert-base-uncased');
 
         // Expected to throw error if jagged array
-        expect(fn () => $tokenizer->tokenize($inputs))->toThrow('Unable to create tensor');
+        expect(static fn () => $tokenizer->tokenize($inputs))->toThrow('Unable to create tensor');
 
         // Truncation
         ['input_ids' => $inputIds, 'attention_mask' => $attentionMask, 'token_type_ids' => $tokenTypeIds] = $tokenizer

@@ -13,4 +13,3 @@ $result1 = $classifier(['I love transformers!', 'I hate transformers!']);
 //$result2 = $classifier("I hate him, he's very terrible.");
 
 dd($result1);
-

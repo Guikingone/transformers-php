@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Models\Pretrained;
 
 use Codewithkyrian\Transformers\Models\ModelArchitecture;
@@ -24,9 +23,8 @@ class M2M100ForConditionalGeneration extends M2M100PretrainedModel
         InferenceSession         $session,
         public InferenceSession  $decoderMergedSession,
         public ModelArchitecture $modelArchitecture,
-        public GenerationConfig  $generationConfig
-    )
-    {
+        public GenerationConfig  $generationConfig,
+    ) {
         parent::__construct($config, $session, $modelArchitecture);
 
         $this->numDecoderLayers = $this->config['decoder_layers'];

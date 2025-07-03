@@ -2,10 +2,19 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PreTokenizers;
 
 use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
+
+use function array_map;
+use function implode;
+use function mb_convert_encoding;
+use function preg_split;
+use function str_starts_with;
+use function unpack;
+
+use const PREG_SPLIT_DELIM_CAPTURE;
+use const PREG_SPLIT_NO_EMPTY;
 
 /**
  * A pre-tokenizer that splits text into Byte-Pair-Encoding (BPE) subwords.
@@ -298,10 +307,10 @@ class ByteLevelPreTokenizer extends PreTokenizer
         $this->useRegex = $config['use_regex'] ?? true;
 
         if ($this->useRegex) {
-//            $this->pattern = "/'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+/gu";
+            //            $this->pattern = "/'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+/gu";
             $this->pattern = "/'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+/u";
             $this->pattern = "/('s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+)/u";
-//            $this->pattern = "/'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+[^\s\p{L}\p{N}]|\s+(?!\S)|\s+/u";
+            //            $this->pattern = "/'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+[^\s\p{L}\p{N}]|\s+(?!\S)|\s+/u";
         }
     }
 
@@ -314,15 +323,15 @@ class ByteLevelPreTokenizer extends PreTokenizer
 
         // Split on whitespace and punctuation
         if ($this->useRegex) {
-            $tokens = preg_split($this->pattern, $text, -1, PREG_SPLIT_NO_EMPTY|PREG_SPLIT_DELIM_CAPTURE);
+            $tokens = preg_split($this->pattern, $text, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
         } else {
             $tokens = [$text];
         }
 
         // Maps all our bytes to unicode strings, avoiding control tokens of the BPE (spaces in our case)
-        return array_map(function ($token) {
+        return array_map(static function ($token) {
             $utf8Bytes = mb_convert_encoding($token, 'UTF-8');
-            $bytes = array_map(fn ($byte) => self::BYTES_TO_UNICODE[$byte], unpack('C*', $utf8Bytes));
+            $bytes = array_map(static fn ($byte) => self::BYTES_TO_UNICODE[$byte], unpack('C*', $utf8Bytes));
 
             return implode('', $bytes);
         }, $tokens);

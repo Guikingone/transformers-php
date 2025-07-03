@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Decoders;
 
+use function array_map;
+use function preg_replace;
+use function str_replace;
+
 class ReplaceDecoder extends Decoder
 {
-
     /**
-     * @param array $config
      */
     public function __construct(array $config)
     {
@@ -27,7 +29,7 @@ class ReplaceDecoder extends Decoder
         $string = $pattern['String'] ?? null;
         $replacement = $this->config['content'] ?? '';
 
-        return array_map(function ($token) use ($regex, $string, $replacement) {
+        return array_map(static function ($token) use ($regex, $string, $replacement) {
             if ($regex !== null) {
                 return preg_replace("/{$regex}/u", $replacement, (string)$token);
             }

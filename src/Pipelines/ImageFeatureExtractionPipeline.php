@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
+
+use Exception;
 
 use function Codewithkyrian\Transformers\Utils\prepareImages;
 
@@ -51,7 +52,7 @@ class ImageFeatureExtractionPipeline extends Pipeline
 
         if ($pool) {
             if (!isset($output['pooler_output'])) {
-                throw new \Exception("No pooled output was returned. Make sure the model has a 'pooler' layer when using the 'pool' option.");
+                throw new Exception("No pooled output was returned. Make sure the model has a 'pooler' layer when using the 'pool' option.");
             }
 
             $result = $output['pooler_output'];

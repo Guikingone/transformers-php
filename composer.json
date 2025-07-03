@@ -26,7 +26,10 @@
     "rokka/imagine-vips": "^0.31.0"
   },
   "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.76",
     "pestphp/pest": "^2.31",
+    "phpstan/phpstan": "^2.1",
+    "phpstan/phpstan-deprecation-rules": "^2.0",
     "symfony/var-dumper": "^7.0"
   },
   "suggest": {
@@ -54,7 +57,9 @@
     "allow-plugins": {
       "pestphp/pest-plugin": true,
       "codewithkyrian/transformers-libsloader": true
-    }
+    },
+    "optimize-autoloader": true,
+    "sort-packages": true
   },
   "bin": [
     "bin/transformers"

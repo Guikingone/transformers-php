@@ -6,6 +6,7 @@ use Codewithkyrian\Transformers\Tensor\Tensor;
 use Codewithkyrian\Transformers\Transformers;
 use Codewithkyrian\Transformers\Utils\Image;
 use Codewithkyrian\Transformers\Utils\ImageDriver;
+
 use function Codewithkyrian\Transformers\Utils\timeUsage;
 
 require_once './bootstrap.php';
@@ -20,13 +21,13 @@ function toTensorTest(ImageDriver $imageDriver): Tensor
         ->setImageDriver($imageDriver)
         ->apply();
 
-    $url = __DIR__.'/../images/kyrian-cartoon.jpeg';
+    $url = __DIR__ . '/../images/kyrian-cartoon.jpeg';
     $tensor = Image::read($url)
         ->rgb()
         ->thumbnail(101, 101)
         ->toTensor();
 
-    dump("$imageDriver->name (toTensor) : ".timeUsage(true));
+    dump("$imageDriver->name (toTensor) : " . timeUsage(true));
 
     return $tensor;
 }
@@ -39,7 +40,7 @@ function fromTensorTest(ImageDriver $imageDriver, Tensor $tensor): Image
 
     $image = Image::fromTensor($tensor);
 
-    dump("$imageDriver->name (fromTensor) : ".timeUsage(true));
+    dump("$imageDriver->name (fromTensor) : " . timeUsage(true));
 
     return $image;
 }

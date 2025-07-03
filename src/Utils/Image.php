@@ -17,6 +17,20 @@ use Imagine\Vips\Imagine;
 use InvalidArgumentException;
 use RuntimeException;
 
+use function array_flip;
+use function floor;
+use function imagecolorallocate;
+use function imagecolorallocatealpha;
+use function imagecolorat;
+use function imagesetpixel;
+use function json_encode;
+use function max;
+use function min;
+use function pack;
+use function putenv;
+use function sprintf;
+use function str_repeat;
+
 /**
  * Helper file for Image Processing.
  *
@@ -77,7 +91,7 @@ class Image
         0x70000000 => "\x1f", 0x71000000 => "\x1d", 0x72000000 => "\x1b", 0x73000000 => "\x19",
         0x74000000 => "\x17", 0x75000000 => "\x15", 0x76000000 => "\x13", 0x77000000 => "\x11",
         0x78000000 => "\x0f", 0x79000000 => "\x0d", 0x7a000000 => "\x0b", 0x7b000000 => "\x09",
-        0x7c000000 => "\x07", 0x7d000000 => "\x05", 0x7e000000 => "\x03", 0x7f000000 => "\x00"
+        0x7c000000 => "\x07", 0x7d000000 => "\x05", 0x7e000000 => "\x03", 0x7f000000 => "\x00",
     ]; // Lookup table for chr(255-(($x >> 23) & 0x7f)).
 
     public function __construct(public ImageInterface $image, public int $channels = 4)
@@ -392,10 +406,11 @@ class Image
 
         if ($size != $maskSize) {
             throw new InvalidArgumentException(
-                sprintf("The given mask doesn't match current image's size, current mask's dimensions are %s, while image's dimensions are %s",
+                sprintf(
+                    "The given mask doesn't match current image's size, current mask's dimensions are %s, while image's dimensions are %s",
                     json_encode($maskSize),
-                    json_encode($size)
-                )
+                    json_encode($size),
+                ),
             );
         }
 
@@ -403,16 +418,16 @@ class Image
             $this->image instanceof \Imagine\Vips\Image => $this->image->copy()->applyMask($mask->image),
 
             $this->image instanceof \Imagine\Imagick\Image => (function () use ($mask) {
-//                $maskImagick = $mask->image->copy()->mask()->getImagick();
-//                $imageImagick = clone $this->image->getImagick();
-//
-//                $maskImagick->compositeImage($imageImagick, Imagick::COMPOSITE_DSTIN, 0, 0);
-//                $imageImagick->compositeImage($maskImagick, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
-//
-//                $maskImagick->clear();
-//                $maskImagick->destroy();
-//
-//                return new \Imagine\Imagick\Image($imageImagick, $this->image->palette(), $this->image->metadata());
+                //                $maskImagick = $mask->image->copy()->mask()->getImagick();
+                //                $imageImagick = clone $this->image->getImagick();
+                //
+                //                $maskImagick->compositeImage($imageImagick, Imagick::COMPOSITE_DSTIN, 0, 0);
+                //                $imageImagick->compositeImage($maskImagick, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
+                //
+                //                $maskImagick->clear();
+                //                $maskImagick->destroy();
+                //
+                //                return new \Imagine\Imagick\Image($imageImagick, $this->image->palette(), $this->image->metadata());
                 $image = $this->image->copy();
                 $maskImage = $mask->image->copy();
                 $maskImage->effects()->negative();
@@ -435,7 +450,7 @@ class Image
                             $color->getRed(),
                             $color->getGreen(),
                             $color->getBlue(),
-                            $newAlpha
+                            $newAlpha,
                         );
 
                         if (imagesetpixel($gdResource, $x, $y, $newColor) === false) {
@@ -569,7 +584,7 @@ class Image
 
         if ($channelFormat === 'HWC') {
             // Do nothing
-        } else if ($channelFormat === 'CHW') { // hwc -> chw
+        } elseif ($channelFormat === 'CHW') { // hwc -> chw
             $tensor = $tensor->permute(2, 0, 1);
         } else {
             throw new Exception("Unsupported channel format: $channelFormat");
@@ -664,7 +679,7 @@ class Image
             new Point($xMax, $yMax),
             $this->image->palette()->color($color),
             $fill,
-            $thickness
+            $thickness,
         );
 
         return new self($image, $this->channels);

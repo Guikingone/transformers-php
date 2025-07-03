@@ -2,14 +2,17 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Models\Output\ObjectDetectionOutput;
 
+use function array_merge;
+use function array_slice;
 use function Codewithkyrian\Transformers\Utils\array_pop_key;
 use function Codewithkyrian\Transformers\Utils\getBoundingBox;
 use function Codewithkyrian\Transformers\Utils\prepareImages;
+use function is_array;
+use function usort;
 
 /**
  * Zero-shot object detection pipeline. This pipeline predicts bounding boxes of
@@ -49,7 +52,6 @@ use function Codewithkyrian\Transformers\Utils\prepareImages;
  */
 class ZeroShotObjectDetectionPipeline extends Pipeline
 {
-
     public function __invoke(array|string $inputs, ...$args): array
     {
         $candidateLabels = $args[0];
@@ -89,7 +91,7 @@ class ZeroShotObjectDetectionPipeline extends Pipeline
                 ];
             }
             // Sort by score
-            usort($result, fn($a, $b) => $b['score'] <=> $a['score']);
+            usort($result, static fn ($a, $b) => $b['score'] <=> $a['score']);
 
             if ($topK !== null) {
                 $result = array_slice($result, 0, $topK);

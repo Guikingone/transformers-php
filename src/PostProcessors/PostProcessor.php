@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PostProcessors;
+
+use InvalidArgumentException;
 
 abstract class PostProcessor
 {
@@ -14,8 +15,6 @@ abstract class PostProcessor
     /**
      * Factory method to create a PostProcessor object from a configuration object.
      *
-     * @param array|null $config
-     * @return self|null
      */
     public static function fromConfig(?array $config): ?self
     {
@@ -29,7 +28,7 @@ abstract class PostProcessor
             'TemplateProcessing' => new TemplateProcessing($config),
             'RobertaProcessing' => new RobertaProcessing($config),
             'Sequence' => new PostProcessorSequence($config),
-            default => throw new \InvalidArgumentException("Unknown post-processor type {$config['type']}"),
+            default => throw new InvalidArgumentException("Unknown post-processor type {$config['type']}"),
         };
     }
 
@@ -37,9 +36,8 @@ abstract class PostProcessor
      * @param array $tokens The input tokens to be post-processed.
      * @param array|null $tokenPair The input tokens for the second sequence in a pair.
      * @param bool $addSpecialTokens Whether to add the special tokens associated with the corresponding model.
-     * @return PostProcessedOutput
      */
-    abstract public function postProcess(array $tokens, ?array $tokenPair = null,  bool $addSpecialTokens = true): PostProcessedOutput;
+    abstract public function postProcess(array $tokens, ?array $tokenPair = null, bool $addSpecialTokens = true): PostProcessedOutput;
 
     public function __invoke(array $tokens, ...$args): PostProcessedOutput
     {

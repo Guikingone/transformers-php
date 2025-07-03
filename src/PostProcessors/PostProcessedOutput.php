@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PostProcessors;
 
 class PostProcessedOutput
@@ -14,7 +13,6 @@ class PostProcessedOutput
     public function __construct(
         public array $tokens,
         public ?array $tokenTypeIds = null,
-    )
-    {
+    ) {
     }
 }

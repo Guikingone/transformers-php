@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Models\Output\SequenceClassifierOutput;
@@ -10,7 +9,16 @@ use Codewithkyrian\Transformers\Models\Pretrained\PretrainedModel;
 use Codewithkyrian\Transformers\PreTrainedTokenizers\PreTrainedTokenizer;
 use Codewithkyrian\Transformers\Transformers;
 use Codewithkyrian\Transformers\Utils\Math;
+
+use function array_change_key_case;
+use function array_keys;
+use function array_map;
+use function array_shift;
 use function Codewithkyrian\Transformers\Utils\timeUsage;
+use function count;
+use function is_array;
+use function str_replace;
+use function usort;
 
 /**
  * NLI-based zero-shot classification pipeline using any model that has been fine-tuned on NLI (natural language inference)
@@ -97,7 +105,7 @@ class ZeroShotClassificationPipeline extends Pipeline
         }
 
         // Insert labels into hypothesis template
-        $hypotheses = array_map(fn($x) => str_replace('{}', $x, $hypothesisTemplate), $candidateLabels);
+        $hypotheses = array_map(static fn ($x) => str_replace('{}', $x, $hypothesisTemplate), $candidateLabels);
 
         // Determine whether to perform softmax over each label independently
         $softmaxEach = $multiLabel || count($candidateLabels) === 1;
@@ -116,7 +124,7 @@ class ZeroShotClassificationPipeline extends Pipeline
                 if ($softmaxEach) {
                     $entailsLogits[] = [
                         $outputs->logits->buffer()[$this->contradictionId],
-                        $outputs->logits->buffer()[$this->entailmentId]
+                        $outputs->logits->buffer()[$this->entailmentId],
                     ];
                 } else {
                     $entailsLogits[] = $outputs->logits->buffer()[$this->entailmentId];
@@ -125,17 +133,17 @@ class ZeroShotClassificationPipeline extends Pipeline
             }
 
             $scores = $softmaxEach
-                ? array_map(fn($x) => Math::softmax($x)[1], $entailsLogits)
+                ? array_map(static fn ($x) => Math::softmax($x)[1], $entailsLogits)
                 : Math::softmax($entailsLogits);
 
             // Sort by scores (desc) and return scores with indices
-            $scores = array_map(fn($x, $i) => [$x, $i], $scores, array_keys($scores));
-            usort($scores, fn($a, $b) => $b[0] <=> $a[0]);
+            $scores = array_map(static fn ($x, $i) => [$x, $i], $scores, array_keys($scores));
+            usort($scores, static fn ($a, $b) => $b[0] <=> $a[0]);
 
             $toReturn[] = [
                 'sequence' => $premise,
-                'labels' => array_map(fn($x) => $candidateLabels[$x[1]], $scores),
-                'scores' => array_map(fn($x) => array_shift($x), $scores),
+                'labels' => array_map(static fn ($x) => $candidateLabels[$x[1]], $scores),
+                'scores' => array_map(static fn ($x) => array_shift($x), $scores),
             ];
         }
 

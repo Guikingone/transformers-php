@@ -2,15 +2,18 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Generation\LogitsProcessors;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
+
+use function array_column;
 use function Codewithkyrian\Transformers\Utils\timeUsage;
+use function count;
+
+use const INF;
 
 class ForceTokensLogitsProcessor extends LogitsProcessor
 {
-
     /** @var array Mapping of input lengths to forced token IDs */
     protected array $forceTokenMap;
 

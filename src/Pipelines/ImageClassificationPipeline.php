@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Models\Output\SequenceClassifierOutput;
 use Codewithkyrian\Transformers\Utils\Math;
 
+use function array_merge;
 use function Codewithkyrian\Transformers\Utils\array_pop_key;
 use function Codewithkyrian\Transformers\Utils\prepareImages;
 use function Codewithkyrian\Transformers\Utils\timeUsage;
+use function is_array;
 
 /**
  * Image classification pipeline using any `AutoModelForImageClassification`.
@@ -90,8 +91,8 @@ class ImageClassificationPipeline extends Pipeline
 
         if ($isBatched || $topK === 1) {
             return $toReturn;
-        } else {
-            return $toReturn[0];
         }
+        return $toReturn[0];
+
     }
 }

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Tokenizers;
 
 /**
@@ -42,8 +41,7 @@ class AddedToken
          * Whether this token is a special token.
          */
         public readonly bool $special = false,
-    )
-    {
+    ) {
     }
 
     public static function make(array $config): self

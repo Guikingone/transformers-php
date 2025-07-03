@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Utils\GenerationConfig;
+
+use function array_key_exists;
+use function array_map;
 use function Codewithkyrian\Transformers\Utils\camelCaseToSnakeCase;
 use function Codewithkyrian\Transformers\Utils\prepareImages;
+use function is_array;
+use function trim;
 
 /**
  * Image To Text pipeline using a `AutoModelForVision2Seq`. This pipeline predicts a caption for a given image.
@@ -62,8 +66,8 @@ class ImageToTextPipeline extends Pipeline
             $output = $this->model->generate($batch, generationConfig: $generationConfig, streamer: $streamer);
 
             $decoded = array_map(
-                fn($x) => ['generated_text' => trim($x)],
-                $this->tokenizer->batchDecode($output, skipSpecialTokens: true)
+                static fn ($x) => ['generated_text' => trim($x)],
+                $this->tokenizer->batchDecode($output, skipSpecialTokens: true),
             );
 
             $toReturn[] = $decoded;

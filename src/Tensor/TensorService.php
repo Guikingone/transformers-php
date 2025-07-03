@@ -7,6 +7,7 @@ namespace Codewithkyrian\Transformers\Tensor;
 use Codewithkyrian\TransformersLibsLoader\Library;
 use Rindow\Math\Matrix\Drivers\AbstractMatlibService;
 use Rindow\Matlib\FFI\MatlibFactory;
+
 use function Codewithkyrian\Transformers\Utils\basePath;
 
 class TensorService extends AbstractMatlibService
@@ -21,7 +22,7 @@ class TensorService extends AbstractMatlibService
         );
 
         $this->mathFactory = new MatlibFactory(
-            libFiles: [Library::RindowMatlib->library(basePath('libs'))]
+            libFiles: [Library::RindowMatlib->library(basePath('libs'))],
         );
     }
 }

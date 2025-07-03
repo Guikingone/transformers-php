@@ -10,7 +10,9 @@ use FFI;
 use FFI\CData;
 use FFI\CType;
 use RuntimeException;
+
 use function Codewithkyrian\Transformers\Utils\basePath;
+use function file_get_contents;
 
 class Samplerate
 {
@@ -29,7 +31,7 @@ class Samplerate
         if (!isset(self::$ffi)) {
             self::$ffi = FFI::cdef(
                 file_get_contents(Library::Samplerate->header(basePath('includes'))),
-                Library::Samplerate->library(basePath('libs'))
+                Library::Samplerate->library(basePath('libs')),
             );
         }
 
@@ -118,7 +120,6 @@ class Samplerate
      * @param CData $state The state of the sample rate converter.
      * @param CData $data The data to be processed.
      *
-     * @return void
      * @throws RuntimeException|Exception If the sample rate conversion fails.
      */
     public static function srcProcess(CData $state, CData $data): void

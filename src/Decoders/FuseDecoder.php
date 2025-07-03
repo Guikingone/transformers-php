@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Decoders;
+
+use function implode;
 
 class FuseDecoder extends Decoder
 {
-
     /**
-     * @param array $config
      */
     public function __construct(array $config)
     {

@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Utils\Audio;
 
+use function array_merge;
 use function Codewithkyrian\Transformers\Utils\array_pop_key;
+use function is_array;
 
 /**
  * Audio classification pipeline using any `AutoModelForAudioClassification`.

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Pipelines;
 
-use Codewithkyrian\Transformers\Exceptions\ModelExecutionException;
 use Codewithkyrian\Transformers\Exceptions\UnsupportedModelTypeException;
 use Codewithkyrian\Transformers\Models\Auto\AutoModel;
 use Codewithkyrian\Transformers\Models\Auto\AutoModelForAudioClassification;
@@ -19,6 +18,7 @@ use Codewithkyrian\Transformers\Models\Auto\AutoModelForQuestionAnswering;
 use Codewithkyrian\Transformers\Models\Auto\AutoModelForSeq2SeqLM;
 use Codewithkyrian\Transformers\Models\Auto\AutoModelForSequenceClassification;
 use Codewithkyrian\Transformers\Models\Auto\AutoModelForSpeechSeq2Seq;
+use Codewithkyrian\Transformers\Models\Auto\AutoModelForTextToWaveform;
 use Codewithkyrian\Transformers\Models\Auto\AutoModelForTokenClassification;
 use Codewithkyrian\Transformers\Models\Auto\AutoModelForVision2Seq;
 use Codewithkyrian\Transformers\Models\Auto\AutoModelForZeroShotObjectDetection;
@@ -44,6 +44,7 @@ enum Task: string
     case TokenClassification = 'token-classification';
     case Ner = 'ner';
 
+    case TextToSpeech = 'text-to-speech';
 
     case ImageToText = 'image-to-text';
     case ImageClassification = 'image-classification';
@@ -57,10 +58,11 @@ enum Task: string
     case AudioClassification = 'audio-classification';
     case AutomaticSpeechRecognition = 'automatic-speech-recognition';
     case ASR = 'asr';
-
-
-    public function pipeline(PretrainedModel $model, ?PreTrainedTokenizer $tokenizer, ?Processor $processor): Pipeline
-    {
+    public function pipeline(
+        PretrainedModel $model,
+        ?PreTrainedTokenizer $tokenizer,
+        ?Processor $processor,
+    ): Pipeline {
         return match ($this) {
             self::SentimentAnalysis,
             self::TextClassification => new TextClassificationPipeline($this, $model, $tokenizer),
@@ -79,6 +81,8 @@ enum Task: string
             self::Summarization => new SummarizationPipeline($this, $model, $tokenizer),
 
             self::Translation => new TranslationPipeline($this, $model, $tokenizer),
+
+            self::TextToSpeech => new TextToAudioPipeline($this, $model, $tokenizer),
 
             self::TextGeneration => new TextGenerationPipeline($this, $model, $tokenizer),
 
@@ -105,7 +109,6 @@ enum Task: string
             self::AutomaticSpeechRecognition => new AutomaticSpeechRecognitionPipeline($this, $model, $tokenizer, $processor),
         };
     }
-
     public function defaultModelName(): string
     {
         return match ($this) {
@@ -125,6 +128,8 @@ enum Task: string
             self::Summarization => 'Xenova/distilbart-cnn-6-6', // Original: 'sshleifer/distilbart-cnn-6-6',
 
             self::Translation => 'Xenova/t5-small', // Original: 't5-small',
+
+            self::TextToSpeech => 'Xenova/speecht5_hifigan',
 
             self::TextGeneration => 'Xenova/gpt2', // Original: 'gpt2',
 
@@ -150,17 +155,15 @@ enum Task: string
             self::AutomaticSpeechRecognition => 'Xenova/whisper-tiny.en', // Original: 'openai/whisper-tiny.en',
         };
     }
-
     public function autoModel(
-        string    $modelNameOrPath,
-        bool      $quantized = true,
-        ?array    $config = null,
-        ?string   $cacheDir = null,
-        string    $revision = 'main',
-        ?string   $modelFilename = null,
-        ?callable $onProgress = null
-    ): PretrainedModel
-    {
+        string $modelNameOrPath,
+        bool $quantized = true,
+        ?array $config = null,
+        ?string $cacheDir = null,
+        string $revision = 'main',
+        ?string $modelFilename = null,
+        ?callable $onProgress = null,
+    ): PretrainedModel {
         return match ($this) {
             self::SentimentAnalysis,
             self::TextClassification,
@@ -198,8 +201,10 @@ enum Task: string
 
             self::AudioClassification => AutoModelForAudioClassification::fromPretrained($modelNameOrPath, $quantized, $config, $cacheDir, $revision, $modelFilename, $onProgress),
 
+            self::TextToSpeech => AutoModelForTextToWaveform::fromPretrained($modelNameOrPath, $quantized, $config, $cacheDir, $revision, $modelFilename, $onProgress),
+
             self::ASR,
-            self::AutomaticSpeechRecognition => (function () use ($modelNameOrPath, $quantized, $config, $cacheDir, $revision, $modelFilename, $onProgress) {
+            self::AutomaticSpeechRecognition => (static function () use ($modelNameOrPath, $quantized, $config, $cacheDir, $revision, $modelFilename, $onProgress): PretrainedModel {
                 try {
                     return AutoModelForSpeechSeq2Seq::fromPretrained($modelNameOrPath, $quantized, $config, $cacheDir, $revision, $modelFilename, $onProgress);
                 } catch (UnsupportedModelTypeException) {
@@ -213,17 +218,16 @@ enum Task: string
         string    $modelNameOrPath,
         ?string   $cacheDir = null,
         string    $revision = 'main',
-        ?callable $onProgress = null
-    ): ?PreTrainedTokenizer
-    {
+        ?callable $onProgress = null,
+    ): ?PreTrainedTokenizer {
         return match ($this) {
-
             self::ImageClassification,
             self::ImageToImage,
             self::ImageFeatureExtraction,
             self::ObjectDetection,
             self::AudioClassification => null,
 
+            self::TextToSpeech,
 
             self::SentimentAnalysis,
             self::TextClassification,
@@ -251,11 +255,9 @@ enum Task: string
         ?array    $config = null,
         ?string   $cacheDir = null,
         string    $revision = 'main',
-        ?callable $onProgress = null
-    ): ?Processor
-    {
+        ?callable $onProgress = null,
+    ): ?Processor {
         return match ($this) {
-
             self::ImageToText,
             self::ImageClassification,
             self::ImageFeatureExtraction,
@@ -267,6 +269,7 @@ enum Task: string
             self::ASR,
             self::AutomaticSpeechRecognition  => AutoProcessor::fromPretrained($modelNameOrPath, $config, $cacheDir, $revision, $onProgress),
 
+            self::TextToSpeech,
 
             self::SentimentAnalysis,
             self::TextClassification,

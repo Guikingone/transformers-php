@@ -10,7 +10,13 @@ use FFI;
 use FFI\CData;
 use FFI\CType;
 use RuntimeException;
+
 use function Codewithkyrian\Transformers\Utils\basePath;
+use function file_get_contents;
+use function mb_convert_encoding;
+use function mb_detect_encoding;
+
+use const PHP_OS_FAMILY;
 
 class Sndfile
 {
@@ -29,7 +35,7 @@ class Sndfile
         if (!isset(self::$ffi)) {
             self::$ffi = FFI::cdef(
                 file_get_contents(Library::Sndfile->header(basePath('includes'))),
-                Library::Sndfile->library(basePath('libs'))
+                Library::Sndfile->library(basePath('libs')),
             );
         }
 

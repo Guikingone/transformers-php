@@ -2,11 +2,40 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\PreTrainedTokenizers;
 
 use Exception;
+
+use function array_filter;
+use function array_flip;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function array_slice;
+use function array_values;
 use function Codewithkyrian\Transformers\Utils\array_every;
+use function count;
+use function end;
+use function floor;
+use function implode;
+use function in_array;
+use function is_array;
+use function is_string;
+use function json_encode;
+use function max;
+use function min;
+use function preg_match;
+use function round;
+use function str_contains;
+use function str_ends_with;
+use function str_starts_with;
+use function strlen;
+use function strpos;
+use function strtolower;
+use function substr;
+use function trim;
+
+use const ARRAY_FILTER_USE_BOTH;
 
 class WhisperTokenizer extends PreTrainedTokenizer
 {
@@ -154,9 +183,8 @@ class WhisperTokenizer extends PreTrainedTokenizer
         float       $timePrecision,
         bool|string $returnTimestamps = false,
         bool        $returnLanguage = false,
-        bool        $forceFullSequences = true
-    ): array
-    {
+        bool        $forceFullSequences = true,
+    ): array {
         // Set forceFullSequences=false if you want streaming
         // TODO add support for `returnLanguage`
 
@@ -180,7 +208,7 @@ class WhisperTokenizer extends PreTrainedTokenizer
 
         $returnWordTimestamps = $returnTimestamps === "word";
 
-        $newChunk = fn() => ["language" => $lastLanguage, "timestamp" => [null, null], "text" => ""];
+        $newChunk = static fn () => ["language" => $lastLanguage, "timestamp" => [null, null], "text" => ""];
 
         // Welcome to the state machine!
         $chunks = [];
@@ -255,9 +283,9 @@ class WhisperTokenizer extends PreTrainedTokenizer
                         }
 
                         $lastLanguage = $chunk['language'] = $language;
-                    } else {
-                        // 2/ This is a regular special token, ignoring it
                     }
+                    // 2/ This is a regular special token, ignoring it
+
                 } elseif ($token >= $timestampBegin) {
                     // 3/ Timestamp token
                     $time = ($token - $timestampBegin) * $timePrecision + $timeOffset;
@@ -286,7 +314,8 @@ class WhisperTokenizer extends PreTrainedTokenizer
                             }
 
                             [$resolvedTokens, $resolvedTokenTimestamps] = $this->findLongestCommonSequence(
-                                $previousTokens, $previousTokenTimestamps
+                                $previousTokens,
+                                $previousTokenTimestamps,
                             );
 
                             $resolvedText = $this->decode($resolvedTokens);
@@ -294,7 +323,9 @@ class WhisperTokenizer extends PreTrainedTokenizer
 
                             if ($returnWordTimestamps) {
                                 $chunk['words'] = $this->collateWordTimestamps(
-                                    $resolvedTokens, $resolvedTokenTimestamps, $lastLanguage
+                                    $resolvedTokens,
+                                    $resolvedTokenTimestamps,
+                                    $lastLanguage,
                                 );
                             }
 
@@ -306,13 +337,13 @@ class WhisperTokenizer extends PreTrainedTokenizer
                             $previousTokenTimestamps = [];
                             $currentTokenTimestamps = [];
                             $chunk = $newChunk();
-                        } else {
-                            // This is a bug in timestamp token output
-                            // where we're taking the duplicate token
-                            // as a stop where it should be a start.
-                            // This is an issue in the underlying model output
-                            // Let's just skip it so it becomes de-factor a start agin
                         }
+                        // This is a bug in timestamp token output
+                        // where we're taking the duplicate token
+                        // as a stop where it should be a start.
+                        // This is an issue in the underlying model output
+                        // Let's just skip it so it becomes de-factor a start agin
+
                     }
                 } else {
                     // 4/ Regular token
@@ -339,7 +370,7 @@ class WhisperTokenizer extends PreTrainedTokenizer
                 if ($returnWordTimestamps) {
                     $previousTokenTimestamps[] = $currentTokenTimestamps;
                 }
-            } elseif (array_every($previousTokens, fn($x) => empty($x))) {
+            } elseif (array_every($previousTokens, static fn ($x) => empty($x))) {
                 $chunk = $newChunk();
                 $previousTokens = [];
                 $currentTokens = [];
@@ -353,7 +384,7 @@ class WhisperTokenizer extends PreTrainedTokenizer
                 // Last token should always be timestamps, so there shouldn't be leftover
                 throw new Exception(
                     "Whisper did not predict an ending timestamp, which can happen if audio is cut off in the middle of a word. " .
-                    "Also make sure WhisperTimeStampLogitsProcessor was used during generation."
+                    "Also make sure WhisperTimeStampLogitsProcessor was used during generation.",
                 );
             }
 
@@ -371,7 +402,7 @@ class WhisperTokenizer extends PreTrainedTokenizer
 
         $optional = [];
 
-        $fullText = implode('', array_map(fn($chunk) => $chunk['text'], $chunks));
+        $fullText = implode('', array_map(static fn ($chunk) => $chunk['text'], $chunks));
 
         if ($returnTimestamps || $returnLanguage) {
             for ($i = 0; $i < count($chunks); $i++) {
@@ -440,7 +471,7 @@ class WhisperTokenizer extends PreTrainedTokenizer
                 }
 
                 $matches = count(
-                    array_filter($left, fn($elem, $idx) => $elem === $right[$idx], ARRAY_FILTER_USE_BOTH)
+                    array_filter($left, static fn ($elem, $idx) => $elem === $right[$idx], ARRAY_FILTER_USE_BOTH),
                 );
 
                 $matching = $matches / $j + $eps;
@@ -468,9 +499,9 @@ class WhisperTokenizer extends PreTrainedTokenizer
         if ($useTokenTimestampSequences) {
             $totalTokenTimestampSequence = array_merge($totalTokenTimestampSequence, $leftTokenTimestampSequence);
             return [$totalSequence, $totalTokenTimestampSequence];
-        } else {
-            return [$totalSequence, []];
         }
+        return [$totalSequence, []];
+
     }
 
     public function collateWordTimestamps($tokens, $tokenTimestamps, $language): array
@@ -494,17 +525,13 @@ class WhisperTokenizer extends PreTrainedTokenizer
     /**
      * Groups tokens by word. Returns a tuple containing a list of strings with the words,
      * and a list of `token_id` sequences with the tokens making up each word.
-     * @param array $tokens
-     * @param string|null $language
-     * @return array
      * @private
      */
     private function combineTokensIntoWords(
         array  $tokens,
-        string $language = null
-    ): array
-    {
-        $language = $language ?? 'english';
+        string $language = null,
+    ): array {
+        $language ??= 'english';
         $prependPunctuations = "\"'“¡¿([{-";
         $appendPunctuations = "\"'.。,，!！?？:：”)]}、";
 
@@ -523,9 +550,8 @@ class WhisperTokenizer extends PreTrainedTokenizer
         bool  $skipSpecialTokens = false,
         ?bool $cleanUpTokenizationSpaces = null,
         bool  $decodeWithTimestamps = null,
-        float $timePrecision = 0.02
-    ): string
-    {
+        float $timePrecision = 0.02,
+    ): string {
 
         if ($decodeWithTimestamps) {
             $text = $this->decodeWithTimestamps($tokenIds, $skipSpecialTokens, $cleanUpTokenizationSpaces, $timePrecision);
@@ -544,9 +570,8 @@ class WhisperTokenizer extends PreTrainedTokenizer
         array $tokenIds,
         bool  $skipSpecialTokens = false,
         ?bool $cleanUpTokenizationSpaces = null,
-        float $timePrecision = 0.02
-    ): string
-    {
+        float $timePrecision = 0.02,
+    ): string {
         $timestampBegin = end($this->allSpecialIds) + 1;
         $outputs = [[]];
 
@@ -560,15 +585,13 @@ class WhisperTokenizer extends PreTrainedTokenizer
             }
         }
 
-        $outputs = array_map(fn($s) => is_string($s) ? $s : parent::decode($tokenIds, $skipSpecialTokens, $cleanUpTokenizationSpaces), $outputs);
+        $outputs = array_map(fn ($s) => is_string($s) ? $s : parent::decode($tokenIds, $skipSpecialTokens, $cleanUpTokenizationSpaces), $outputs);
 
         return implode('', $outputs);
     }
 
     /**
      * Combine tokens into words by splitting at any position where the tokens are decoded as valid Unicode points.
-     * @param array $tokens
-     * @return array
      * @private
      */
     private function splitTokensOnUnicode(array $tokens): array
@@ -605,8 +628,6 @@ class WhisperTokenizer extends PreTrainedTokenizer
 
     /**
      * Combine tokens into words by splitting at whitespace and punctuation tokens.
-     * @param array $tokens
-     * @return array
      * @private
      */
     private function splitTokensOnSpaces(array $tokens): array
@@ -617,7 +638,7 @@ class WhisperTokenizer extends PreTrainedTokenizer
         $wordTokens = [];
         $tokenIndices = [];
 
-//        $punctuationRegex = '/^\p{P}+$/u';
+        //        $punctuationRegex = '/^\p{P}+$/u';
         $punctuationRegex = '\p{P}\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E';
         $punctuationRegex = "/\s+|([$punctuationRegex])+/u";
 
@@ -648,12 +669,6 @@ class WhisperTokenizer extends PreTrainedTokenizer
 
     /**
      * Merges punctuation tokens with neighboring words.
-     * @param array $words
-     * @param array $tokens
-     * @param array $indices
-     * @param string $prepended
-     * @param string $appended
-     * @return array
      * @private
      */
     private function mergePunctuations(array $words, array $tokens, array $indices, string $prepended, string $appended): array
@@ -666,7 +681,7 @@ class WhisperTokenizer extends PreTrainedTokenizer
         $i = count($newWords) - 2;
         $j = count($newWords) - 1;
 
-//        dd($newWords[8], str_contains($prepended, trim($newWords[$i])));
+        //        dd($newWords[8], str_contains($prepended, trim($newWords[$i])));
 
         while ($i >= 0) {
             if (str_starts_with($newWords[$i], ' ') && str_contains($prepended, trim($newWords[$i]))) {
@@ -700,9 +715,9 @@ class WhisperTokenizer extends PreTrainedTokenizer
         }
 
         return [
-            array_values(array_filter($newWords, fn($x) => $x !== '')),
-            array_values(array_filter($newTokens, fn($x) => count($x) > 0)),
-            array_values(array_filter($newIndices, fn($x) => count($x) > 0)),
+            array_values(array_filter($newWords, static fn ($x) => $x !== '')),
+            array_values(array_filter($newTokens, static fn ($x) => count($x) > 0)),
+            array_values(array_filter($newIndices, static fn ($x) => count($x) > 0)),
         ];
     }
 
@@ -721,12 +736,12 @@ class WhisperTokenizer extends PreTrainedTokenizer
      * ```
      *
      * @param string|null $language The language of the transcription text.
-     * The corresponding language id token is appended to the start of the sequence for multilingual
-     * speech recognition and speech translation tasks, e.g. for "Spanish" the token "<|es|>" is appended
-     * to the start of sequence.
+     *                              The corresponding language id token is appended to the start of the sequence for multilingual
+     *                              speech recognition and speech translation tasks, e.g. for "Spanish" the token "<|es|>" is appended
+     *                              to the start of sequence.
      * @param string|null $task Task identifier to append at the start of sequence (if any).
-     * This should be used for mulitlingual fine-tuning, with "transcribe" for speech recognition and
-     * "translate" for speech translation.
+     *                          This should be used for mulitlingual fine-tuning, with "transcribe" for speech recognition and
+     *                          "translate" for speech translation.
      * @param bool $noTimestamps Whether to add the <|notimestamps|> token at the start of the sequence.
      * @return array The decoder prompt ids.
      * @throws Exception
@@ -734,9 +749,8 @@ class WhisperTokenizer extends PreTrainedTokenizer
     public function getDecoderPromptIds(
         ?string $language = null,
         ?string $task = null,
-        bool    $noTimestamps = true
-    ): array
-    {
+        bool    $noTimestamps = true,
+    ): array {
         // <|lang_id|> <|task|> <|notimestamps|>
         $forcedDecoderIds = [];
 
@@ -800,10 +814,10 @@ class WhisperTokenizer extends PreTrainedTokenizer
         }
 
         // Prepend index numbers
-        $mapped = array_map(fn($x, $i) => [$i + 1, $x], $forcedDecoderIds, array_keys($forcedDecoderIds));
+        $mapped = array_map(static fn ($x, $i) => [$i + 1, $x], $forcedDecoderIds, array_keys($forcedDecoderIds));
 
         // Remove null elements
-        $filtered = array_filter($mapped, fn($x) => $x[1] !== null);
+        $filtered = array_filter($mapped, static fn ($x) => $x[1] !== null);
 
         return array_values($filtered);
     }

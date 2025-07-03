@@ -9,7 +9,17 @@ use Codewithkyrian\Transformers\Exceptions\ModelExecutionException;
 use Codewithkyrian\Transformers\Models\Pretrained\PretrainedModel;
 use Codewithkyrian\Transformers\Tensor\Tensor;
 use Codewithkyrian\Transformers\Utils\GenerationConfig;
+use Error;
 use Interop\Polite\Math\Matrix\NDArray;
+
+use function array_column;
+use function array_fill;
+use function array_map;
+use function array_slice;
+use function count;
+use function in_array;
+use function is_array;
+use function property_exists;
 
 enum ModelArchitecture: string
 {
@@ -36,7 +46,7 @@ enum ModelArchitecture: string
         return match ($this) {
             self::DecoderOnly => $this->decoderRunBeam($model, $beam),
             self::Seq2SeqLM, self::Vision2Seq => $this->seq2seqRunBeam($model, $beam),
-            default => throw new \Error('This model type does not support beam search'),
+            default => throw new Error('This model type does not support beam search'),
         };
     }
 
@@ -45,13 +55,12 @@ enum ModelArchitecture: string
         Tensor           $inputTokenIds,
         GenerationConfig $generationConfig,
         int              $numOutputTokens,
-        Tensor           $inputsAttentionMask = null
-    ): array
-    {
+        Tensor           $inputsAttentionMask = null,
+    ): array {
         return match ($this) {
             self::DecoderOnly => $this->decoderStartBeams($model, $inputTokenIds, $generationConfig, $numOutputTokens, $inputsAttentionMask),
             self::Seq2SeqLM, self::Vision2Seq => $this->seq2seqStartBeams($model, $inputTokenIds, $generationConfig, $numOutputTokens),
-            default => throw new \Error('This model type does not support beam search'),
+            default => throw new Error('This model type does not support beam search'),
         };
     }
 
@@ -60,7 +69,7 @@ enum ModelArchitecture: string
         match ($this) {
             self::DecoderOnly => $this->decoderUpdatebeam($beam, $newTokenId),
             self::Seq2SeqLM, self::Vision2Seq => $this->seq2seqUpdatebeam($beam, $newTokenId),
-            default => throw new \Error('This model type does not support beam search'),
+            default => throw new Error('This model type does not support beam search'),
         };
     }
 
@@ -70,7 +79,7 @@ enum ModelArchitecture: string
             self::EncoderOnly => $this->encoderForward($model, $modelInputs),
             self::DecoderOnly => $this->decoderForward($model, $modelInputs),
             self::Seq2SeqLM, self::Vision2Seq => $this->seq2seqForward($model, $modelInputs),
-            default => throw new \Error('This model type does not have a forward method'),
+            default => throw new Error('This model type does not have a forward method'),
         };
     }
 
@@ -144,9 +153,8 @@ enum ModelArchitecture: string
         Tensor           $inputTokenIds,
         GenerationConfig $generationConfig,
         int              $numOutputTokens,
-        Tensor           $inputsAttentionMask = null
-    ): array
-    {
+        Tensor           $inputsAttentionMask = null,
+    ): array {
         $beams = [];
         $beamId = 0;
 
@@ -175,7 +183,7 @@ enum ModelArchitecture: string
 
                 'done' => false,
                 'score' => 0,
-                'id' => $beamId++ // assign unique id to beams
+                'id' => $beamId++, // assign unique id to beams
             ];
 
             $beams[] = $start;
@@ -188,7 +196,6 @@ enum ModelArchitecture: string
      * Update a beam with a new token ID.
      * @param array $beam The beam to update.
      * @param int $newTokenId The new token ID to add to the beam.
-     * @return void
      */
     protected function decoderUpdatebeam(array &$beam, int $newTokenId): void
     {
@@ -219,7 +226,7 @@ enum ModelArchitecture: string
         $inputNames = array_column($model->session->inputs(), 'name');
 
         if (in_array('use_cache_branch', $inputNames)) {
-            $decoderFeeds['use_cache_branch'] = new Tensor([$useCacheBranch], Tensor::bool,  [1]);
+            $decoderFeeds['use_cache_branch'] = new Tensor([$useCacheBranch], Tensor::bool, [1]);
         }
 
         $model->preparePositionIds($inputNames, $decoderFeeds, $useCacheBranch);
@@ -285,8 +292,7 @@ enum ModelArchitecture: string
         Tensor           $inputTokenIds,
         GenerationConfig $generationConfig,
         int              $numOutputTokens,
-    ): array
-    {
+    ): array {
         $beams = [];
         $beamId = 0;
 

@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Exceptions;
 
-class TemplateParseException extends \Exception implements TransformersException
+use Exception;
+
+class TemplateParseException extends Exception implements TransformersException
 {
     public static function undefinedVariable($variableName): TemplateParseException
     {

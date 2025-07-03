@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\FeatureExtractors;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
+
 use function Codewithkyrian\Transformers\Utils\timeUsage;
+use function pow;
+use function sqrt;
 
 class Wav2Vec2FeatureExtractor extends FeatureExtractor
 {
@@ -18,12 +20,11 @@ class Wav2Vec2FeatureExtractor extends FeatureExtractor
     public function __invoke(Tensor $waveform): array
     {
         // zero-mean and unit-variance normalization
-        if ($this->config['do_normalize'])
-        {
+        if ($this->config['do_normalize']) {
             $mean = $waveform->mean();
 
             //calculate the variance
-//            $variance = $waveform->add(-$mean)->pow(2)->mean();
+            //            $variance = $waveform->add(-$mean)->pow(2)->mean();
             $variance = 0;
             for ($i = 0; $i < $waveform->size(); $i++) {
                 $variance += pow($waveform[$i] - $mean, 2);
@@ -38,7 +39,7 @@ class Wav2Vec2FeatureExtractor extends FeatureExtractor
 
         return [
             'input_values' => $waveform->reshape($shape),
-            'attention_mask' => Tensor::ones($shape, dtype: Tensor::int64)
+            'attention_mask' => Tensor::ones($shape, dtype: Tensor::int64),
         ];
     }
 }

@@ -10,12 +10,25 @@ use Exception;
 use RuntimeException;
 use Symfony\Component\Console\Helper\ProgressBar;
 
+use function fclose;
+use function file_exists;
+use function file_get_contents;
+use function filesize;
+use function fopen;
+use function json_decode;
+use function json_last_error;
+use function json_last_error_msg;
+use function rename;
+use function round;
+use function str_replace;
+use function stream_copy_to_stream;
+use function unlink;
+
 /**
  * Utility class to download files from the Hugging Face Hub
  */
 class Hub
 {
-
     private const ERROR_MAPPING = [
         '400' => 'Bad request error occurred while trying to load file',
         '401' => 'Unauthorized access to file',
@@ -33,15 +46,15 @@ class Hub
      * Tries to locate a file in a local folder and repo, downloads and cache it if necessary.
      *
      * @param string $pathOrRepoID This can be either a string, the "model id" of a model repo on huggingface.co,
-     * or a path to a local directory containing a model.
+     *                             or a path to a local directory containing a model.
      * @param string $fileName The name of the file to locate in $pathOrRepoID.
      * @param string|null $cacheDir Path to a directory in which a downloaded pretrained model configuration should
-     * be cached if the standard cache should not be used.
-     * the cached versions if they exist. Defaults to false.
+     *                              be cached if the standard cache should not be used.
+     *                              the cached versions if they exist. Defaults to false.
      * @param string $revision The specific model version to use. It can be a branch name, a tag name,
-     * or a commit id. Defaults to 'main'.
+     *                         or a commit id. Defaults to 'main'.
      * @param string $subFolder In case the relevant files are located inside a subfolder of the model repo or
-     * directory, indicate it here.
+     *                          directory, indicate it here.
      * @param bool $fatal Whether to raise an error if the file could not be loaded.
      *
      * @throws HubException
@@ -54,9 +67,8 @@ class Hub
         string    $revision = 'main',
         string    $subFolder = '',
         bool      $fatal = true,
-        ?callable $onProgress = null
-    ): ?string
-    {
+        ?callable $onProgress = null,
+    ): ?string {
         # Local cache and file paths
         $cacheDir ??= Transformers::getCacheDir();
 
@@ -72,17 +84,17 @@ class Hub
         $partCounter = 1;
         $partBasePath = "$filePath.part";
 
-        while (file_exists($partBasePath.$partCounter)) {
+        while (file_exists($partBasePath . $partCounter)) {
             $partCounter++;
         }
 
-        $partPath = $partBasePath.$partCounter;
+        $partPath = $partBasePath . $partCounter;
 
         # Resume download if partially downloaded
         $downloadedBytes = 0;
         if ($partCounter > 1) {
             for ($i = 1; $i < $partCounter; $i++) {
-                $downloadedBytes += filesize($partBasePath.$i);
+                $downloadedBytes += filesize($partBasePath . $i);
             }
         }
 
@@ -92,14 +104,14 @@ class Hub
         $options = [
             'http' => [
                 'header' => [
-                    'Range: bytes='.$downloadedBytes.'-',
+                    'Range: bytes=' . $downloadedBytes . '-',
                 ],
                 'User-Agent' => Transformers::getUserAgent(),
             ],
         ];
 
         if (Transformers::getAuthToken()) {
-            $options['http']['header'][] = 'Authorization: Bearer '.Transformers::getAuthToken();
+            $options['http']['header'][] = 'Authorization: Bearer ' . Transformers::getAuthToken();
         }
 
         try {
@@ -107,7 +119,7 @@ class Hub
                 $onProgress('begin_download', $fileName, 0, 0, 0, 0);
             }
 
-            $progressCallback = function ($downloadSize, $downloaded, $uploadSize, $uploaded) use ($onProgress, $fileName) {
+            $progressCallback = static function ($downloadSize, $downloaded, $uploadSize, $uploaded) use ($onProgress, $fileName) {
                 if ($onProgress) {
                     $onProgress('advance_download', $fileName, $downloadSize, $downloaded, $uploadSize, $uploaded);
                 }
@@ -145,9 +157,8 @@ class Hub
         string    $revision = 'main',
         string    $subFolder = '',
         bool      $fatal = true,
-        ?callable $onProgress = null
-    ): ?array
-    {
+        ?callable $onProgress = null,
+    ): ?array {
         $file = self::getFile($pathOrRepoID, $fileName, $cacheDir, $revision, $subFolder, $fatal, $onProgress);
 
         if ($file === null) {
@@ -169,8 +180,10 @@ class Hub
 
     private static function onProgress(ProgressBar $progressBar): callable
     {
-        return function ($totalDownload, $downloadedBytes) use ($progressBar) {
-            if ($totalDownload == 0) return;
+        return static function ($totalDownload, $downloadedBytes) use ($progressBar) {
+            if ($totalDownload == 0) {
+                return;
+            }
 
             $percent = round(($downloadedBytes / $totalDownload) * 100, 2);
             $progressBar->setProgress((int)$percent);
@@ -182,7 +195,7 @@ class Hub
     {
         $fileHandle = fopen($filePath, 'w');
         for ($i = 1; $i <= $partCount; $i++) {
-            $partPath = $partBasePath.$i;
+            $partPath = $partBasePath . $i;
             $partFileHandle = fopen($partPath, 'r');
             stream_copy_to_stream($partFileHandle, $fileHandle);
             fclose($partFileHandle);
@@ -215,7 +228,7 @@ class Hub
         $remotePath = str_replace(
             ['{model}', '{revision}', '{file}'],
             [$pathOrRepoID, $revision, $subFolder === '' ? $fileName : "$subFolder/$fileName"],
-            Transformers::getRemotePathTemplate()
+            Transformers::getRemotePathTemplate(),
         );
 
         return "$remoteHost/$remotePath";

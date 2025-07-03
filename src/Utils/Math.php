@@ -2,11 +2,27 @@
 
 declare(strict_types=1);
 
-
 namespace Codewithkyrian\Transformers\Utils;
 
 use ArrayAccess;
 use Traversable;
+
+use function array_fill;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function array_reduce;
+use function array_search;
+use function array_slice;
+use function array_sum;
+use function count;
+use function exp;
+use function floor;
+use function intval;
+use function log;
+use function max;
+use function min;
+use function usort;
 
 class Math
 {
@@ -38,7 +54,7 @@ class Math
         $softmaxArr = self::softmax($arr);
 
         // Apply log formula to each element
-        return array_map(fn($x) => log($x), $softmaxArr);
+        return array_map(static fn ($x) => log($x), $softmaxArr);
     }
 
     /**
@@ -53,13 +69,13 @@ class Math
         $maxVal = max($arr);
 
         // Compute the exponentials of the array values
-        $exps = array_map(fn($x) => exp($x - $maxVal), $arr);
+        $exps = array_map(static fn ($x) => exp($x - $maxVal), $arr);
 
         // Compute the sum of the exponentials
         $sumExps = array_sum($exps);
 
         // Compute the softmax values
-        return array_map(fn($x) => $x / $sumExps, $exps);
+        return array_map(static fn ($x) => $x / $sumExps, $exps);
     }
 
     /**
@@ -76,7 +92,7 @@ class Math
             $indexedItems[] = [$index, $value];
         }
 
-        usort($indexedItems, function ($a, $b) {
+        usort($indexedItems, static function ($a, $b) {
             return $b[1] <=> $a[1];
         });
 
@@ -99,13 +115,13 @@ class Math
         // Cartesian product of items
         // Adapted from https://stackoverflow.com/a/43053803
 
-        return array_reduce($a, function ($carry, $array) {
+        return array_reduce($a, static function ($carry, $array) {
             return array_merge(
-                ...array_map(function ($d) use ($array) {
-                    return array_map(function ($e) use ($d) {
+                ...array_map(static function ($d) use ($array) {
+                    return array_map(static function ($e) use ($d) {
                         return [...$d, $e];
                     }, $array);
-                }, $carry)
+                }, $carry),
             );
         }, [[]]);
     }
@@ -134,7 +150,7 @@ class Math
         }
 
         // Precompute inverse mapping of stride
-        $invStride = array_map(function ($_, $i) use ($stride, $axes) {
+        $invStride = array_map(static function ($_, $i) use ($stride, $axes) {
             return $stride[array_search($i, $axes)];
         }, $stride, array_keys($stride));
 

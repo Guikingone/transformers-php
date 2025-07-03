@@ -16,4 +16,3 @@ $result = $pipeline('My name is Kyrian and I am a <mask> developer.');
 
 
 dd($result);
-
