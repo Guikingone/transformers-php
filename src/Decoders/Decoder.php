@@ -28,14 +28,22 @@ abstract class Decoder
         $this->trimOffsets = $config['trim_offsets'] ?? false;
     }
 
+    /**
+     * Decodes a list of tokens.
+     *
+     * @param string[] $tokens
+     */
+    public function __invoke(array $tokens): string
+    {
+        return $this->decode($tokens);
+    }
 
     /**
      * Creates a decoder instance based on the provided configuration.
-     *
      */
     public static function fromConfig(?array $config): ?self
     {
-        if ($config === null) {
+        if (null === $config) {
             return null;
         }
 
@@ -67,20 +75,9 @@ abstract class Decoder
     /**
      * Apply the decoder to a list of tokens.
      *
-     * @param string[] $tokens The list of tokens.
-     * @return string[] The decoded list of tokens.
+     * @param string[] $tokens the list of tokens
+     *
+     * @return string[] the decoded list of tokens
      */
     abstract protected function decodeChain(array $tokens): array;
-
-    /**
-     * Decodes a list of tokens.
-     *
-     * @param string[] $tokens
-     */
-    public function __invoke(array $tokens): string
-    {
-        return $this->decode($tokens);
-    }
-
-
 }

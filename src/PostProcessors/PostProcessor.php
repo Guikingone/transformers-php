@@ -8,17 +8,19 @@ use InvalidArgumentException;
 
 abstract class PostProcessor
 {
-    public function __construct(public array $config)
+    public function __construct(public array $config) {}
+
+    public function __invoke(array $tokens, ...$args): PostProcessedOutput
     {
+        return $this->postProcess($tokens, ...$args);
     }
 
     /**
      * Factory method to create a PostProcessor object from a configuration object.
-     *
      */
     public static function fromConfig(?array $config): ?self
     {
-        if ($config === null) {
+        if (null === $config) {
             return null;
         }
 
@@ -33,15 +35,9 @@ abstract class PostProcessor
     }
 
     /**
-     * @param array $tokens The input tokens to be post-processed.
-     * @param array|null $tokenPair The input tokens for the second sequence in a pair.
-     * @param bool $addSpecialTokens Whether to add the special tokens associated with the corresponding model.
+     * @param array $tokens the input tokens to be post-processed
+     * @param null|array $tokenPair the input tokens for the second sequence in a pair
+     * @param bool $addSpecialTokens whether to add the special tokens associated with the corresponding model
      */
     abstract public function postProcess(array $tokens, ?array $tokenPair = null, bool $addSpecialTokens = true): PostProcessedOutput;
-
-    public function __invoke(array $tokens, ...$args): PostProcessedOutput
-    {
-        return $this->postProcess($tokens, ...$args);
-    }
-
 }

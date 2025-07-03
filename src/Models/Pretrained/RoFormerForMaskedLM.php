@@ -15,5 +15,4 @@ class RoFormerForMaskedLM extends RoFormerPretrainedModel
     {
         return MaskedLMOutput::fromOutput(parent::__invoke($modelInputs));
     }
-
 }

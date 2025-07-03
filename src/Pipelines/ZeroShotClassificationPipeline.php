@@ -14,7 +14,6 @@ use function array_change_key_case;
 use function array_keys;
 use function array_map;
 use function array_shift;
-use function Codewithkyrian\Transformers\Utils\timeUsage;
 use function count;
 use function is_array;
 use function str_replace;
@@ -68,7 +67,7 @@ class ZeroShotClassificationPipeline extends Pipeline
 
     protected mixed $contradictionId;
 
-    public function __construct(Task|string $task, PretrainedModel $model, ?PreTrainedTokenizer $tokenizer = null, ?string $processor = null)
+    public function __construct(string|Task $task, PretrainedModel $model, ?PreTrainedTokenizer $tokenizer = null, ?string $processor = null)
     {
         parent::__construct($task, $model, $tokenizer, $processor);
 
@@ -76,13 +75,13 @@ class ZeroShotClassificationPipeline extends Pipeline
 
         $this->entailmentId = $this->label2id['entailment'] ?? null;
 
-        if ($this->entailmentId === null) {
+        if (null === $this->entailmentId) {
             Transformers::getLogger()?->warning("Could not find 'entailment' in label2id mapping. Using 2 as entailment_id.");
             $this->entailmentId = 2;
         }
 
         $this->contradictionId = $this->label2id['contradiction'] ?? $this->label2id['not_entailment'] ?? null;
-        if ($this->contradictionId === null) {
+        if (null === $this->contradictionId) {
             Transformers::getLogger()?->warning("Could not find 'contradiction' in label2id mapping. Using 0 as contradiction_id.");
             $this->contradictionId = 0;
         }
@@ -92,7 +91,7 @@ class ZeroShotClassificationPipeline extends Pipeline
     {
         $candidateLabels = $args[0];
         $multiLabel = $args['multiLabel'] ?? false;
-        $hypothesisTemplate = $args['hypothesisTemplate'] ?? "This example is {}.";
+        $hypothesisTemplate = $args['hypothesisTemplate'] ?? 'This example is {}.';
 
         $isBatched = is_array($inputs);
 
@@ -108,7 +107,7 @@ class ZeroShotClassificationPipeline extends Pipeline
         $hypotheses = array_map(static fn ($x) => str_replace('{}', $x, $hypothesisTemplate), $candidateLabels);
 
         // Determine whether to perform softmax over each label independently
-        $softmaxEach = $multiLabel || count($candidateLabels) === 1;
+        $softmaxEach = $multiLabel || 1 === count($candidateLabels);
 
         $toReturn = [];
         foreach ($inputs as $premise) {
@@ -120,7 +119,6 @@ class ZeroShotClassificationPipeline extends Pipeline
                 /** @var SequenceClassifierOutput $outputs */
                 $outputs = $this->model->__invoke($inputs);
 
-
                 if ($softmaxEach) {
                     $entailsLogits[] = [
                         $outputs->logits->buffer()[$this->contradictionId],
@@ -129,7 +127,6 @@ class ZeroShotClassificationPipeline extends Pipeline
                 } else {
                     $entailsLogits[] = $outputs->logits->buffer()[$this->entailmentId];
                 }
-
             }
 
             $scores = $softmaxEach

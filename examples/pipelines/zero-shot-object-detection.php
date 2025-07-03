@@ -17,8 +17,8 @@ $detector = pipeline('zero-shot-object-detection', 'Xenova/owlvit-base-patch32')
 $url = __DIR__ . '/../images/astronaut.png';
 $candidateLabels = ['human face', 'rocket', 'helmet', 'american flag'];
 
-//$url = __DIR__. '/../images/beach.png';
-//$candidateLabels = ['hat', 'book', 'sunglasses', 'camera'];
+// $url = __DIR__. '/../images/beach.png';
+// $candidateLabels = ['hat', 'book', 'sunglasses', 'camera'];
 
 $output = $detector($url, $candidateLabels, topK: 4, threshold: 0.05);
 

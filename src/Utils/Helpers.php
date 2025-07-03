@@ -36,7 +36,7 @@ function memoryUsage(): string
     $mem = memory_get_usage(true);
     $unit = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 
-    return @round($mem / pow(1024, ($i = floor(log($mem, 1024)))), 2) . ' ' . $unit[$i];
+    return @round($mem / pow(1024, $i = floor(log($mem, 1024))), 2) . ' ' . $unit[$i];
 }
 
 function memoryPeak(): string
@@ -44,19 +44,18 @@ function memoryPeak(): string
     $mem = memory_get_peak_usage(true);
     $unit = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 
-    return @round($mem / pow(1024, ($i = floor(log($mem, 1024)))), 2) . ' ' . $unit[$i];
+    return @round($mem / pow(1024, $i = floor(log($mem, 1024))), 2) . ' ' . $unit[$i];
 }
 
-
-function timeUsage(bool $milliseconds = false, bool $sinceLastCall = true, bool $returnString = true): string|float
+function timeUsage(bool $milliseconds = false, bool $sinceLastCall = true, bool $returnString = true): float|string
 {
     static $lastCallTime = 0;
 
     $currentTime = microtime(true);
 
-    $timeDiff = $sinceLastCall ? ($lastCallTime !== 0 ? $currentTime - $lastCallTime
-        : $currentTime - $_SERVER["REQUEST_TIME_FLOAT"])
-        : $currentTime - $_SERVER["REQUEST_TIME_FLOAT"];
+    $timeDiff = $sinceLastCall ? (0 !== $lastCallTime ? $currentTime - $lastCallTime
+        : $currentTime - $_SERVER['REQUEST_TIME_FLOAT'])
+        : $currentTime - $_SERVER['REQUEST_TIME_FLOAT'];
 
     $lastCallTime = $currentTime;
 
@@ -88,13 +87,15 @@ function array_every(array $array, callable $callback): bool
     return true;
 }
 
-function array_pop_key(array &$array, string|int $key, mixed $default = null)
+function array_pop_key(array &$array, int|string $key, mixed $default = null)
 {
     if (isset($array[$key])) {
         $value = $array[$key];
         unset($array[$key]);
+
         return $value;
     }
+
     return $default;
 }
 
@@ -119,9 +120,10 @@ function joinPaths(string ...$args): string
     $paths = [];
 
     foreach ($args as $key => $path) {
-        if ($path === '') {
+        if ('' === $path) {
             continue;
-        } elseif ($key === 0) {
+        }
+        if (0 === $key) {
             $paths[$key] = rtrim($path, DIRECTORY_SEPARATOR);
         } elseif ($key === count($paths) - 1) {
             $paths[$key] = ltrim($path, DIRECTORY_SEPARATOR);
@@ -143,9 +145,9 @@ function ensureDirectory($filePath): void
 /**
  * Prepare images for further tasks.
  *
- * @param mixed $images Images to prepare.
+ * @param mixed $images images to prepare
  *
- * @return Image[] Returns processed images.
+ * @return Image[] returns processed images
  */
 function prepareImages(mixed $images): array
 {
@@ -164,18 +166,19 @@ function prepareImages(mixed $images): array
 }
 
 /**
- * Helper function to convert list [xmin, xmax, ymin, ymax] into object { "xmin": xmin, ... }
+ * Helper function to convert list [xmin, xmax, ymin, ymax] into object { "xmin": xmin, ... }.
  *
- * @param array $box The bounding box as a list.
- * @param bool $asInteger Whether to cast to integers.
+ * @param array $box the bounding box as a list
+ * @param bool $asInteger whether to cast to integers
  *
- * @return array The bounding box as an object.
+ * @return array the bounding box as an object
+ *
  * @private
  */
 function getBoundingBox(array $box, bool $asInteger): array
 {
     if ($asInteger) {
-        $box = array_map(static fn ($x) => (int)$x, $box);
+        $box = array_map(static fn ($x) => (int) $x, $box);
     }
 
     [$xmin, $ymin, $xmax, $ymax] = $box;
@@ -183,14 +186,12 @@ function getBoundingBox(array $box, bool $asInteger): array
     return ['xmin' => $xmin, 'ymin' => $ymin, 'xmax' => $xmax, 'ymax' => $ymax];
 }
 
-
 /**
- * Returns base path value of the project
+ * Returns base path value of the project.
  *
  * @param string $dir Directory to append to base path
- *
  */
-function basePath(string $dir = ""): string
+function basePath(string $dir = ''): string
 {
     return joinPaths(dirname(__DIR__, 2), $dir);
 }
@@ -198,23 +199,24 @@ function basePath(string $dir = ""): string
 /**
  * Helper method to construct a pattern from a config object.
  *
- * @param array $pattern The pattern object.
- * @param bool $invert Whether to invert the pattern.
+ * @param array $pattern the pattern object
+ * @param bool $invert whether to invert the pattern
  *
- * @return string|null The compiled pattern or null if invalid.
+ * @return null|string the compiled pattern or null if invalid
  */
 function createPattern(array $pattern, bool $invert = true): ?string
 {
     if (isset($pattern['Regex'])) {
         // Remove unnecessary escape sequences
-        return str_replace(['\\#', '\\&', '\\~'], ['#', '&', '~'], $pattern['Regex']);
-    } elseif (isset($pattern['String'])) {
+        return str_replace(['\#', '\&', '\~'], ['#', '&', '~'], $pattern['Regex']);
+    }
+    if (isset($pattern['String'])) {
         $escaped = preg_quote($pattern['String'], '/');
 
         // NOTE: if invert is true, we wrap the pattern in a group so that it is kept when performing split
-        return $invert ? $escaped : "($escaped)";
+        return $invert ? $escaped : "({$escaped})";
     }
     Transformers::getLogger()?->error('Unknown pattern type: ' . print_r($pattern, true));
-    return null;
 
+    return null;
 }

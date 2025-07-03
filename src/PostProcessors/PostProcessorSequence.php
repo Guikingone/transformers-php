@@ -35,11 +35,11 @@ class PostProcessorSequence extends PostProcessor
     /**
      * Post-process the given tokens.
      *
-     * @param array $tokens The list of tokens for the first sequence.
-     * @param string[]|null $tokenPair The input tokens for the second sequence in a pair.
-     *                                 * @param bool $addSpecialTokens Whether to add the special tokens associated with the corresponding model.
+     * @param array $tokens the list of tokens for the first sequence
+     * @param null|string[] $tokenPair the input tokens for the second sequence in a pair
+     *                                 * @param bool $addSpecialTokens Whether to add the special tokens associated with the corresponding model
      *
-     * @return PostProcessedOutput An array containing the post-processed tokens and token_type_ids.
+     * @return PostProcessedOutput an array containing the post-processed tokens and token_type_ids
      */
     public function postProcess(array $tokens, ?array $tokenPair = null, bool $addSpecialTokens = true): PostProcessedOutput
     {
@@ -51,7 +51,7 @@ class PostProcessorSequence extends PostProcessor
                 $output = $processor->postProcess($tokens);
                 $tokens = $output->tokens;
 
-                if ($tokenPair !== null) {
+                if (null !== $tokenPair) {
                     $pairOutput = $processor->postProcess($tokenPair);
                     $tokenPair = $pairOutput->tokens;
                 }

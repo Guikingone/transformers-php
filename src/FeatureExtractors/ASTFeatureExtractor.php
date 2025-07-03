@@ -7,7 +7,6 @@ namespace Codewithkyrian\Transformers\FeatureExtractors;
 use Codewithkyrian\Transformers\Tensor\Tensor;
 use Codewithkyrian\Transformers\Utils\Audio;
 
-use function Codewithkyrian\Transformers\Utils\timeUsage;
 use function count;
 use function floor;
 
@@ -31,12 +30,12 @@ class ASTFeatureExtractor extends FeatureExtractor
             floor($samplingRate / 2),
             $samplingRate,
             null,
-            "kaldi",
+            'kaldi',
             true,
         );
 
         // Do padding:
-        for ($i = 0; $i < count($this->melFilters); $i++) {
+        for ($i = 0; $i < count($this->melFilters); ++$i) {
             $this->melFilters[$i][] = 0;
         }
 
@@ -48,8 +47,10 @@ class ASTFeatureExtractor extends FeatureExtractor
 
     /**
      *  Extracts features from a given audio using the provided configuration.
-     * @param Tensor $waveform The audio tensor to extract features from.
-     * @return Tensor[] The extracted features.
+     *
+     * @param Tensor $waveform the audio tensor to extract features from
+     *
+     * @return Tensor[] the extracted features
      */
     public function __invoke(Tensor $waveform): array
     {

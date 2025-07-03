@@ -36,7 +36,7 @@ describe('Tokenizers (dynamic)', static function () {
             expect($encoded)->toMatchArray($test['encoded']);
 
             // Skip decoding tests if encoding produces zero tokens
-            if (count($encoded['input_ids']) === 0) {
+            if (0 === count($encoded['input_ids'])) {
                 return;
             }
 
@@ -46,7 +46,6 @@ describe('Tokenizers (dynamic)', static function () {
             $decodedWithoutSpecial = $tokenizer->decode($encoded['input_ids'], skipSpecialTokens: true);
             expect($decodedWithoutSpecial)->toBe($test['decoded_without_special']);
         } else {
-
             ['text' => $text, 'text_pair' => $textPair] = $test['input'];
 
             $encoded = $tokenizer($text, $textPair, returnTensor: false);
@@ -54,12 +53,12 @@ describe('Tokenizers (dynamic)', static function () {
             expect($encoded)->toMatchArray($test['output']);
         }
     })
-    ->with('regular-tokenization');
+        ->with('regular-tokenization');
 });
 
 describe('Chat templates', static function () {
     it('can apply a chat template', static function () {
-        $tokenizer = AutoTokenizer::fromPretrained("Xenova/mistral-tokenizer-v1");
+        $tokenizer = AutoTokenizer::fromPretrained('Xenova/mistral-tokenizer-v1');
 
         $chat = [
             ['role' => 'user', 'content' => 'Hello, how are you?'],
@@ -79,7 +78,7 @@ describe('Chat templates', static function () {
     });
 
     it('should support user-defined chat template', static function () {
-        $tokenizer = AutoTokenizer::fromPretrained("Xenova/llama-tokenizer");
+        $tokenizer = AutoTokenizer::fromPretrained('Xenova/llama-tokenizer');
 
         $chat = [
             ['role' => 'user', 'content' => 'Hello, how are you?'],
@@ -87,36 +86,36 @@ describe('Chat templates', static function () {
             ['role' => 'user', 'content' => "I'd like to show off how chat templating works!"],
         ];
 
-        $chatTemplate = "{% if messages[0]['role'] == 'system' %}" .
-            "{% set loop_messages = messages[1:] %}" .
-            "{% set system_message = messages[0]['content'] %}" .
-            "{% elif USE_DEFAULT_PROMPT == true and not '<<SYS>>' in messages[0]['content'] %}" .
-            "{% set loop_messages = messages %}" .
-            "{% set system_message = 'DEFAULT_SYSTEM_MESSAGE' %}" .
-            "{% else %}" .
-            "{% set loop_messages = messages %}" .
-            "{% set system_message = false %}" .
-            "{% endif %}" .
-            "{% if loop_messages|length == 0 and system_message %}" .
-            "{{ bos_token + '[INST] <<SYS>>\\n' + system_message + '\\n<</SYS>>\\n\\n [/INST]' }}" .
-            "{% endif %}" .
-            "{% for message in loop_messages %}" .
-            "{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}" .
-            "{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}" .
-            "{% endif %}" .
-            "{% if loop.index0 == 0 and system_message != false %}" .
-            "{% set content = '<<SYS>>\\n' + system_message + '\\n<</SYS>>\\n\\n' + message['content'] %}" .
-            "{% else %}" .
-            "{% set content = message['content'] %}" .
-            "{% endif %}" .
-            "{% if message['role'] == 'user' %}" .
-            "{{ bos_token + '[INST] ' + content.strip() + ' [/INST]' }}" .
-            "{% elif message['role'] == 'system' %}" .
-            "{{ '<<SYS>>\\n' + content.strip() + '\\n<</SYS>>\\n\\n' }}" .
-            "{% elif message['role'] == 'assistant' %}" .
-            "{{ ' '  + content.strip() + ' ' + eos_token }}" .
-            "{% endif %}" .
-            "{% endfor %}";
+        $chatTemplate = "{% if messages[0]['role'] == 'system' %}"
+            . '{% set loop_messages = messages[1:] %}'
+            . "{% set system_message = messages[0]['content'] %}"
+            . "{% elif USE_DEFAULT_PROMPT == true and not '<<SYS>>' in messages[0]['content'] %}"
+            . '{% set loop_messages = messages %}'
+            . "{% set system_message = 'DEFAULT_SYSTEM_MESSAGE' %}"
+            . '{% else %}'
+            . '{% set loop_messages = messages %}'
+            . '{% set system_message = false %}'
+            . '{% endif %}'
+            . '{% if loop_messages|length == 0 and system_message %}'
+            . "{{ bos_token + '[INST] <<SYS>>\\n' + system_message + '\\n<</SYS>>\\n\\n [/INST]' }}"
+            . '{% endif %}'
+            . '{% for message in loop_messages %}'
+            . "{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}"
+            . "{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}"
+            . '{% endif %}'
+            . '{% if loop.index0 == 0 and system_message != false %}'
+            . "{% set content = '<<SYS>>\\n' + system_message + '\\n<</SYS>>\\n\\n' + message['content'] %}"
+            . '{% else %}'
+            . "{% set content = message['content'] %}"
+            . '{% endif %}'
+            . "{% if message['role'] == 'user' %}"
+            . "{{ bos_token + '[INST] ' + content.strip() + ' [/INST]' }}"
+            . "{% elif message['role'] == 'system' %}"
+            . "{{ '<<SYS>>\\n' + content.strip() + '\\n<</SYS>>\\n\\n' }}"
+            . "{% elif message['role'] == 'assistant' %}"
+            . "{{ ' '  + content.strip() + ' ' + eos_token }}"
+            . '{% endif %}'
+            . '{% endfor %}';
 
         $chatTemplate = str_replace('USE_DEFAULT_PROMPT', 'true', $chatTemplate);
         $chatTemplate = str_replace('DEFAULT_SYSTEM_MESSAGE', 'You are a helpful, respectful and honest assistant.', $chatTemplate);
@@ -194,7 +193,6 @@ describe('Tokenizer padding/truncation', static function () {
         expect($inputIds->toArray())->toBe([[1037, 0], [1038, 1039]])
             ->and($attentionMask->toArray())->toBe([[1, 0], [1, 1]])
             ->and($tokenTypeIds->toArray())->toBe([[0, 0], [0, 0]]);
-
 
         $textPair = ['d e', 'f g h'];
 

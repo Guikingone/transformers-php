@@ -19,13 +19,12 @@ class TrOCRPretrainedModel extends PretrainedModel
     public mixed $encoderDimKv;
 
     public function __construct(
-        AutoConfig               $config,
-        InferenceSession         $session,
+        AutoConfig $config,
+        InferenceSession $session,
         public ModelArchitecture $modelArchitecture,
-        public GenerationConfig  $generationConfig,
+        public GenerationConfig $generationConfig,
     ) {
         parent::__construct($config, $session, $modelArchitecture);
-
 
         $this->numEncoderLayers = $this->numDecoderLayers = $this->config['decoder_layers'];
         $this->numEncoderHeads = $this->numDecoderHeads = $this->config['decoder_attention_heads'];

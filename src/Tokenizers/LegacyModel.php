@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Tokenizers;
 
-use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
-
 /**
  * Legacy tokenizer class for tokenizers with only a vocabulary.
  */
@@ -50,7 +48,6 @@ class LegacyModel extends TokenizerModel
 
         $this->unkToken = $moreConfig['unk_token'] ?? null;
         $this->unkTokenId = $this->tokenToIds[$this->unkToken] ?? null;
-
 
         foreach ($this->tokenToIds as $token => $id) {
             $this->vocab[$id] = $token;

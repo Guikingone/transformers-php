@@ -29,29 +29,8 @@ class complex_t
 class TensorBuffer implements LinearBuffer
 {
     public const MAX_BYTES = 2147483648; // 2**31
-    protected static ?FFI $ffi = null;
 
-    /** @var array<int,string> $typeString */
-    protected static $typeString = [
-        NDArray::bool => 'uint8_t',
-        NDArray::int8 => 'int8_t',
-        NDArray::int16 => 'int16_t',
-        NDArray::int32 => 'int32_t',
-        NDArray::int64 => 'int64_t',
-        NDArray::uint8 => 'uint8_t',
-        NDArray::uint16 => 'uint16_t',
-        NDArray::uint32 => 'uint32_t',
-        NDArray::uint64 => 'uint64_t',
-        //NDArray::float8  => 'N/A',
-        //NDArray::float16 => 'N/A',
-        NDArray::float32 => 'float',
-        NDArray::float64 => 'double',
-        //NDArray::complex16 => 'N/A',
-        //NDArray::complex32 => 'N/A',
-        NDArray::complex64 => 'rindow_complex_float',
-        NDArray::complex128 => 'rindow_complex_double',
-    ];
-    /** @var array<int,int> $valueSize */
+    /** @var array<int,int> */
     public static array $valueSize = [
         NDArray::bool => 1,
         NDArray::int8 => 1,
@@ -62,14 +41,36 @@ class TensorBuffer implements LinearBuffer
         NDArray::uint16 => 2,
         NDArray::uint32 => 4,
         NDArray::uint64 => 8,
-        //NDArray::float8  => 'N/A',
-        //NDArray::float16 => 'N/A',
+        // NDArray::float8  => 'N/A',
+        // NDArray::float16 => 'N/A',
         NDArray::float32 => 4,
         NDArray::float64 => 8,
-        //NDArray::complex16 => 'N/A',
-        //NDArray::complex32 => 'N/A',
+        // NDArray::complex16 => 'N/A',
+        // NDArray::complex32 => 'N/A',
         NDArray::complex64 => 8,
         NDArray::complex128 => 16,
+    ];
+    protected static ?FFI $ffi = null;
+
+    /** @var array<int,string> */
+    protected static $typeString = [
+        NDArray::bool => 'uint8_t',
+        NDArray::int8 => 'int8_t',
+        NDArray::int16 => 'int16_t',
+        NDArray::int32 => 'int32_t',
+        NDArray::int64 => 'int64_t',
+        NDArray::uint8 => 'uint8_t',
+        NDArray::uint16 => 'uint16_t',
+        NDArray::uint32 => 'uint32_t',
+        NDArray::uint64 => 'uint64_t',
+        // NDArray::float8  => 'N/A',
+        // NDArray::float16 => 'N/A',
+        NDArray::float32 => 'float',
+        NDArray::float64 => 'double',
+        // NDArray::complex16 => 'N/A',
+        // NDArray::complex32 => 'N/A',
+        NDArray::complex64 => 'rindow_complex_float',
+        NDArray::complex128 => 'rindow_complex_double',
     ];
 
     protected int $size;
@@ -78,53 +79,34 @@ class TensorBuffer implements LinearBuffer
 
     public function __construct(int $size, int $dtype)
     {
-        if (self::$ffi === null) {
+        if (null === self::$ffi) {
             $code = file_get_contents(__DIR__ . '/../../includes/buffer.h');
             self::$ffi = FFI::cdef($code);
         }
 
         if (!isset(self::$typeString[$dtype])) {
-            throw new InvalidArgumentException("Invalid data type");
+            throw new InvalidArgumentException('Invalid data type');
         }
 
         $limitsize = intdiv(self::MAX_BYTES, self::$valueSize[$dtype]);
         if ($size >= $limitsize) {
-            throw new InvalidArgumentException("Data size is too large.");
+            throw new InvalidArgumentException('Data size is too large.');
         }
 
         $this->size = $size;
         $this->dtype = $dtype;
         $declaration = self::$typeString[$dtype];
 
-        if ($size === 0) {
-            $this->data = self::$ffi->new("void *");
+        if (0 === $size) {
+            $this->data = self::$ffi->new('void *');
         } else {
             $this->data = self::$ffi->new("{$declaration}[{$size}]");
         }
-
     }
 
-    protected function assertOffset(string $method, mixed $offset): void
+    public function __clone()
     {
-        if (!is_int($offset)) {
-            throw new TypeError($method . '(): Argument #1 ($offset) must be of type int');
-        }
-        if ($offset < 0 || $offset >= $this->size) {
-            throw new OutOfRangeException($method . '(): Index invalid or out of range');
-        }
-    }
-
-    protected function assertOffsetIsInt(string $method, mixed $offset): void
-    {
-        if (!is_int($offset)) {
-            throw new TypeError($method . '(): Argument #1 ($offset) must be of type int');
-        }
-    }
-
-    protected function isComplex(int $dtype = null): bool
-    {
-        $dtype ??= $this->dtype;
-        return $dtype == NDArray::complex64 || $dtype == NDArray::complex128;
+        $this->data = clone $this->data;
     }
 
     public function dtype(): int
@@ -160,8 +142,8 @@ class TensorBuffer implements LinearBuffer
 
         $value = $this->data[$offset];
 
-        if ($this->dtype === NDArray::bool) {
-            $value = (bool)$value;
+        if (NDArray::bool === $this->dtype) {
+            $value = (bool) $value;
         }
 
         return $value;
@@ -179,7 +161,8 @@ class TensorBuffer implements LinearBuffer
                 $imag = $value->imag;
             } else {
                 $type = gettype($value);
-                throw new InvalidArgumentException("Cannot convert to complex number.: " . $type);
+
+                throw new InvalidArgumentException('Cannot convert to complex number.: ' . $type);
             }
 
             /** @var \Codewithkyrian\Transformers\Utils\complex_t $value */
@@ -193,18 +176,18 @@ class TensorBuffer implements LinearBuffer
 
     public function offsetUnset(mixed $offset): void
     {
-        throw new LogicException("Illegal Operation");
+        throw new LogicException('Illegal Operation');
     }
 
     public function dump(): string
     {
         $byteSize = self::$valueSize[$this->dtype] * $this->size;
 
-        if ($byteSize === 0) {
+        if (0 === $byteSize) {
             return '';
         }
 
-        $buf = self::$ffi->new("char[$byteSize]");
+        $buf = self::$ffi->new("char[{$byteSize}]");
 
         FFI::memcpy($buf, $this->data, $byteSize);
 
@@ -217,14 +200,33 @@ class TensorBuffer implements LinearBuffer
 
         $strlen = strlen($string);
         if ($strlen != $byteSize) {
-            throw new InvalidArgumentException("Unmatched data size. buffer size is $byteSize. $strlen byte given.");
+            throw new InvalidArgumentException("Unmatched data size. buffer size is {$byteSize}. {$strlen} byte given.");
         }
 
         FFI::memcpy($this->data, $string, $strlen);
     }
 
-    public function __clone()
+    protected function assertOffset(string $method, mixed $offset): void
     {
-        $this->data = clone $this->data;
+        if (!is_int($offset)) {
+            throw new TypeError($method . '(): Argument #1 ($offset) must be of type int');
+        }
+        if ($offset < 0 || $offset >= $this->size) {
+            throw new OutOfRangeException($method . '(): Index invalid or out of range');
+        }
+    }
+
+    protected function assertOffsetIsInt(string $method, mixed $offset): void
+    {
+        if (!is_int($offset)) {
+            throw new TypeError($method . '(): Argument #1 ($offset) must be of type int');
+        }
+    }
+
+    protected function isComplex(?int $dtype = null): bool
+    {
+        $dtype ??= $this->dtype;
+
+        return NDArray::complex64 == $dtype || NDArray::complex128 == $dtype;
     }
 }

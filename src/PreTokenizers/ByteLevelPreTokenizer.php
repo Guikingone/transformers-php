@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\PreTokenizers;
 
-use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
-
 use function array_map;
 use function implode;
 use function mb_convert_encoding;
@@ -299,7 +297,6 @@ class ByteLevelPreTokenizer extends PreTokenizer
 
     protected string $pattern;
 
-
     public function __construct(protected array $config)
     {
         $this->addPrefixSpace = $config['add_prefix_space'] ?? true;
@@ -308,8 +305,8 @@ class ByteLevelPreTokenizer extends PreTokenizer
 
         if ($this->useRegex) {
             //            $this->pattern = "/'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+/gu";
-            $this->pattern = "/'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+/u";
-            $this->pattern = "/('s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+)/u";
+            $this->pattern = "/'s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+/u";
+            $this->pattern = "/('s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+)/u";
             //            $this->pattern = "/'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+[^\s\p{L}\p{N}]|\s+(?!\S)|\s+/u";
         }
     }
@@ -336,5 +333,4 @@ class ByteLevelPreTokenizer extends PreTokenizer
             return implode('', $bytes);
         }, $tokens);
     }
-
 }

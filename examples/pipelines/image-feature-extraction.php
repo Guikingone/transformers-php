@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 use function Codewithkyrian\Transformers\Pipelines\pipeline;
 use function Codewithkyrian\Transformers\Utils\memoryUsage;
 use function Codewithkyrian\Transformers\Utils\timeUsage;
@@ -15,4 +14,4 @@ $url = __DIR__ . '/../images/cats.jpg';
 
 $features = $imageFeatureExtractor($url);
 
-dd(($features[0]), timeUsage(), memoryUsage());
+dd($features[0], timeUsage(), memoryUsage());

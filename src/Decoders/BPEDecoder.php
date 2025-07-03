@@ -13,8 +13,6 @@ class BPEDecoder extends Decoder
 {
     protected string $suffix;
 
-    /**
-     */
     public function __construct(array $config)
     {
         parent::__construct($config);

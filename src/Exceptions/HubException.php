@@ -12,5 +12,4 @@ class HubException extends Exception implements TransformersException
     {
         return new self($message);
     }
-
 }

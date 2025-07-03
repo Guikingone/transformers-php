@@ -16,14 +16,11 @@ class MinNewTokensLengthLogitsProcessor extends LogitsProcessor
     public function __construct(
         protected int $promptLengthToSkip,
         protected int $minNewTokens,
-        protected int|array $eosTokenId,
+        protected array|int $eosTokenId,
     ) {
         $this->eosTokenId = is_array($eosTokenId) ? $eosTokenId : [$eosTokenId];
     }
 
-    /**
-     *
-     */
     public function __invoke(array $inputIds, Tensor $logits): Tensor
     {
         $newTokensLength = count($inputIds) - $this->promptLengthToSkip;

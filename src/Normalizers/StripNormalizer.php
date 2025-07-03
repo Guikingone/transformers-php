@@ -15,8 +15,10 @@ class StripNormalizer extends Normalizer
 {
     /**
      * Strip leading and/or trailing whitespace from the input text.
-     * @param string $text The input text.
-     * @return string The normalized text.
+     *
+     * @param string $text the input text
+     *
+     * @return string the normalized text
      */
     public function normalize(string $text): string
     {
@@ -31,6 +33,7 @@ class StripNormalizer extends Normalizer
                 $text = rtrim($text);
             }
         }
+
         return $text;
     }
 }

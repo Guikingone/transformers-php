@@ -15,25 +15,25 @@ use function trim;
 
 /**
  * The CTC (Connectionist Temporal Classification) decoder.
- * See https://github.com/huggingface/tokenizers/blob/bb38f390a61883fc2f29d659af696f428d1cda6b/tokenizers/src/decoders/ctc.rs
+ * See https://github.com/huggingface/tokenizers/blob/bb38f390a61883fc2f29d659af696f428d1cda6b/tokenizers/src/decoders/ctc.rs.
  */
 class CTCDecoder extends Decoder
 {
     /**
-     * @var mixed|null
+     * @var null|mixed
      */
     protected string $padToken;
+
     /**
-     * @var mixed|null
+     * @var null|mixed
      */
     protected string $wordDelimiterToken;
+
     /**
      * @var mixed|true
      */
     protected mixed $cleanup;
 
-    /**
-     */
     public function __construct(array $config)
     {
         parent::__construct($config);
@@ -45,8 +45,10 @@ class CTCDecoder extends Decoder
 
     /**
      * Converts a connectionist-temporal-classification (CTC) output tokens into a single string.
-     * @param array $tokens Array of tokens to be decoded.
-     * @return string The decoded string.
+     *
+     * @param array $tokens array of tokens to be decoded
+     *
+     * @return string the decoded string
      */
     public function convertTokensToString(array $tokens): string
     {

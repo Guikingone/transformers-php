@@ -28,6 +28,7 @@ abstract class Streamer
     public function setTokenizer(PreTrainedTokenizer $tokenizer): static
     {
         $this->tokenizer = $tokenizer;
+
         return $this;
     }
 
@@ -35,35 +36,39 @@ abstract class Streamer
     {
         $this->promptTokens = $promptTokens;
         $this->nextTokensArePrompt = true;
+
         return $this;
     }
 
     public function shouldSkipPrompt(bool $skipPrompt = true): static
     {
         $this->skipPrompt = $skipPrompt;
+
         return $this;
     }
 
     public function onStream(callable $callback): static
     {
         $this->onStreamCallback = $callback;
+
         return $this;
     }
 
     public function onStreamEnd(callable $callback): static
     {
         $this->onStreamEndCallback = $callback;
+
         return $this;
     }
 
     public function setStreamMode(StreamMode $streamMode): static
     {
         $this->streamMode = $streamMode;
+
         return $this;
     }
 
     abstract public function put(mixed $value): void;
 
     abstract public function end(): void;
-
 }

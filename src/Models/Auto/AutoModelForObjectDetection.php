@@ -17,5 +17,4 @@ class AutoModelForObjectDetection extends PretrainedMixin
     public const MODEL_CLASS_MAPPINGS = [
         self::MODEL_CLASS_MAPPING,
     ];
-
 }

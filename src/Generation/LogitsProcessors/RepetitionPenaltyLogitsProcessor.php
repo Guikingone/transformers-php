@@ -11,9 +11,7 @@ use Codewithkyrian\Transformers\Tensor\Tensor;
  */
 class RepetitionPenaltyLogitsProcessor extends LogitsProcessor
 {
-    public function __construct(protected float $penalty)
-    {
-    }
+    public function __construct(protected float $penalty) {}
 
     /**
      * Apply the repetition penalty to the logits.
@@ -30,6 +28,7 @@ class RepetitionPenaltyLogitsProcessor extends LogitsProcessor
                 $logits->buffer()[$inputId] /= $this->penalty;
             }
         }
+
         return $logits;
     }
 }

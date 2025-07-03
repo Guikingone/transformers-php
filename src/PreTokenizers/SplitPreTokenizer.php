@@ -13,27 +13,27 @@ use const PREG_OFFSET_CAPTURE;
 
 class SplitPreTokenizer extends PreTokenizer
 {
-    protected string|array $pattern;
+    protected array|string $pattern;
 
     public function __construct(protected array $config)
     {
         $this->pattern = createPattern($config['pattern'], $config['invert']);
     }
 
-
     /**
      * Tokenizes text by splitting it using the given pattern.
      */
-    public function preTokenizeText(string|array $text, array $options): array
+    public function preTokenizeText(array|string $text, array $options): array
     {
         if ($this->config['invert']) {
-            preg_match_all("/$this->pattern/u", $text, $matches);
+            preg_match_all("/{$this->pattern}/u", $text, $matches);
+
             return $matches[0];
         }
         $result = [];
         $offset = 0;
 
-        preg_match_all("/$this->pattern/u", $text, $matches, PREG_OFFSET_CAPTURE);
+        preg_match_all("/{$this->pattern}/u", $text, $matches, PREG_OFFSET_CAPTURE);
 
         foreach ($matches[0] as $match) {
             $fullMatch = $match[0];
@@ -55,6 +55,5 @@ class SplitPreTokenizer extends PreTokenizer
         }
 
         return $result;
-
     }
 }

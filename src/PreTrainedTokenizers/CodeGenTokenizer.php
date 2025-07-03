@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\PreTrainedTokenizers;
 
-class CodeGenTokenizer extends PreTrainedTokenizer
-{
-}
+class CodeGenTokenizer extends PreTrainedTokenizer {}

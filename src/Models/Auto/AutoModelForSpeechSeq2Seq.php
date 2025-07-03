@@ -9,7 +9,7 @@ use Codewithkyrian\Transformers\Models\Pretrained\WhisperForConditionalGeneratio
 class AutoModelForSpeechSeq2Seq extends PretrainedMixin
 {
     public const MODEL_CLASS_MAPPING = [
-        "whisper" => WhisperForConditionalGeneration::class,
+        'whisper' => WhisperForConditionalGeneration::class,
     ];
 
     public const MODEL_CLASS_MAPPINGS = [

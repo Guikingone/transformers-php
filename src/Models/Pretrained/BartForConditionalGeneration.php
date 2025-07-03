@@ -22,11 +22,11 @@ class BartForConditionalGeneration extends BartPretrainedModel
     public mixed $encoderDimKv;
 
     public function __construct(
-        AutoConfig               $config,
-        InferenceSession         $session,
-        public InferenceSession  $decoderMergedSession,
+        AutoConfig $config,
+        InferenceSession $session,
+        public InferenceSession $decoderMergedSession,
         public ModelArchitecture $modelArchitecture,
-        public GenerationConfig  $generationConfig,
+        public GenerationConfig $generationConfig,
     ) {
         parent::__construct($config, $session, $modelArchitecture);
 

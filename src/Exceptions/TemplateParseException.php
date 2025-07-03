@@ -10,6 +10,6 @@ class TemplateParseException extends Exception implements TransformersException
 {
     public static function undefinedVariable($variableName): TemplateParseException
     {
-        return new self("Undefined variable:  $variableName");
+        return new self("Undefined variable:  {$variableName}");
     }
 }

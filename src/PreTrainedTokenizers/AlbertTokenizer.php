@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Codewithkyrian\Transformers\PreTrainedTokenizers;
 
 /**
- * Albert tokenizer
+ * Albert tokenizer.
  */
 class AlbertTokenizer extends PreTrainedTokenizer
 {

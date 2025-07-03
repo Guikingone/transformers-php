@@ -25,5 +25,4 @@ enum Resample: int
             self::HAMMING => 'hamming',
         };
     }
-
 }

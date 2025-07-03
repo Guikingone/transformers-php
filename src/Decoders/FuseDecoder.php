@@ -8,8 +8,6 @@ use function implode;
 
 class FuseDecoder extends Decoder
 {
-    /**
-     */
     public function __construct(array $config)
     {
         parent::__construct($config);

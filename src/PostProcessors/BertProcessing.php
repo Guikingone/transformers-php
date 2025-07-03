@@ -14,17 +14,15 @@ use function count;
 class BertProcessing extends PostProcessor
 {
     /**
-     * @var string The special token to add to the beginning of the input.
+     * @var string the special token to add to the beginning of the input
      */
     protected string $cls;
 
     /**
-     * @var string The special token to add to the end of the input.
+     * @var string the special token to add to the end of the input
      */
     protected string $sep;
 
-    /**
-     */
     public function __construct(array $config)
     {
         parent::__construct($config);
@@ -36,11 +34,11 @@ class BertProcessing extends PostProcessor
     /**
      * Adds the special tokens to the beginning and end of the input.
      *
-     * @param string[] $tokens The input tokens.
-     * @param string[]|null $tokenPair The input tokens for the second sequence in a pair.
-     * @param bool $addSpecialTokens Whether to add the special tokens associated with the corresponding model.
+     * @param string[] $tokens the input tokens
+     * @param null|string[] $tokenPair the input tokens for the second sequence in a pair
+     * @param bool $addSpecialTokens whether to add the special tokens associated with the corresponding model
      */
-    public function postProcess(array $tokens, array $tokenPair = null, bool $addSpecialTokens = true): PostProcessedOutput
+    public function postProcess(array $tokens, ?array $tokenPair = null, bool $addSpecialTokens = true): PostProcessedOutput
     {
         if ($addSpecialTokens) {
             $tokens = array_merge([$this->cls], $tokens, [$this->sep]);

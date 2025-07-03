@@ -30,6 +30,4 @@ namespace Codewithkyrian\Transformers\Models\Pretrained;
  * // }
  * ```
  */
-class Wav2Vec2Model extends Wav2Vec2PretrainedModel
-{
-}
+class Wav2Vec2Model extends Wav2Vec2PretrainedModel {}

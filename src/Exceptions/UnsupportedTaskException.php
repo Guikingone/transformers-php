@@ -10,6 +10,6 @@ class UnsupportedTaskException extends Exception implements TransformersExceptio
 {
     public static function make(string $task): self
     {
-        return new self("The task `$task` is not supported. Please check for typos or refer to the documentation for the list of supported tasks.");
+        return new self("The task `{$task}` is not supported. Please check for typos or refer to the documentation for the list of supported tasks.");
     }
 }

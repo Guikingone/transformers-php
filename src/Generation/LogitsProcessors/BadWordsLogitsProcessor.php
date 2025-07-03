@@ -16,7 +16,7 @@ use const INF;
 class BadWordsLogitsProcessor extends LogitsProcessor
 {
     protected array $badWordsIds;
-    protected int|array $eosTokenId;
+    protected array|int $eosTokenId;
 
     public function __construct(array $badWordsIds, $eosTokenId)
     {
@@ -24,9 +24,6 @@ class BadWordsLogitsProcessor extends LogitsProcessor
         $this->eosTokenId = is_array($eosTokenId) ? $eosTokenId : [$eosTokenId];
     }
 
-    /**
-     *
-     */
     public function __invoke(array $inputIds, Tensor $logits): Tensor
     {
         foreach ($this->badWordsIds as $badWordIds) {
@@ -36,9 +33,9 @@ class BadWordsLogitsProcessor extends LogitsProcessor
             // For each bad word in the list, if the current sequence of input ids ends with this sequence (excluding the last),
             // then we set the logits of the last bad word id to -Infinity.
             for ($i = 1; $i <= count($badWordIds) - 1 && count($badWordIds) < count($inputIds) + 1; ++$i) {
-
                 if ($badWordIds[count($badWordIds) - $i - 1] !== array_slice($inputIds, -$i, 1)[0]) {
                     $mark = false;
+
                     break;
                 }
             }

@@ -27,28 +27,12 @@ class LibsChecker
 {
     protected static ProgressBar $progressBar;
 
-    protected static function getProgressBar($filename, $output): ProgressBar
-    {
-        ProgressBar::setFormatDefinition('hub', '  - Downloading <info>%message%</info> : [%bar%] %percent:3s%%');
-
-        if (!isset(self::$progressBar)) {
-            self::$progressBar = new ProgressBar($output, 100);
-            self::$progressBar->setFormat('hub');
-            self::$progressBar->setBarCharacter('<fg=green>•</>');
-            self::$progressBar->setEmptyBarCharacter("<fg=red>⚬</>");
-            self::$progressBar->setProgressCharacter('<fg=green>➤</>');
-            self::$progressBar->setMessage($filename);
-        }
-
-        return self::$progressBar;
-    }
-
-    public static function check($event = null, OutputInterface $output = null): void
+    public static function check($event = null, ?OutputInterface $output = null): void
     {
         $output ??= new ConsoleOutput();
 
-        $vendorDir = $event !== null ?
-            $event->getComposer()->getConfig()->get('vendor-dir')
+        $vendorDir = null !== $event
+            ? $event->getComposer()->getConfig()->get('vendor-dir')
             : 'vendor';
 
         require $vendorDir . '/autoload.php';
@@ -59,14 +43,31 @@ class LibsChecker
         foreach (Library::cases() as $library) {
             if (!$library->exists($libsDir)) {
                 $installationNeeded = true;
+
                 break;
             }
         }
 
         if ($installationNeeded) {
-            $output->writeln("<info>Installing TransformersPHP libraries...</info>");
+            $output->writeln('<info>Installing TransformersPHP libraries...</info>');
             self::install($output);
         }
+    }
+
+    protected static function getProgressBar($filename, $output): ProgressBar
+    {
+        ProgressBar::setFormatDefinition('hub', '  - Downloading <info>%message%</info> : [%bar%] %percent:3s%%');
+
+        if (!isset(self::$progressBar)) {
+            self::$progressBar = new ProgressBar($output, 100);
+            self::$progressBar->setFormat('hub');
+            self::$progressBar->setBarCharacter('<fg=green>•</>');
+            self::$progressBar->setEmptyBarCharacter('<fg=red>⚬</>');
+            self::$progressBar->setProgressCharacter('<fg=green>➤</>');
+            self::$progressBar->setMessage($filename);
+        }
+
+        return self::$progressBar;
     }
 
     private static function install(OutputInterface $output): void
@@ -81,8 +82,8 @@ class LibsChecker
 
         $arch = match (PHP_OS_FAMILY) {
             'Windows' => 'x86_64',
-            'Darwin' => php_uname('m') == 'x86_64' ? 'x86_64' : 'arm64',
-            default => php_uname('m') == 'x86_64' ? 'x86_64' : 'aarch64',
+            'Darwin' => 'x86_64' == php_uname('m') ? 'x86_64' : 'arm64',
+            default => 'x86_64' == php_uname('m') ? 'x86_64' : 'aarch64',
         };
 
         $extension = match ($os) {
@@ -93,17 +94,16 @@ class LibsChecker
         $maxRetries = 10;
         $attempts = 0;
 
-
         do {
-            $baseUrl = "https://github.com/CodeWithKyrian/transformers-php/releases/download/$version";
-            $filename = "transformersphp-$version-$os-$arch";
-            $downloadUrl = "$baseUrl/$filename.$extension";
-            $downloadPath = tempnam(sys_get_temp_dir(), 'transformers-php') . ".$extension";
+            $baseUrl = "https://github.com/CodeWithKyrian/transformers-php/releases/download/{$version}";
+            $filename = "transformersphp-{$version}-{$os}-{$arch}";
+            $downloadUrl = "{$baseUrl}/{$filename}.{$extension}";
+            $downloadPath = tempnam(sys_get_temp_dir(), 'transformers-php') . ".{$extension}";
 
             $onProgress = static function ($downloadSize, $downloaded, $uploadSize, $uploaded) use ($output, $filename) {
                 $progressBar = self::getProgressBar($filename, $output);
                 $percent = round(($downloaded / $downloadSize) * 100, 2);
-                $progressBar->setProgress((int)$percent);
+                $progressBar->setProgress((int) $percent);
             };
 
             $downloadSuccess = false;
@@ -114,47 +114,47 @@ class LibsChecker
                 $progressBar = self::getProgressBar($filename, $output);
                 $progressBar->finish();
                 $progressBar->clear();
-                $output->writeln("  - Downloading <info>$filename</info>");
+                $output->writeln("  - Downloading <info>{$filename}</info>");
             } catch (Exception) {
             } finally {
                 unset($progressBar);
             }
 
             if ($downloadSuccess) {
-                $output->writeln("  - Installing <info>$filename</info> : Extracting archive");
+                $output->writeln("  - Installing <info>{$filename}</info> : Extracting archive");
 
                 $archive = new PharData($downloadPath);
-                if ($extension != 'zip') {
+                if ('zip' != $extension) {
                     $archive = $archive->decompress();
                 }
 
                 $archive->extractTo(basePath(), overwrite: true);
                 @unlink($downloadPath);
 
-                $output->writeln("✔ TransformersPHP libraries installed successfully!");
+                $output->writeln('✔ TransformersPHP libraries installed successfully!');
+
                 return;
             }
-            $output->writeln("  - Failed to download <info>$filename</info> trying a lower version...");
+            $output->writeln("  - Failed to download <info>{$filename}</info> trying a lower version...");
             $version = self::getLowerVersion($version);
 
+            ++$attempts;
+        } while (null !== $version && $attempts < $maxRetries);
 
-            $attempts++;
-        } while ($version !== null && $attempts < $maxRetries);
-
-        throw new Exception("Could not find the required binaries after $maxRetries attempts.");
+        throw new Exception("Could not find the required binaries after {$maxRetries} attempts.");
     }
 
     private static function getLowerVersion(string $version): ?string
     {
         $parts = explode('.', $version);
 
-        if (count($parts) === 3 && $parts[2] > 0) {
-            $parts[2]--;
-        } elseif (count($parts) === 3) {
-            $parts[1]--;
+        if (3 === count($parts) && $parts[2] > 0) {
+            --$parts[2];
+        } elseif (3 === count($parts)) {
+            --$parts[1];
             $parts[2] = 9;  // Reset patch version
-        } elseif (count($parts) === 2 && $parts[1] > 0) {
-            $parts[1]--;
+        } elseif (2 === count($parts) && $parts[1] > 0) {
+            --$parts[1];
         } else {
             return null;  // No lower version possible
         }
@@ -170,6 +170,6 @@ class LibsChecker
             'yellow' => "\033[33m",
         };
 
-        return "$prefix$text\033[39m";
+        return "{$prefix}{$text}\033[39m";
     }
 }

@@ -14,8 +14,6 @@ use function array_merge;
 use function Codewithkyrian\Transformers\Utils\array_every;
 use function Codewithkyrian\Transformers\Utils\array_keys_to_snake_case;
 use function Codewithkyrian\Transformers\Utils\array_pop_key;
-use function Codewithkyrian\Transformers\Utils\camelCaseToSnakeCase;
-use function Codewithkyrian\Transformers\Utils\timeUsage;
 use function count;
 use function floor;
 use function is_array;
@@ -60,9 +58,6 @@ use function substr;
  * $output = $generator('function test() {', maxNewTokens: 100);
  * // ['generated_text' => 'function test() {\n  console.log("Hello, World!");\n}']
  * ```
- *
- *
- *
  */
 class TextGenerationPipeline extends Pipeline
 {
@@ -136,7 +131,7 @@ class TextGenerationPipeline extends Pipeline
         for ($i = 0; $i < count($decoded); ++$i) {
             $textIndex = floor($i / count($outputTokenIds) * count($inputs));
 
-            if ($promptLengths !== null) {
+            if (null !== $promptLengths) {
                 // Trim the decoded text to only include the generated part
                 $decoded[$i] = substr($decoded[$i], $promptLengths[$textIndex]);
 
@@ -153,8 +148,7 @@ class TextGenerationPipeline extends Pipeline
             ];
         }
 
-        return (!$isBatched && count($toReturn) === 1) ? $toReturn[0] : $toReturn;
-
+        return (!$isBatched && 1 === count($toReturn)) ? $toReturn[0] : $toReturn;
     }
 
     // Detect chat mode
@@ -162,5 +156,4 @@ class TextGenerationPipeline extends Pipeline
     {
         return is_array($x) && array_every($x, static fn ($item) => isset($item['role']) && isset($item['content']));
     }
-
 }

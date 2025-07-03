@@ -8,7 +8,6 @@ use function normalizer_normalize;
 
 /**
  * Normalizes a string to Normalization Form Compatibility Decomposition (NFKD).
-
  */
 class NFKD extends Normalizer
 {

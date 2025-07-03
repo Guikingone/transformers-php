@@ -7,7 +7,6 @@ namespace Codewithkyrian\Transformers\FeatureExtractors;
 use Codewithkyrian\Transformers\Tensor\Tensor;
 use Codewithkyrian\Transformers\Utils\Audio;
 
-use function Codewithkyrian\Transformers\Utils\timeUsage;
 use function trigger_error;
 
 use const E_USER_WARNING;
@@ -21,7 +20,7 @@ class WhisperFeatureExtractor extends FeatureExtractor
         parent::__construct($config);
 
         $this->config['mel_filters'] ??= Audio::melFilterBank(
-            (int)(1 + $config['n_fft'] / 2),
+            (int) (1 + $config['n_fft'] / 2),
             nMelFilters: $config['feature_size'],
             minFrequency: 0,
             maxFrequency: 8000,
@@ -35,15 +34,17 @@ class WhisperFeatureExtractor extends FeatureExtractor
 
     /**
      *  Extracts features from a given audio using the provided configuration.
-     * @param Tensor $waveform The audio tensor to extract features from.
-     * @return Tensor[] The extracted features.
+     *
+     * @param Tensor $waveform the audio tensor to extract features from
+     *
+     * @return Tensor[] the extracted features
      */
     public function __invoke(Tensor $waveform): array
     {
         if ($waveform->size() > $this->config['n_samples']) {
-            trigger_error('Attempting to extract features for audio longer than 30 seconds.' .
-                'If using a pipeline to extract transcript from a long audio clip,' .
-                'remember to specify `chunkLengthSecs` and/or `strideLengthSecs` in the pipeline options.', E_USER_WARNING);
+            trigger_error('Attempting to extract features for audio longer than 30 seconds.'
+                . 'If using a pipeline to extract transcript from a long audio clip,'
+                . 'remember to specify `chunkLengthSecs` and/or `strideLengthSecs` in the pipeline options.', E_USER_WARNING);
 
             $waveform = $waveform->sliceWithBounds([0], [$this->config['n_samples']]);
         } elseif ($waveform->size() < $this->config['n_samples']) {

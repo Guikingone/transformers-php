@@ -20,8 +20,25 @@ use const INF;
  */
 class NoRepeatNGramLogitsProcessor extends LogitsProcessor
 {
-    public function __construct(protected int $noRepeatNgramSize)
+    public function __construct(protected int $noRepeatNgramSize) {}
+
+    /**
+     * Apply the no-repeat-ngram processor to the logits.
+     *
+     * @param array $inputIds the input IDs
+     * @param NDArrayPhp|Tensor $logits the logits to process
+     *
+     * @return NDArrayPhp|Tensor the processed logits
+     */
+    public function __invoke(array $inputIds, Tensor $logits): Tensor
     {
+        $bannedTokens = $this->calcBannedNgramTokens($inputIds);
+
+        foreach ($bannedTokens as $token) {
+            $logits->buffer()[$token] = -INF;
+        }
+
+        return $logits;
     }
 
     /**
@@ -46,6 +63,7 @@ class NoRepeatNGramLogitsProcessor extends LogitsProcessor
             }
             $generatedNgram[$prevNgramKey][] = end($ngram);
         }
+
         return $generatedNgram;
     }
 
@@ -54,12 +72,15 @@ class NoRepeatNGramLogitsProcessor extends LogitsProcessor
     private function getGeneratedNgrams(array $bannedNgrams, array $prevInputIds): array
     {
         $ngramIdx = array_slice($prevInputIds, -($this->noRepeatNgramSize - 1));
+
         return $bannedNgrams[json_encode($ngramIdx)] ?? [];
     }
 
     /**
-     * Calculate banned n-gram tokens
+     * Calculate banned n-gram tokens.
+     *
      * @param array $prevInputIds List of previous input ids
+     *
      * @return array List of banned tokens
      */
     private function calcBannedNgramTokens(array $prevInputIds): array
@@ -69,23 +90,7 @@ class NoRepeatNGramLogitsProcessor extends LogitsProcessor
             $generatedNgrams = $this->getNgrams($prevInputIds);
             $bannedTokens = $this->getGeneratedNgrams($generatedNgrams, $prevInputIds);
         }
+
         return $bannedTokens;
-    }
-
-    /**
-     * Apply the no-repeat-ngram processor to the logits.
-     * @param array $inputIds The input IDs.
-     * @param Tensor|NDArrayPhp $logits The logits to process.
-     * @return Tensor|NDArrayPhp The processed logits.
-     */
-    public function __invoke(array $inputIds, Tensor $logits): Tensor
-    {
-        $bannedTokens = $this->calcBannedNgramTokens($inputIds);
-
-        foreach ($bannedTokens as $token) {
-            $logits->buffer()[$token] = -INF;
-        }
-
-        return $logits;
     }
 }

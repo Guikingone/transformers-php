@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Commands;
 
-use Codewithkyrian\Transformers\Transformers;
 use Codewithkyrian\Transformers\Utils\LibsChecker;
 use Exception;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -43,7 +42,6 @@ class InstallCommand extends Command
             return Command::FAILURE;
         }
     }
-
 
     protected function askToStar(InputInterface $input, OutputInterface $output): void
     {

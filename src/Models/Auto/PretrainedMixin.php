@@ -21,7 +21,7 @@ abstract class PretrainedMixin
     /**
      * Mapping from model type to model class.
      *
-     * @var array<string, array<string, string>> The model class mappings.
+     * @var array<string, array<string, string>> the model class mappings
      */
     public const MODEL_CLASS_MAPPINGS = [];
 
@@ -34,20 +34,20 @@ abstract class PretrainedMixin
     /**
      * Instantiate a model from a pretrained model configuration.
      *
-     * @param string $modelNameOrPath The model name or path.
-     * @param bool $quantized Whether to use a quantized model.
-     * @param array|null $config The configuration for the model.
-     * @param string|null $cacheDir The cache directory to save the model in.
-     * @param string $revision The revision of the model.
-     * @param string|null $modelFilename The filename of the model.
+     * @param string $modelNameOrPath the model name or path
+     * @param bool $quantized whether to use a quantized model
+     * @param null|array $config the configuration for the model
+     * @param null|string $cacheDir the cache directory to save the model in
+     * @param string $revision the revision of the model
+     * @param null|string $modelFilename the filename of the model
      *
-     * @return PretrainedModel The instantiated pretrained model.
+     * @return PretrainedModel the instantiated pretrained model
      */
     public static function fromPretrained(
         string $modelNameOrPath,
         bool $quantized = true,
         ?array $config = null,
-        ?string$cacheDir = null,
+        ?string $cacheDir = null,
         string $revision = 'main',
         ?string $modelFilename = null,
         ?callable $onProgress = null,
@@ -57,7 +57,7 @@ abstract class PretrainedMixin
         foreach (static::MODEL_CLASS_MAPPINGS as $modelClassMapping) {
             $modelClass = $modelClassMapping[$config->modelType] ?? null;
 
-            if ($modelClass === null) {
+            if (null === $modelClass) {
                 continue;
             }
 

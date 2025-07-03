@@ -42,7 +42,6 @@ class Text2TextGenerationPipeline extends Pipeline
 
         $generateKwargs = new GenerationConfig($kwargs);
 
-
         if (!is_array($inputs)) {
             $inputs = [$inputs];
         }
@@ -55,7 +54,6 @@ class Text2TextGenerationPipeline extends Pipeline
 
         // Handle task specific params
         $taskSpecificParams = $this->model->config['task_specific_params'] ?? null;
-
 
         if ($taskSpecificParams && isset($taskSpecificParams[$this->task->value])) {
             // Add prefixes, if present
@@ -74,7 +72,6 @@ class Text2TextGenerationPipeline extends Pipeline
         $inputIds = $this instanceof TranslationPipeline && method_exists($tokenizer, 'buildTranslationInputs')
             ? $tokenizer->buildTranslationInputs($inputs, $generateKwargs, padding: true, truncation: true)['input_ids']
             : $tokenizer->__invoke($inputs, padding: true, truncation: true)['input_ids'];
-
 
         // Streamer can only handle one input at a time for now, so we only pass the first input
         $streamer?->setTokenizer($this->tokenizer)?->shouldSkipPrompt(false);

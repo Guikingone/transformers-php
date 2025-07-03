@@ -15,5 +15,4 @@ class DebertaV2ForMaskedLM extends DebertaV2PretrainedModel
     {
         return MaskedLMOutput::fromOutput(parent::__invoke($modelInputs));
     }
-
 }

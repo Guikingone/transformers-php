@@ -10,6 +10,6 @@ class ModelExecutionException extends Exception implements TransformersException
 {
     public static function make(string $message): self
     {
-        return new self("An error occurred during model execution: $message");
+        return new self("An error occurred during model execution: {$message}");
     }
 }

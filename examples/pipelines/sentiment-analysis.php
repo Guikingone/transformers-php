@@ -6,10 +6,9 @@ use function Codewithkyrian\Transformers\Pipelines\pipeline;
 
 require_once './bootstrap.php';
 
-
 $classifier = pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english');
 
 $result1 = $classifier(['I love transformers!', 'I hate transformers!']);
-//$result2 = $classifier("I hate him, he's very terrible.");
+// $result2 = $classifier("I hate him, he's very terrible.");
 
 dd($result1);

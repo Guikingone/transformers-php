@@ -43,7 +43,6 @@ class ImageFeatureExtractionPipeline extends Pipeline
         $pool = $args['pool'] ?? null;
         $preparedImages = prepareImages($inputs);
 
-
         ['pixel_values' => $pixelValues] = ($this->processor)($preparedImages);
 
         $output = $this->model->__invoke(['pixel_values' => $pixelValues]);

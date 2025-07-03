@@ -15,5 +15,4 @@ class DistilBertForMaskedLM extends RobertaPretrainedModel
     {
         return MaskedLMOutput::fromOutput(parent::__invoke($modelInputs));
     }
-
 }

@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Models\Output\SequenceClassifierOutput;
-use Codewithkyrian\Transformers\Utils\Math;
 
 use function array_merge;
 use function Codewithkyrian\Transformers\Utils\array_pop_key;
 use function Codewithkyrian\Transformers\Utils\prepareImages;
-use function Codewithkyrian\Transformers\Utils\timeUsage;
 use function is_array;
 
 /**
@@ -81,18 +79,17 @@ class ImageClassificationPipeline extends Pipeline
                 $values[] = ['label' => $id2label[$index], 'score' => $scores[$i]];
             }
 
-
-            if ($topK === 1) {
+            if (1 === $topK) {
                 $toReturn = array_merge($toReturn, $values);
             } else {
                 $toReturn[] = $values;
             }
         }
 
-        if ($isBatched || $topK === 1) {
+        if ($isBatched || 1 === $topK) {
             return $toReturn;
         }
-        return $toReturn[0];
 
+        return $toReturn[0];
     }
 }

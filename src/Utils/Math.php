@@ -44,9 +44,12 @@ class Math
 
     /**
      * Calculates the logarithm of the softmax function for the input array.
+     *
      * @template T of int|float
-     * @param array<int|float> $arr The input array to calculate the log_softmax function for.
-     * @return array<int|float> The resulting log_softmax array.
+     *
+     * @param array<float|int> $arr the input array to calculate the log_softmax function for
+     *
+     * @return array<float|int> the resulting log_softmax array
      */
     public static function logSoftmax(array $arr): array
     {
@@ -59,9 +62,12 @@ class Math
 
     /**
      * Compute the softmax of an array of numbers.
+     *
      * @template T of int|float
-     * @param array<int|float> $arr The array of numbers to compute the softmax of.
-     * @return array<int|float> The softmax array.
+     *
+     * @param array<float|int> $arr the array of numbers to compute the softmax of
+     *
+     * @return array<float|int> the softmax array
      */
     public static function softmax(array $arr): array
     {
@@ -79,12 +85,13 @@ class Math
     }
 
     /**
-     * Get the top k items from an iterable, sorted by descending order
+     * Get the top k items from an iterable, sorted by descending order.
+     *
      * @param array|Traversable $items The items to be sorted
      * @param int $topK The number of top items to return (default: 0 = return all)
+     *
      * @return array The top k items, sorted by descending order
      */
-
     public static function getTopItems(array $items, int $topK = -1): array
     {
         $indexedItems = [];
@@ -97,17 +104,18 @@ class Math
         });
 
         // Get top k items if top_k > 0
-        if ($topK !== -1 && $topK > 0) {
+        if (-1 !== $topK && $topK > 0) {
             $indexedItems = array_slice($indexedItems, 0, $topK);
         }
 
         return $indexedItems;
     }
 
-
     /**
-     * Compute the Cartesian product of given arrays
+     * Compute the Cartesian product of given arrays.
+     *
      * @param array ...$a Arrays to compute the product
+     *
      * @return array Returns the computed Cartesian product as an array
      */
     public static function product(...$a): array
@@ -126,15 +134,16 @@ class Math
         }, [[]]);
     }
 
-
     /**
-     * Helper method to permute a typed array directly
+     * Helper method to permute a typed array directly.
      *
      * @template T
+     *
      * @param T $array
      * @param int[] $shape
      * @param int[] $axes
-     * @return array{0: T, 1: int[]} The permuted array and the new shape.
+     *
+     * @return array{0: T, 1: int[]} the permuted array and the new shape
      */
     public static function permuteData($array, array $shape, array $axes): array
     {
@@ -169,6 +178,4 @@ class Math
 
         return [$permutedData, $newShape];
     }
-
-
 }

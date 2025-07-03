@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Processors;
 
-class OwlViTProcessor extends Processor
-{
-}
+class OwlViTProcessor extends Processor {}

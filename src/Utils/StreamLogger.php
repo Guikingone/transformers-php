@@ -66,22 +66,22 @@ class StreamLogger implements LoggerInterface
 
     protected ?string $url = null;
 
-    private ?string $errorMessage = null;
-
     protected ?int $filePermission;
 
     protected bool $useLocking;
 
     protected string $fileOpenMode;
 
-    /** @var true|null */
+    private ?string $errorMessage = null;
+
+    /** @var null|true */
     private ?bool $dirCreated = null;
 
     private bool $retrying = false;
 
     /**
      * @param resource|string $stream If a missing path can't be created, an UnexpectedValueException will be thrown on first write
-     * @param int|null $filePermission Optional file permissions (default (0644) are only for owner read/write)
+     * @param null|int $filePermission Optional file permissions (default (0644) are only for owner read/write)
      * @param bool $useLocking Try to lock log file before doing any writes
      * @param string $fileOpenMode The fopen() mode used when opening a file, if $stream is a file path
      *
@@ -89,7 +89,6 @@ class StreamLogger implements LoggerInterface
      */
     public function __construct(mixed $stream, ?int $filePermission = null, bool $useLocking = false, string $fileOpenMode = 'a')
     {
-
         if (($phpMemoryLimit = self::getMemoryLimitInBytes()) !== false) {
             if ($phpMemoryLimit > 0) {
                 // use max 10% of allowed memory for the chunk size, and at least 100KB
@@ -118,11 +117,16 @@ class StreamLogger implements LoggerInterface
         $this->useLocking = $useLocking;
     }
 
-    public function log($level, Stringable|string $message, array $context = []): void
+    public function __destruct()
     {
-        if (! is_resource($this->stream)) {
+        $this->close();
+    }
+
+    public function log($level, string|Stringable $message, array $context = []): void
+    {
+        if (!is_resource($this->stream)) {
             $url = $this->url;
-            if ($url === null || $url === '') {
+            if (null === $url || '' === $url) {
                 throw new LogicException('Missing stream url, the stream can not be opened. This may be caused by a premature call to close()');
             }
             $this->createDir($url);
@@ -131,13 +135,13 @@ class StreamLogger implements LoggerInterface
 
             try {
                 $stream = fopen($url, $this->fileOpenMode);
-                if ($this->filePermission !== null) {
+                if (null !== $this->filePermission) {
                     @chmod($url, $this->filePermission);
                 }
             } finally {
                 restore_error_handler();
             }
-            if (! is_resource($stream)) {
+            if (!is_resource($stream)) {
                 $this->stream = null;
 
                 throw new UnexpectedValueException('The stream could not be opened in append mode');
@@ -154,26 +158,26 @@ class StreamLogger implements LoggerInterface
 
         $this->errorMessage = null;
         set_error_handler($this->customErrorHandler(...));
-        try {
 
+        try {
             $params = [
                 '%datetime%' => date(static::DATE_FORMAT),
                 '%level_name%' => $level,
                 '%message%' => trim($message),
                 '%context%' => json_encode(
                     $context,
-                    JSON_UNESCAPED_SLASHES |
-                    JSON_UNESCAPED_UNICODE |
-                    JSON_PRESERVE_ZERO_FRACTION,
+                    JSON_UNESCAPED_SLASHES
+                    | JSON_UNESCAPED_UNICODE
+                    | JSON_PRESERVE_ZERO_FRACTION,
                 ),
             ];
             fwrite($stream, strtr(static::LOG_FORMAT, $params));
         } finally {
             restore_error_handler();
         }
-        if ($this->errorMessage !== null) {
+        if (null !== $this->errorMessage) {
             // close the resource if possible to reopen it, and retry the failed write
-            if (! $this->retrying && $this->url !== null && $this->url !== 'php://memory') {
+            if (!$this->retrying && null !== $this->url && 'php://memory' !== $this->url) {
                 $this->retrying = true;
                 $this->close();
                 $this->log($level, $message, $context);
@@ -192,17 +196,79 @@ class StreamLogger implements LoggerInterface
 
     public function close(): void
     {
-        if ($this->url !== null && is_resource($this->stream)) {
+        if (null !== $this->url && is_resource($this->stream)) {
             fclose($this->stream);
         }
         $this->stream = null;
         $this->dirCreated = null;
     }
 
+    /**
+     * Makes sure if a relative path is passed in it is turned into an absolute path.
+     *
+     * @param string $streamUrl stream URL or path without protocol
+     */
+    public static function canonicalizePath(string $streamUrl): string
+    {
+        $prefix = '';
+        if (str_starts_with($streamUrl, 'file://')) {
+            $streamUrl = substr($streamUrl, 7);
+            $prefix = 'file://';
+        }
+
+        // other type of stream, not supported
+        if (str_contains($streamUrl, '://')) {
+            return $streamUrl;
+        }
+
+        // already absolute
+        if (str_starts_with($streamUrl, '/') || ':' === substr($streamUrl, 1, 1) || str_starts_with($streamUrl, '\\\\')) {
+            return $prefix . $streamUrl;
+        }
+
+        $streamUrl = getcwd() . '/' . $streamUrl;
+
+        return $prefix . $streamUrl;
+    }
+
+    protected static function getMemoryLimitInBytes(): false|int
+    {
+        $limit = ini_get('memory_limit');
+        if (!is_string($limit)) {
+            return false;
+        }
+
+        // support -1
+        if ((int) $limit < 0) {
+            return (int) $limit;
+        }
+
+        if (!preg_match('/^\s*(?<limit>\d+)(?:\.\d+)?\s*(?<unit>[gmk]?)\s*$/i', $limit, $match)) {
+            return false;
+        }
+
+        $limit = (int) $match['limit'];
+
+        switch (strtolower($match['unit'])) {
+            case 'g':
+                $limit *= 1024;
+
+                // no break
+            case 'm':
+                $limit *= 1024;
+
+                // no break
+            case 'k':
+                $limit *= 1024;
+        }
+
+        return $limit;
+    }
+
     private function getDirFromStream(string $stream): ?string
     {
         $pos = strpos($stream, '://');
-        if ($pos === false) {
+        if (false === $pos) {
             return dirname($stream);
         }
 
@@ -223,86 +289,22 @@ class StreamLogger implements LoggerInterface
     private function createDir(string $url): void
     {
         // Do not try to create dir if it has already been tried.
-        if ($this->dirCreated === true) {
+        if (true === $this->dirCreated) {
             return;
         }
 
         $dir = $this->getDirFromStream($url);
-        if ($dir !== null && ! is_dir($dir)) {
+        if (null !== $dir && !is_dir($dir)) {
             $this->errorMessage = null;
             set_error_handler(function (...$args) {
                 return $this->customErrorHandler(...$args);
             });
             $status = mkdir($dir, 0o777, true);
             restore_error_handler();
-            if ($status === false && ! is_dir($dir) && ! str_contains((string) $this->errorMessage, 'File exists')) {
+            if (false === $status && !is_dir($dir) && !str_contains((string) $this->errorMessage, 'File exists')) {
                 throw new UnexpectedValueException(sprintf('There is no existing directory at "%s" and it could not be created: ' . $this->errorMessage, $dir));
             }
         }
         $this->dirCreated = true;
-    }
-
-    protected static function getMemoryLimitInBytes(): false|int
-    {
-        $limit = ini_get('memory_limit');
-        if (! is_string($limit)) {
-            return false;
-        }
-
-        // support -1
-        if ((int) $limit < 0) {
-            return (int) $limit;
-        }
-
-        if (!preg_match('/^\s*(?<limit>\d+)(?:\.\d+)?\s*(?<unit>[gmk]?)\s*$/i', $limit, $match)) {
-            return false;
-        }
-
-        $limit = (int) $match['limit'];
-        switch (strtolower($match['unit'])) {
-            case 'g':
-                $limit *= 1024;
-                // no break
-            case 'm':
-                $limit *= 1024;
-                // no break
-            case 'k':
-                $limit *= 1024;
-        }
-
-        return $limit;
-    }
-
-    /**
-     * Makes sure if a relative path is passed in it is turned into an absolute path
-     *
-     * @param string $streamUrl stream URL or path without protocol
-     */
-    public static function canonicalizePath(string $streamUrl): string
-    {
-        $prefix = '';
-        if (str_starts_with($streamUrl, 'file://')) {
-            $streamUrl = substr($streamUrl, 7);
-            $prefix = 'file://';
-        }
-
-        // other type of stream, not supported
-        if (str_contains($streamUrl, '://')) {
-            return $streamUrl;
-        }
-
-        // already absolute
-        if (str_starts_with($streamUrl, '/') || substr($streamUrl, 1, 1) === ':' || str_starts_with($streamUrl, '\\\\')) {
-            return $prefix . $streamUrl;
-        }
-
-        $streamUrl = getcwd() . '/' . $streamUrl;
-
-        return $prefix . $streamUrl;
-    }
-
-    public function __destruct()
-    {
-        $this->close();
     }
 }

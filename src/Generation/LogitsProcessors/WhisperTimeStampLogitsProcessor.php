@@ -8,7 +8,6 @@ use Codewithkyrian\Transformers\Tensor\Tensor;
 use Codewithkyrian\Transformers\Utils\GenerationConfig;
 
 use function array_slice;
-use function Codewithkyrian\Transformers\Utils\timeUsage;
 use function count;
 use function end;
 use function log;
@@ -18,27 +17,27 @@ use const INF;
 class WhisperTimeStampLogitsProcessor extends LogitsProcessor
 {
     /**
-     * @var int|mixed The ID of the end-of-sequence token.
+     * @var int|mixed the ID of the end-of-sequence token
      */
     protected int $eosTokenId;
 
     /**
-     * @var int The ID of the token used to indicate that a token should not have a timestamp.
+     * @var int the ID of the token used to indicate that a token should not have a timestamp
      */
     protected int $noTimestampsTokenId;
 
     /**
-     * @var int The ID at which timestamps begin.
+     * @var int the ID at which timestamps begin
      */
     protected int $timestampBegin;
 
     /**
-     * @var int The index at which the first token can have a timestamp.
+     * @var int the index at which the first token can have a timestamp
      */
     protected int $beginIndex;
 
     /**
-     * @var ?int The maximum index at which an initial timestamp can appear.
+     * @var ?int the maximum index at which an initial timestamp can appear
      */
     protected ?int $maxInitialTimestampIndex;
 
@@ -55,7 +54,7 @@ class WhisperTimeStampLogitsProcessor extends LogitsProcessor
 
         $forcedDecoderIds = $generateConfig['forced_decoder_ids'] ?? [];
         if (count($forcedDecoderIds) > 0 && end($forcedDecoderIds)[1] === $this->noTimestampsTokenId) {
-            $this->beginIndex -= 1;
+            --$this->beginIndex;
         }
 
         $this->maxInitialTimestampIndex = $generateConfig['max_initial_timestamp_index'] ?? null;
@@ -63,9 +62,11 @@ class WhisperTimeStampLogitsProcessor extends LogitsProcessor
 
     /**
      * Modify the logits to handle timestamp tokens.
-     * @param array $inputIds The input sequence of tokens.
-     * @param Tensor $logits The logits output by the model.
-     * @return Tensor The modified logits.
+     *
+     * @param array $inputIds the input sequence of tokens
+     * @param Tensor $logits the logits output by the model
+     *
+     * @return Tensor the modified logits
      */
     public function __invoke(array $inputIds, Tensor $logits): Tensor
     {
@@ -75,6 +76,7 @@ class WhisperTimeStampLogitsProcessor extends LogitsProcessor
         if (count($inputIds) === $this->beginIndex - 1) {
             Tensor::mo()->la()->fill(-INF, $logits);
             $logits->buffer()[$this->timestampBegin] = 0;
+
             return $logits;
         }
 
@@ -85,20 +87,20 @@ class WhisperTimeStampLogitsProcessor extends LogitsProcessor
 
         if ($lastWasTimestamp) {
             if ($penultimateWasTimestamp) { // has to be non-timestamp
-                for ($i = $this->timestampBegin; $i < $logits->size(); $i++) {
+                for ($i = $this->timestampBegin; $i < $logits->size(); ++$i) {
                     $logits->buffer()[$i] = -INF;
                 }
             } else { // cannot be normal text tokens
-                for ($i = 0; $i < $this->eosTokenId; $i++) {
+                for ($i = 0; $i < $this->eosTokenId; ++$i) {
                     $logits->buffer()[$i] = -INF;
                 }
             }
         }
 
         // apply the `max_initial_timestamp` option
-        if (count($inputIds) === $this->beginIndex && $this->maxInitialTimestampIndex !== null) {
+        if (count($inputIds) === $this->beginIndex && null !== $this->maxInitialTimestampIndex) {
             $lastAllowed = $this->timestampBegin + $this->maxInitialTimestampIndex;
-            for ($i = $lastAllowed + 1; $i < $logits->size(); $i++) {
+            for ($i = $lastAllowed + 1; $i < $logits->size(); ++$i) {
                 $logits->buffer()[$i] = -INF;
             }
         }
@@ -110,7 +112,7 @@ class WhisperTimeStampLogitsProcessor extends LogitsProcessor
         $maxTextTokenLogProb = $logProbs->sliceWithBounds([0, 0], [1, $this->timestampBegin])->max();
 
         if ($timestampLogProb > $maxTextTokenLogProb) {
-            for ($i = 0; $i < $this->timestampBegin; $i++) {
+            for ($i = 0; $i < $this->timestampBegin; ++$i) {
                 $logits->buffer()[$i] = -INF;
             }
         }

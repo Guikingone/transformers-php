@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Models\Pretrained;
 
-class BartPretrainedModel extends PretrainedModel
-{
-}
+class BartPretrainedModel extends PretrainedModel {}

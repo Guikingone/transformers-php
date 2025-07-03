@@ -6,7 +6,6 @@ namespace Codewithkyrian\Transformers\FeatureExtractors;
 
 use Codewithkyrian\Transformers\Tensor\Tensor;
 
-use function Codewithkyrian\Transformers\Utils\timeUsage;
 use function pow;
 use function sqrt;
 
@@ -14,8 +13,10 @@ class Wav2Vec2FeatureExtractor extends FeatureExtractor
 {
     /**
      *  Extracts features from a given audio using the provided configuration.
-     * @param Tensor $waveform The audio tensor to extract features from.
-     * @return Tensor[] The extracted features.
+     *
+     * @param Tensor $waveform the audio tensor to extract features from
+     *
+     * @return Tensor[] the extracted features
      */
     public function __invoke(Tensor $waveform): array
     {
@@ -23,15 +24,15 @@ class Wav2Vec2FeatureExtractor extends FeatureExtractor
         if ($this->config['do_normalize']) {
             $mean = $waveform->mean();
 
-            //calculate the variance
+            // calculate the variance
             //            $variance = $waveform->add(-$mean)->pow(2)->mean();
             $variance = 0;
-            for ($i = 0; $i < $waveform->size(); $i++) {
+            for ($i = 0; $i < $waveform->size(); ++$i) {
                 $variance += pow($waveform[$i] - $mean, 2);
             }
             $variance /= $waveform->size();
 
-            //normalize the waveform
+            // normalize the waveform
             $waveform = $waveform->add(-$mean)->multiply(1.0 / sqrt($variance + 1e-7));
         }
 

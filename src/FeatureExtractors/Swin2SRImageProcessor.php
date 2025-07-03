@@ -9,16 +9,16 @@ use Codewithkyrian\Transformers\Tensor\Tensor;
 class Swin2SRImageProcessor extends ImageFeatureExtractor
 {
     public function padImage(
-        Tensor    $imageTensor,
-        int|array $padSize,
+        Tensor $imageTensor,
+        array|int $padSize,
         string $tensorFormat = 'CHW', // 'HWC' or 'CHW
-        string    $mode = 'constant',
-        bool      $center = false,
-        int       $constantValues = 0,
+        string $mode = 'constant',
+        bool $center = false,
+        int $constantValues = 0,
     ): Tensor {
         // NOTE: In this case, `padSize` represents the size of the sliding window for the local attention.
         // In other words, the image is padded so that its width and height are multiples of `padSize`.
-        if ($tensorFormat === 'CHW') {
+        if ('CHW' === $tensorFormat) {
             [$imageChannels, $imageHeight, $imageWidth] = $imageTensor->shape();
         } else {
             [$imageHeight, $imageWidth, $imageChannels] = $imageTensor->shape();

@@ -16,9 +16,24 @@ class LogitsProcessorList implements IteratorAggregate
     private array $processors = [];
 
     /**
+     * Applies all logits processors in the list to a batch of logits, modifying them in-place.
+     *
+     * @param array $inputIds the input IDs for the language model
+     * @param Tensor $batchedLogits a 2D array of logits, where each row corresponds to a single input sequence
+     */
+    public function __invoke(array $inputIds, Tensor &$batchedLogits): void
+    {
+        for ($i = 0; $i < count($batchedLogits); ++$i) {
+            foreach ($this->processors as $processor) {
+                $processor($inputIds, $batchedLogits[$i]); // Apply processors in-place
+            }
+        }
+    }
+
+    /**
      * Adds a new logits processor to the list.
      *
-     * @param LogitsProcessor $item The logits processor function to add.
+     * @param LogitsProcessor $item the logits processor function to add
      */
     public function push(LogitsProcessor $item): void
     {
@@ -28,9 +43,9 @@ class LogitsProcessorList implements IteratorAggregate
     /**
      * Adds multiple logits processors to the list.
      *
-     * @param LogitsProcessor[] $items The logits processor functions to add.
+     * @param LogitsProcessor[] $items the logits processor functions to add
      */
-    public function extend(traversable $items): void
+    public function extend(Traversable $items): void
     {
         foreach ($items as $item) {
             $this->processors[] = $item;
@@ -38,24 +53,9 @@ class LogitsProcessorList implements IteratorAggregate
     }
 
     /**
-     * Applies all logits processors in the list to a batch of logits, modifying them in-place.
-     *
-     * @param array $inputIds The input IDs for the language model.
-     * @param Tensor $batchedLogits A 2D array of logits, where each row corresponds to a single input sequence.
-     */
-    public function __invoke(array $inputIds, Tensor &$batchedLogits): void
-    {
-        for ($i = 0; $i < count($batchedLogits); $i++) {
-            foreach ($this->processors as $processor) {
-                $processor($inputIds, $batchedLogits[$i]); // Apply processors in-place
-            }
-        }
-    }
-
-    /**
      * Allows iteration over the processors.
      *
-     * @return Traversable An iterator over the processors.
+     * @return Traversable an iterator over the processors
      */
     public function getIterator(): Traversable
     {

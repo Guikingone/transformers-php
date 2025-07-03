@@ -16,7 +16,7 @@ class Replace extends Normalizer
     {
         $pattern = $this->config['pattern'] ?? null;
 
-        if ($pattern === null) {
+        if (null === $pattern) {
             return $text;
         }
 
@@ -24,11 +24,11 @@ class Replace extends Normalizer
         $string = $pattern['String'] ?? null;
         $replacement = $this->config['content'] ?? '';
 
-        if ($regex !== null) {
+        if (null !== $regex) {
             return preg_replace("/{$regex}/u", $replacement, $text);
         }
 
-        if ($string !== null) {
+        if (null !== $string) {
             return str_replace($string, $replacement, $text);
         }
 

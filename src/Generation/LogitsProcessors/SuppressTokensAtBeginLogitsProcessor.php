@@ -19,13 +19,9 @@ class SuppressTokensAtBeginLogitsProcessor extends LogitsProcessor
 {
     public function __construct(
         protected array $beginSuppressTokens,
-        protected int   $beginIndex = 0,
-    ) {
-    }
+        protected int $beginIndex = 0,
+    ) {}
 
-    /**
-     *
-     */
     public function __invoke(array $inputIds, Tensor $logits): Tensor
     {
         if (count($inputIds) == $this->beginIndex) {

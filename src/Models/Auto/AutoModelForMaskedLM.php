@@ -16,14 +16,14 @@ use Codewithkyrian\Transformers\Models\Pretrained\RoFormerForMaskedLM;
 class AutoModelForMaskedLM extends PretrainedMixin
 {
     public const MODEL_CLASS_MAPPING = [
-        "albert" => AlbertForMaskedLM::class,
-        "bert" => BertForMaskedLM::class,
-        "deberta" => DebertaForMaskedLM::class,
-        "deberta-v2" => DebertaV2ForMaskedLM::class,
-        "distilbert" => DistilBertForMaskedLM::class,
-        "mobilebert" => MobileBertForMaskedLM::class,
-        "roberta" => RobertaForMaskedLM::class,
-        "roformer" => RoFormerForMaskedLM::class,
+        'albert' => AlbertForMaskedLM::class,
+        'bert' => BertForMaskedLM::class,
+        'deberta' => DebertaForMaskedLM::class,
+        'deberta-v2' => DebertaV2ForMaskedLM::class,
+        'distilbert' => DistilBertForMaskedLM::class,
+        'mobilebert' => MobileBertForMaskedLM::class,
+        'roberta' => RobertaForMaskedLM::class,
+        'roformer' => RoFormerForMaskedLM::class,
     ];
 
     public const MODEL_CLASS_MAPPINGS = [

@@ -11,9 +11,7 @@ use Codewithkyrian\Transformers\Tensor\Tensor;
  */
 class TokenClassifierOutput implements ModelOutput
 {
-    public function __construct(public readonly Tensor $logits)
-    {
-    }
+    public function __construct(public readonly Tensor $logits) {}
 
     public static function fromOutput(array $array): self
     {

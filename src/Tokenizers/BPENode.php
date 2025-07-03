@@ -12,9 +12,8 @@ class BPENode
 
     public function __construct(
         public string $token,
-        public float  $bias,
+        public float $bias,
         public ?BPENode $prev = null,
         public ?BPENode $next = null,
-    ) {
-    }
+    ) {}
 }

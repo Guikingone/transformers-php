@@ -23,8 +23,6 @@ class MetaspaceDecoder extends Decoder
      */
     protected string $replacement;
 
-    /**
-     */
     public function __construct(array $config)
     {
         parent::__construct($config);
@@ -40,7 +38,7 @@ class MetaspaceDecoder extends Decoder
         foreach ($tokens as $i => $token) {
             $normalized = str_replace($this->replacement, ' ', $token);
 
-            if ($this->addPrefixSpace && $i == 0 && str_starts_with($normalized, ' ')) {
+            if ($this->addPrefixSpace && 0 == $i && str_starts_with($normalized, ' ')) {
                 $normalized = substr($normalized, 1);
             }
 

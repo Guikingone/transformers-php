@@ -11,7 +11,7 @@ class GreedySampler extends Sampler
     /**
      * Sample the maximum probability of a given logits tensor.
      *
-     * @return array An array with a single tuple, containing the index of the maximum value and a meaningless score (since this is a greedy search).
+     * @return array an array with a single tuple, containing the index of the maximum value and a meaningless score (since this is a greedy search)
      */
     public function sample(Tensor $logits, int $index): array
     {

@@ -8,9 +8,7 @@ use Codewithkyrian\Transformers\Tensor\Tensor;
 
 class MaskedLMOutput implements ModelOutput
 {
-    public function __construct(public readonly Tensor $logits)
-    {
-    }
+    public function __construct(public readonly Tensor $logits) {}
 
     public static function fromOutput(array $array): self
     {

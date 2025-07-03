@@ -39,11 +39,11 @@ it('handles different log levels correctly', function () {
     $levels = ['debug', 'info', 'notice', 'warning', 'error', 'critical', 'alert', 'emergency'];
 
     foreach ($levels as $level) {
-        $this->logger->log($level, "Message at $level level");
+        $this->logger->log($level, "Message at {$level} level");
 
         rewind($this->outputBuffer);
         $output = stream_get_contents($this->outputBuffer);
-        expect($output)->toContain("$level: Message at $level level");
+        expect($output)->toContain("{$level}: Message at {$level} level");
 
         ftruncate($this->outputBuffer, 0); // Clear buffer
         rewind($this->outputBuffer);
@@ -60,7 +60,7 @@ it('handles empty context gracefully', function () {
 });
 
 it('handles stringable objects in the message', function () {
-    $stringable = new class() {
+    $stringable = new class {
         public function __toString(): string
         {
             return 'Stringable message content';

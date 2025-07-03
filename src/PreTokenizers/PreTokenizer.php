@@ -17,9 +17,20 @@ abstract class PreTokenizer
 {
     public const PUNCTUATION_REGEX = '\p{P}\u0021-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007E';
 
+    /** Tokenizes the given text into pre-tokens.
+     * @param string|string[] $text the text to pre-tokenize
+     * @param array $options additional options for the pre-tokenization logic
+     *
+     * @return string[]
+     */
+    public function __invoke(array|string $text, array $options): array
+    {
+        return $this->preTokenize($text, $options);
+    }
+
     public static function fromConfig(?array $config): ?self
     {
-        if ($config === null) {
+        if (null === $config) {
             return null;
         }
 
@@ -38,22 +49,13 @@ abstract class PreTokenizer
         };
     }
 
-    /**
-     * Method that should be implemented by subclasses to define the specific pre-tokenization logic.
-     *
-     * @param string|string[] $text The text to pre-tokenize.
-     * @param array $options Additional options for the pre-tokenization logic.
-     * @return string[] The pre-tokenized text.
-     */
-    abstract protected function preTokenizeText(string|array $text, array $options): array;
-
-
     /** Tokenizes the given text into pre-tokens.
-     * @param string|string[] $text The text to pre-tokenize.
-     * @param array $options Additional options for the pre-tokenization logic.
+     * @param string|string[] $text the text to pre-tokenize
+     * @param array $options additional options for the pre-tokenization logic
+     *
      * @return string[]
      */
-    public function preTokenize(string|array $text, array $options): array
+    public function preTokenize(array|string $text, array $options): array
     {
         // Check if $text is an array
         if (is_array($text)) {
@@ -63,18 +65,18 @@ abstract class PreTokenizer
 
             return array_merge(...$result);
         }
+
         // If $text is not an array, apply pre_tokenize_text directly
         return $this->preTokenizeText($text, $options);
-
     }
 
-    /** Tokenizes the given text into pre-tokens.
-     * @param string|string[] $text The text to pre-tokenize.
-     * @param array $options Additional options for the pre-tokenization logic.
-     * @return string[]
+    /**
+     * Method that should be implemented by subclasses to define the specific pre-tokenization logic.
+     *
+     * @param string|string[] $text the text to pre-tokenize
+     * @param array $options additional options for the pre-tokenization logic
+     *
+     * @return string[] the pre-tokenized text
      */
-    public function __invoke(string|array $text, array $options): array
-    {
-        return $this->preTokenize($text, $options);
-    }
+    abstract protected function preTokenizeText(array|string $text, array $options): array;
 }

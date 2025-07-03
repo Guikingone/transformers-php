@@ -71,13 +71,13 @@ class AudioClassificationPipeline extends Pipeline
                 $values[] = ['label' => $id2label[$index], 'score' => $scores[$i]];
             }
 
-            if ($topK === 1) {
+            if (1 === $topK) {
                 $toReturn = array_merge($toReturn, $values);
             } else {
                 $toReturn[] = $values;
             }
         }
 
-        return $isBatched || $topK === 1 ? $toReturn : $toReturn[0];
+        return $isBatched || 1 === $topK ? $toReturn : $toReturn[0];
     }
 }

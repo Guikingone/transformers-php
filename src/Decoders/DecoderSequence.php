@@ -14,8 +14,6 @@ class DecoderSequence extends Decoder
      */
     protected array $decoders;
 
-    /**
-     */
     public function __construct(array $config)
     {
         parent::__construct($config);

@@ -10,7 +10,7 @@ use Codewithkyrian\Transformers\Tensor\Tensor;
 use function Codewithkyrian\Transformers\Utils\array_pop_key;
 
 /**
- * Text classification pipeline
+ * Text classification pipeline.
  *
  * *Example:** Sentiment-analysis w/ `Xenova/distilbert-base-uncased-finetuned-sst-2-english`.
  * ```php
@@ -69,9 +69,9 @@ class TextClassificationPipeline extends Pipeline
 
         $problemType = $this->model->config['problem_type'] ?? 'single_label_classification';
 
-        $activationFunction = $problemType == 'multi_label_classification' ?
-            static fn (Tensor $batch) => $batch->sigmoid() :
-            static fn (Tensor $batch) => $batch->softmax();
+        $activationFunction = 'multi_label_classification' == $problemType
+            ? static fn (Tensor $batch) => $batch->sigmoid()
+            : static fn (Tensor $batch) => $batch->softmax();
 
         $id2label = $this->model->config['id2label'];
         $toReturn = [];
@@ -87,7 +87,7 @@ class TextClassificationPipeline extends Pipeline
                 $values[] = ['label' => $id2label[$index], 'score' => $scores[$i]];
             }
 
-            if ($topK === 1) {
+            if (1 === $topK) {
                 $toReturn = $values;
             } else {
                 $toReturn[] = $values;

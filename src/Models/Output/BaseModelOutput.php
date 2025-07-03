@@ -12,16 +12,15 @@ use Codewithkyrian\Transformers\Tensor\Tensor;
 class BaseModelOutput implements ModelOutput
 {
     /**
-     * @param Tensor $lastHiddenState Sequence of hidden-states at the output of the last layer of the model.
-     * @param Tensor|null $hiddenStates Hidden-states of the model at the output of each layer plus the optional initial embedding outputs.
-     * @param Tensor|null $attentions Attentions weights after the attention softmax, used to compute the weighted average in the self-attention heads.
+     * @param Tensor $lastHiddenState sequence of hidden-states at the output of the last layer of the model
+     * @param null|Tensor $hiddenStates hidden-states of the model at the output of each layer plus the optional initial embedding outputs
+     * @param null|Tensor $attentions attentions weights after the attention softmax, used to compute the weighted average in the self-attention heads
      */
     public function __construct(
-        public readonly Tensor  $lastHiddenState,
+        public readonly Tensor $lastHiddenState,
         public readonly ?Tensor $hiddenStates = null,
         public readonly ?Tensor $attentions = null,
-    ) {
-    }
+    ) {}
 
     public static function fromOutput(array $array): self
     {

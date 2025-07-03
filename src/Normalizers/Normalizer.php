@@ -13,13 +13,16 @@ use function func_get_args;
  */
 abstract class Normalizer
 {
-    public function __construct(protected array $config)
+    public function __construct(protected array $config) {}
+
+    public function __invoke(): string
     {
+        return $this->normalize(...func_get_args());
     }
 
     public static function fromConfig(?array $config): ?self
     {
-        if ($config === null) {
+        if (null === $config) {
             return null;
         }
 
@@ -40,9 +43,4 @@ abstract class Normalizer
     }
 
     abstract public function normalize(string $text): string;
-
-    public function __invoke(): string
-    {
-        return $this->normalize(...func_get_args());
-    }
 }

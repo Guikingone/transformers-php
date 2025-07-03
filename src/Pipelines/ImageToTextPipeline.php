@@ -75,5 +75,4 @@ class ImageToTextPipeline extends Pipeline
 
         return $isBatched ? $toReturn : $toReturn[0];
     }
-
 }

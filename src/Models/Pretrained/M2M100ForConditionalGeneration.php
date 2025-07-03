@@ -19,11 +19,11 @@ class M2M100ForConditionalGeneration extends M2M100PretrainedModel
     protected mixed $encoderDimKv;
 
     public function __construct(
-        AutoConfig               $config,
-        InferenceSession         $session,
-        public InferenceSession  $decoderMergedSession,
+        AutoConfig $config,
+        InferenceSession $session,
+        public InferenceSession $decoderMergedSession,
         public ModelArchitecture $modelArchitecture,
-        public GenerationConfig  $generationConfig,
+        public GenerationConfig $generationConfig,
     ) {
         parent::__construct($config, $session, $modelArchitecture);
 
@@ -35,5 +35,4 @@ class M2M100ForConditionalGeneration extends M2M100PretrainedModel
         $this->numEncoderHeads = $this->config['encoder_attention_heads'];
         $this->encoderDimKv = $this->config['d_model'] / $this->numEncoderHeads;
     }
-
 }

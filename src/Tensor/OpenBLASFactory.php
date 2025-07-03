@@ -13,21 +13,18 @@ use RuntimeException;
 use function extension_loaded;
 use function file_get_contents;
 
-/**
- */
 class OpenBLASFactory
 {
     private static ?FFI $ffi = null;
-
 
     /**
      * @param array<string> $libFiles
      */
     public function __construct(
         string $headerFile,
-        array  $libFiles,
+        array $libFiles,
     ) {
-        if (self::$ffi !== null) {
+        if (null !== self::$ffi) {
             return;
         }
         if (!extension_loaded('ffi')) {
@@ -44,20 +41,22 @@ class OpenBLASFactory
             }
 
             self::$ffi = $ffi;
+
             break;
         }
     }
 
     public function isAvailable(): bool
     {
-        return self::$ffi !== null;
+        return null !== self::$ffi;
     }
 
     public function Blas(): Blas
     {
-        if (self::$ffi == null) {
+        if (null == self::$ffi) {
             throw new RuntimeException('openblas library not loaded.');
         }
+
         return new Blas(self::$ffi);
     }
 

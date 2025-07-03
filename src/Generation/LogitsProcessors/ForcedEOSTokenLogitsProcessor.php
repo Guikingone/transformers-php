@@ -18,8 +18,7 @@ class ForcedEOSTokenLogitsProcessor extends LogitsProcessor
     public function __construct(
         protected int $maxLength,
         protected int $forcedEosTokenId,
-    ) {
-    }
+    ) {}
 
     public function __invoke(array $inputIds, Tensor $logits): Tensor
     {
@@ -27,6 +26,7 @@ class ForcedEOSTokenLogitsProcessor extends LogitsProcessor
             Tensor::mo()->la()->fill(-INF, $logits);
             $logits->buffer()[$this->forcedEosTokenId] = 0;
         }
+
         return $logits;
     }
 }

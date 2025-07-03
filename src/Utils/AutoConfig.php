@@ -12,9 +12,9 @@ class AutoConfig implements ArrayAccess
 
     public bool $isEncoderDecoder;
 
-    protected array $architectures = [];
+    public array|int $padTokenId;
 
-    public int|array $padTokenId;
+    protected array $architectures = [];
 
     protected int $vocabSize;
 
@@ -31,10 +31,10 @@ class AutoConfig implements ArrayAccess
     }
 
     public static function fromPretrained(
-        string  $modelNameOrPath,
-        ?array  $config = null,
+        string $modelNameOrPath,
+        ?array $config = null,
         ?string $cacheDir = null,
-        string  $revision = 'main',
+        string $revision = 'main',
         ?callable $onProgress = null,
     ): self {
         $data = $config ?? Hub::getJson(

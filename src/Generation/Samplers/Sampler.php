@@ -17,13 +17,10 @@ use function mt_rand;
  */
 abstract class Sampler
 {
-    public function __construct(protected GenerationConfig $generationConfig)
-    {
-    }
+    public function __construct(protected GenerationConfig $generationConfig) {}
 
     /**
      * Executes the sampler, using the specified logits.
-     *
      */
     public function __invoke(Tensor $logits, int $index = -1): array
     {
@@ -39,6 +36,7 @@ abstract class Sampler
 
     /**
      * Returns the specified logits as an array, with temperature applied.
+     *
      * @return array
      */
     public function getLogits(Tensor $logits, int $index): Tensor
@@ -54,8 +52,10 @@ abstract class Sampler
 
     /**
      * Selects an item randomly based on the specified probabilities.
-     * @param array $probabilities An array of probabilities to use for selection.
-     * @return int The index of the selected item.
+     *
+     * @param array $probabilities an array of probabilities to use for selection
+     *
+     * @return int the index of the selected item
      */
     public function randomSelect(array $probabilities): int
     {
@@ -78,7 +78,8 @@ abstract class Sampler
 
     /**
      * Returns a Sampler object based on the specified options.
-     * @return Sampler A Sampler object.
+     *
+     * @return Sampler a Sampler object
      */
     public static function getSampler(GenerationConfig $generationConfig): Sampler
     {
@@ -93,13 +94,14 @@ abstract class Sampler
         // NOTE: beam search is implemented directly into the generation function
         if ($generationConfig->do_sample) {
             return new MultinomialSampler($generationConfig);
-        } elseif ($generationConfig->num_beams > 1) {
+        }
+        if ($generationConfig->num_beams > 1) {
             return new BeamSearchSampler($generationConfig);
         }
         if ($generationConfig->num_return_sequences > 1) {
             throw new Error("num_return_sequences has to be 1 when doing greedy search, but is {$generationConfig->num_return_sequences}.");
         }
-        return new GreedySampler($generationConfig);
 
+        return new GreedySampler($generationConfig);
     }
 }

@@ -7,6 +7,4 @@ namespace Codewithkyrian\Transformers\PreTrainedTokenizers;
 /**
  * BertTokenizer is a class used to tokenize text for BERT models.
  */
-class BertTokenizer extends PreTrainedTokenizer
-{
-}
+class BertTokenizer extends PreTrainedTokenizer {}

@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace Codewithkyrian\Transformers\Generation\Streamers;
 
 use InvalidArgumentException;
-use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Console\Output\ConsoleSectionOutput;
-use Symfony\Component\Console\Output\OutputInterface;
 
 use function call_user_func;
 use function count;
@@ -50,7 +47,7 @@ class WhisperTextStreamer extends Streamer
     public function put(mixed $value): void
     {
         if (count($value) > 1) {
-            throw new InvalidArgumentException("WhisperTextStreamer only supports batch size 1");
+            throw new InvalidArgumentException('WhisperTextStreamer only supports batch size 1');
         }
 
         $tokens = $value[0]['output_token_ids'];
@@ -65,11 +62,11 @@ class WhisperTextStreamer extends Streamer
         if ($offset >= 0) {
             $time = $offset * $this->timePrecision;
             if ($this->waitingForTimestamp) {
-                if ($this->onTimestampEndCallback !== null) {
+                if (null !== $this->onTimestampEndCallback) {
                     call_user_func($this->onTimestampEndCallback, $time);
                 }
             } else {
-                if ($this->onTimestampStartCallback !== null) {
+                if (null !== $this->onTimestampStartCallback) {
                     call_user_func($this->onTimestampStartCallback, $time);
                 }
             }
@@ -82,7 +79,7 @@ class WhisperTextStreamer extends Streamer
 
         [$decodedText, $optional] = $this->tokenizer->decodeASR($this->chunksToProcess, $this->timePrecision);
 
-        if ($this->onStreamCallback !== null) {
+        if (null !== $this->onStreamCallback) {
             call_user_func(
                 $this->onStreamCallback,
                 $decodedText,
@@ -112,31 +109,34 @@ class WhisperTextStreamer extends Streamer
     public function onTimestampStart(callable $callback): static
     {
         $this->onTimestampStartCallback = $callback;
+
         return $this;
     }
 
     public function onTimestampEnd(callable $callback): static
     {
         $this->onTimestampEndCallback = $callback;
+
         return $this;
     }
 
     public function setTimestampBegin(int $timestampBegin): static
     {
         $this->timestampBegin = $timestampBegin;
+
         return $this;
     }
 
     public function setTimePrecision(float $timePrecision): static
     {
         $this->timePrecision = $timePrecision;
+
         return $this;
     }
 
-
     public function end(): void
     {
-        if ($this->onStreamEndCallback !== null) {
+        if (null !== $this->onStreamEndCallback) {
             call_user_func($this->onStreamEndCallback);
         }
     }

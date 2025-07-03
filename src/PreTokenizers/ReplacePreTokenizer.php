@@ -10,14 +10,16 @@ class ReplacePreTokenizer extends PreTokenizer
 {
     protected ?string $pattern;
     protected string $content;
+
     public function __construct(array $config)
     {
         $this->pattern = $config['pattern'] ?? null;
         $this->content = $config['content'];
     }
-    public function preTokenizeText(string|array $text, array $options): array
+
+    public function preTokenizeText(array|string $text, array $options): array
     {
-        if ($this->pattern === null) {
+        if (null === $this->pattern) {
             return [$text];
         }
 

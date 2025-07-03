@@ -34,7 +34,7 @@ class ZeroShotImageClassificationPipeline extends Pipeline
     public function __invoke(array|string $inputs, ...$args): array
     {
         $candidateLabels = $args[0];
-        $hypothesisTemplate = $args['hypothesisTemplate'] ?? "This is a photo of {}";
+        $hypothesisTemplate = $args['hypothesisTemplate'] ?? 'This is a photo of {}';
 
         $isBatched = is_array($inputs);
         $preparedImages = prepareImages($inputs);
@@ -45,10 +45,9 @@ class ZeroShotImageClassificationPipeline extends Pipeline
         // Run tokenization
         $textInputs = $this->tokenizer->tokenize(
             $texts,
-            padding: $this->model->config['model_type'] === 'siglip' ? 'max_length' : true,
+            padding: 'siglip' === $this->model->config['model_type'] ? 'max_length' : true,
             truncation: true,
         );
-
 
         // Run processor
         ['pixel_values' => $pixelValues] = ($this->processor)($preparedImages);
@@ -56,9 +55,9 @@ class ZeroShotImageClassificationPipeline extends Pipeline
         // Run model with both text and pixel inputs
         $output = $this->model->__invoke(array_merge($textInputs, ['pixel_values' => $pixelValues]));
 
-        $activationFn = $this->model->config['model_type'] === 'siglip' ?
-            static fn (Tensor $batch) => $batch->sigmoid() :
-            static fn (Tensor $batch) => $batch->softmax();
+        $activationFn = 'siglip' === $this->model->config['model_type']
+            ? static fn (Tensor $batch) => $batch->sigmoid()
+            : static fn (Tensor $batch) => $batch->softmax();
 
         // Compare each image with each candidate label
         $toReturn = [];
@@ -80,5 +79,4 @@ class ZeroShotImageClassificationPipeline extends Pipeline
 
         return $isBatched ? $toReturn : $toReturn[0];
     }
-
 }

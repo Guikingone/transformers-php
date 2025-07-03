@@ -90,7 +90,7 @@ use function is_null;
  */
 class AutomaticSpeechRecognitionPipeline extends Pipeline
 {
-    public function __invoke(array|string $inputs, ...$args): array|Tensor|Image
+    public function __invoke(array|string $inputs, ...$args): array|Image|Tensor
     {
         return match ($this->model->config->modelType) {
             'whisper' => $this->__invokeWhisper($inputs, ...$args),
@@ -103,14 +103,14 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
         };
     }
 
-    private function __invokeWhisper(array|string $inputs, ...$args): array|Tensor|Image
+    private function __invokeWhisper(array|string $inputs, ...$args): array|Image|Tensor
     {
         $returnTimestamps = $args['returnTimestamps'] ?? false;
         $chunkLengthSecs = $args['chunkLengthSecs'] ?? 0;
         $forceFullSequences = $args['forceFullSequences'] ?? false;
         $strideLengthSecs = $args['strideLengthSecs'] ?? null;
 
-        if ($returnTimestamps === 'word') {
+        if ('word' === $returnTimestamps) {
             $args['return_token_timestamps'] = true;
         }
 
@@ -148,7 +148,7 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
         $timePrecision = $this->processor->featureExtractor->config['chunk_length'] / $this->model->config['max_source_positions'];
         $hopLength = $this->processor->featureExtractor->config['hop_length'];
         $samplingRate = $this->processor->featureExtractor->config['sampling_rate'];
-        $timestampBegin = $this->tokenizer->model->convertTokensToIds(["<|notimestamps|>"])[0] + 1;
+        $timestampBegin = $this->tokenizer->model->convertTokensToIds(['<|notimestamps|>'])[0] + 1;
 
         $toReturn = [];
 
@@ -163,8 +163,7 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
             $chunks = [];
 
             if ($chunkLengthSecs > 0) {
-
-                if ($strideLengthSecs === null) {
+                if (null === $strideLengthSecs) {
                     $strideLengthSecs = $chunkLengthSecs / 6;
                 } elseif ($chunkLengthSecs <= $strideLengthSecs) {
                     throw new InvalidArgumentException('`strideLengthSecs` must be less than `chunkLengthSecs`');
@@ -172,7 +171,7 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
 
                 $window = $chunkLengthSecs * $samplingRate;
                 $stride = $strideLengthSecs * $samplingRate;
-                $jump = (int)floor($window - 2 * $stride);
+                $jump = (int) floor($window - 2 * $stride);
                 $offset = 0;
 
                 while ($offset < $audioTensor->size()) {
@@ -184,7 +183,7 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
                     $subAudio = $audioTensor->sliceWithBounds([$offset], [$window]);
                     $feature = ($this->processor)($subAudio);
 
-                    $isFirstChunk = $offset === 0;
+                    $isFirstChunk = 0 === $offset;
                     $isLastChunk = $offset + $jump >= $audioTensor->size();
 
                     $chunks[] = [
@@ -207,17 +206,16 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
                         'is_last' => true,
                     ],
                 ];
-
             }
 
             // Generate for each set of input features
             foreach ($chunks as &$chunk) {
-                $generationConfig['num_frames'] = (int)floor($chunk['stride'][0] / $hopLength);
+                $generationConfig['num_frames'] = (int) floor($chunk['stride'][0] / $hopLength);
 
                 $data = $this->model->generate($chunk['input_features'], generationConfig: $generationConfig, streamer: $streamer);
 
                 // TODO: Right now we only get top beam
-                if ($returnTimestamps === 'word') {
+                if ('word' === $returnTimestamps) {
                     $chunk['tokens'] = $data['sequences'][0];
                     $chunk['token_timestamps'] = $data['token_timestamps'][0]->round(2);
                 } else {
@@ -243,7 +241,7 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
         return $isBatched ? $toReturn : $toReturn[0];
     }
 
-    private function __invokeWav2Vec2(array|string $inputs, ...$args): array|Tensor|Image
+    private function __invokeWav2Vec2(array|string $inputs, ...$args): array|Image|Tensor
     {
         $isBatched = is_array($inputs);
 
@@ -270,6 +268,7 @@ class AutomaticSpeechRecognitionPipeline extends Pipeline
             $predictedSentences = $this->tokenizer->decode($predictedIds);
             $toReturn[] = ['text' => $predictedSentences];
         }
+
         return $isBatched ? $toReturn : $toReturn[0];
     }
 }

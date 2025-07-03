@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Generation\Streamers;
 
-class StdOutStreamer extends TextStreamer
-{
-}
+class StdOutStreamer extends TextStreamer {}

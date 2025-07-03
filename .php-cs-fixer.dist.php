@@ -18,6 +18,7 @@ return (new PhpCsFixer\Config())
         '@PSR1' => true,
         '@PSR2' => true,
         '@PSR12' => true,
+        '@PhpCsFixer' => true,
         '@PHP81Migration' => true,
         'concat_space' => ['spacing' => 'one'],
         'array_syntax' => ['syntax' => 'short'],

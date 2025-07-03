@@ -8,9 +8,8 @@ use function Codewithkyrian\Transformers\Utils\timeUsage;
 
 require_once './bootstrap.php';
 
-
-//$classifier = pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli');
-//$result = $classifier('Who are you voting for in 2020?', ['politics', 'public health', 'economics', 'elections']);
+// $classifier = pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli');
+// $result = $classifier('Who are you voting for in 2020?', ['politics', 'public health', 'economics', 'elections']);
 
 ini_set('memory_limit', -1);
 $classifier = pipeline('zero-shot-classification', 'Xenova/nli-deberta-v3-xsmall');
@@ -28,15 +27,11 @@ $result = $classifier(
     multiLabel: true,
 );
 
-
-
-
-
-//$classifier = pipeline('zero-shot-classification', 'Xenova/nli-deberta-v3-xsmall');
-////$classifier = pipeline('zero-shot-classification', 'Xenova/distilbert-base-uncased-mnli');
+// $classifier = pipeline('zero-shot-classification', 'Xenova/nli-deberta-v3-xsmall');
+// //$classifier = pipeline('zero-shot-classification', 'Xenova/distilbert-base-uncased-mnli');
 //
 //
-//$result = $classifier('Apple just announced the newest iPhone 13', ["technology", "sports", "politics"]);
+// $result = $classifier('Apple just announced the newest iPhone 13', ["technology", "sports", "politics"]);
 
 dd($result, timeUsage(), memoryUsage());
 

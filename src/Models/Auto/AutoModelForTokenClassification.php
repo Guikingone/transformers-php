@@ -13,10 +13,10 @@ use Codewithkyrian\Transformers\Models\Pretrained\RoFormerForTokenClassification
 class AutoModelForTokenClassification extends PretrainedMixin
 {
     public const MODEL_CLASS_MAPPING = [
-        "bert" => BertForTokenClassification::class,
-        "deberta" => DebertaForTokenClassification::class,
-        "deberta-v2" => DebertaV2ForTokenClassification::class,
-        "roberta" => RobertaForTokenClassification::class,
+        'bert' => BertForTokenClassification::class,
+        'deberta' => DebertaForTokenClassification::class,
+        'deberta-v2' => DebertaV2ForTokenClassification::class,
+        'roberta' => RobertaForTokenClassification::class,
         'roformer' => RoFormerForTokenClassification::class,
     ];
 

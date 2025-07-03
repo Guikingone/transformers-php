@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Generation\Streamers;
 
-use Codewithkyrian\Transformers\PreTrainedTokenizers\PreTrainedTokenizer;
 use InvalidArgumentException;
 
 use function array_slice;
@@ -45,7 +44,7 @@ class TextStreamer extends Streamer
     public function put(mixed $value): void
     {
         if (count($value) > 1) {
-            throw new InvalidArgumentException("TextStreamer only supports batch size 1");
+            throw new InvalidArgumentException('TextStreamer only supports batch size 1');
         }
 
         if ($this->skipPrompt && $this->nextTokensArePrompt) {
@@ -58,6 +57,7 @@ class TextStreamer extends Streamer
             $prompt = $this->tokenizer->decode($this->promptTokens, skipSpecialTokens: true);
             $this->printedLength = mb_strlen($prompt);
             $this->lastDecodedCheckpointForToken = count($this->promptTokens) - 1;
+
             return;
         }
 
@@ -73,7 +73,7 @@ class TextStreamer extends Streamer
         $punctuationMarks = ['.', ',', '!', '?', ';', ':'];
 
         $this->printedText = mb_substr($this->printedText, 0, $this->lastDecodedCheckpointForText)
-            . ($this->lastDecodedCheckpointForToken == 0 ? '' : ' ')
+            . (0 == $this->lastDecodedCheckpointForToken ? '' : ' ')
             . $decodedText;
 
         $newText = mb_substr($this->printedText, $this->printedLength);
@@ -85,17 +85,17 @@ class TextStreamer extends Streamer
             $this->lastDecodedCheckpointForText = mb_strlen($this->printedText);
         }
 
-        if ($this->onStreamCallback !== null) {
+        if (null !== $this->onStreamCallback) {
             call_user_func(
                 $this->onStreamCallback,
-                $this->streamMode === StreamMode::PARTIAL ? $newText : $this->printedText,
+                StreamMode::PARTIAL === $this->streamMode ? $newText : $this->printedText,
             );
         }
     }
 
     public function end(): void
     {
-        if ($this->onStreamEndCallback !== null) {
+        if (null !== $this->onStreamEndCallback) {
             call_user_func($this->onStreamEndCallback, $this->printedText);
         }
 

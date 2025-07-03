@@ -33,7 +33,9 @@ class ImageToImagePipeline extends Pipeline
 {
     /**
      * @param mixed ...$args
+     *
      * @return Image|Image[]
+     *
      * @throws Exception
      */
     public function __invoke(array|string $inputs, ...$args): array|Image

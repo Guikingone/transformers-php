@@ -7,7 +7,6 @@ namespace Codewithkyrian\Transformers\Generation\LogitsProcessors;
 use Codewithkyrian\Transformers\Tensor\Tensor;
 
 use function array_column;
-use function Codewithkyrian\Transformers\Utils\timeUsage;
 use function count;
 
 use const INF;
@@ -25,9 +24,10 @@ class ForceTokensLogitsProcessor extends LogitsProcessor
     /**
      * Apply the processor to the input logits.
      *
-     * @param Tensor[] $inputIds The input IDs.
-     * @param Tensor $logits The logits to process.
-     * @return Tensor The processed logits.
+     * @param Tensor[] $inputIds the input IDs
+     * @param Tensor $logits the logits to process
+     *
+     * @return Tensor the processed logits
      */
     public function __invoke(array $inputIds, Tensor $logits): Tensor
     {

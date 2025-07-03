@@ -8,7 +8,7 @@ use Codewithkyrian\Transformers\Models\ModelArchitecture;
 use Codewithkyrian\Transformers\Utils\AutoConfig;
 
 /**
- * CLIP Vision Model with a projection layer on top (a linear layer on top of the pooled output)
+ * CLIP Vision Model with a projection layer on top (a linear layer on top of the pooled output).
  *
  * Particularly useful for image feature extraction tasks.
  */
@@ -17,7 +17,7 @@ class CLIPVisionModelWithProjection extends CLIPPretrainedModel
     public static function fromPretrained(
         string $modelNameOrPath,
         bool $quantized = true,
-        AutoConfig|array $config = null,
+        null|array|AutoConfig $config = null,
         ?string $cacheDir = null,
         ?string $token = null,
         string $revision = 'main',
@@ -27,6 +27,7 @@ class CLIPVisionModelWithProjection extends CLIPPretrainedModel
     ): PretrainedModel {
         // Update default model file name if not provided
         $modelFilename ??= 'vision_model';
+
         return parent::fromPretrained($modelNameOrPath, $quantized, $config, $cacheDir, $token, $revision, $modelFilename, $modelArchitecture, $onProgress);
     }
 }

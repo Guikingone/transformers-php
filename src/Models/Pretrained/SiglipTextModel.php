@@ -15,7 +15,7 @@ class SiglipTextModel extends SiglipPretrainedModel
     public static function fromPretrained(
         string $modelNameOrPath,
         bool $quantized = true,
-        AutoConfig|array $config = null,
+        null|array|AutoConfig $config = null,
         ?string $cacheDir = null,
         ?string $token = null,
         string $revision = 'main',
@@ -25,6 +25,7 @@ class SiglipTextModel extends SiglipPretrainedModel
     ): PretrainedModel {
         // Update default model file name if not provided
         $modelFilename ??= 'text_model';
+
         return parent::fromPretrained($modelNameOrPath, $quantized, $config, $cacheDir, $token, $revision, $modelFilename, $modelArchitecture, $onProgress);
     }
 }

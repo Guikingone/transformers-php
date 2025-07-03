@@ -13,7 +13,6 @@ class BeamSearchSampler extends Sampler
 {
     /**
      * Sample from the logits.
-     *
      */
     public function sample(Tensor $logits, int $index): array
     {
@@ -33,7 +32,7 @@ class BeamSearchSampler extends Sampler
         $probabilities = $topLogits->softmax()->toArray();
 
         $sampledResults = [];
-        for ($i = 0; $i < $this->generationConfig->num_beams; $i++) {
+        for ($i = 0; $i < $this->generationConfig->num_beams; ++$i) {
             $sampledResults[] = [
                 $topIndices[$i], // token id
                 log($probabilities[$i]), // score

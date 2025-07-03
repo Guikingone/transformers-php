@@ -16,7 +16,7 @@ use Exception;
 use function property_exists;
 
 /**
- * Vision Encoder-Decoder model based on OpenAI's GPT architecture for image captioning and other vision tasks
+ * Vision Encoder-Decoder model based on OpenAI's GPT architecture for image captioning and other vision tasks.
  */
 class VisionEncoderDecoderModel extends PretrainedModel
 {
@@ -35,10 +35,10 @@ class VisionEncoderDecoderModel extends PretrainedModel
     /**
      * Creates a new instance of the `VisionEncoderDecoderModel` class.
      *
-     * @param AutoConfig $config The configuration array specifying the hyperparameters and other model settings.
-     * @param mixed $session The ONNX session containing the encoder model.
-     * @param InferenceSession $decoderMergedSession The ONNX session containing the merged decoder model.
-     * @param GenerationConfig $generationConfig Configuration object for the generation process.
+     * @param AutoConfig $config the configuration array specifying the hyperparameters and other model settings
+     * @param mixed $session the ONNX session containing the encoder model
+     * @param InferenceSession $decoderMergedSession the ONNX session containing the merged decoder model
+     * @param GenerationConfig $generationConfig configuration object for the generation process
      */
     public function __construct(
         AutoConfig $config,

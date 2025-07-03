@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Codewithkyrian\Transformers\Decoders;
 
 use Codewithkyrian\Transformers\Tokenizers\AddedToken;
-use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
-use SplFixedArray;
 
 use function array_filter;
 use function array_map;
@@ -278,12 +276,12 @@ class ByteLevelDecoder extends Decoder
         'ÿ' => 255,
     ];
 
-
     /**
      * Convert an array of tokens to a string by decoding each byte.
      *
-     * @param array $tokens Array of tokens to be decoded.
-     * @return string The decoded string.
+     * @param array $tokens array of tokens to be decoded
+     *
+     * @return string the decoded string
      */
     public function convertTokensToString(array $tokens): string
     {

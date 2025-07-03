@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Models\Pretrained;
 
-class GPT2Model extends GPT2PretrainedModel
-{
-}
+class GPT2Model extends GPT2PretrainedModel {}

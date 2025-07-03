@@ -8,7 +8,7 @@ namespace Codewithkyrian\Transformers\Tokenizers;
  * Represent a token added by the user on top of the existing Model vocabulary.
  * AddedToken can be configured to specify the behavior they should have in various situations like:
  *   - Whether they should only match single words
- *   - Whether to include any whitespace on its left or right
+ *   - Whether to include any whitespace on its left or right.
  */
 class AddedToken
 {
@@ -41,8 +41,7 @@ class AddedToken
          * Whether this token is a special token.
          */
         public readonly bool $special = false,
-    ) {
-    }
+    ) {}
 
     public static function make(array $config): self
     {

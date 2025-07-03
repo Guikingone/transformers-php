@@ -19,19 +19,19 @@ class GenerationConfig implements ArrayAccess
     /** @var int The maximum length the generated tokens can have. Corresponds to the length of the input prompt + `max_new_tokens`. Its effect is overridden by `max_new_tokens`, if also set. */
     public int $max_length;
 
-    /** @var int|null The maximum numbers of tokens to generate, ignoring the number of tokens in the prompt. */
+    /** @var null|int The maximum numbers of tokens to generate, ignoring the number of tokens in the prompt. */
     public ?int $max_new_tokens;
 
     /** @var int The minimum length of the sequence to be generated. */
     public int $min_length;
 
-    /** @var int|null The minimum numbers of tokens to generate, ignoring the number of tokens in the prompt. */
+    /** @var null|int The minimum numbers of tokens to generate, ignoring the number of tokens in the prompt. */
     public ?int $min_new_tokens;
 
     /** @var bool|string Controls the stopping condition for beam-based methods, like beam-search. */
     public bool|string $early_stopping;
 
-    /** @var int|null The maximum amount of time you allow the computation to run for in seconds. */
+    /** @var null|int The maximum amount of time you allow the computation to run for in seconds. */
     public ?int $max_time;
 
     /** @var bool Whether or not to use sampling; use greedy decoding otherwise. */
@@ -43,7 +43,7 @@ class GenerationConfig implements ArrayAccess
     /** @var int Number of groups to divide `num_beams` into in order to ensure diversity among different groups of beams. */
     public int $num_beam_groups;
 
-    /** @var float|null The values balance the model confidence and the degeneration penalty in contrastive search decoding. */
+    /** @var null|float The values balance the model confidence and the degeneration penalty in contrastive search decoding. */
     public ?float $penalty_alpha;
 
     /** @var bool Whether or not the model should use the past last key/values attentions to speed up decoding. */
@@ -82,10 +82,10 @@ class GenerationConfig implements ArrayAccess
     /** @var int If set to int > 0, all ngrams of that size can only occur once. */
     public int $no_repeat_ngram_size;
 
-    /** @var int[][]|null List of token ids that are not allowed to be generated. */
+    /** @var null|int[][] List of token ids that are not allowed to be generated. */
     public ?array $bad_words_ids;
 
-    /** @var int[][]|int[][][]|null List of token ids that must be generated. */
+    /** @var null|int[][]|int[][][] List of token ids that must be generated. */
     public ?array $force_words_ids;
 
     /** @var bool Whether to re-normalize the logits after applying all the logits processors or warpers (including the custom ones). */
@@ -97,22 +97,22 @@ class GenerationConfig implements ArrayAccess
     /** @var ?int The id of the token to force as the first generated token after the `decoder_start_token_id`. */
     public ?int $forced_bos_token_id;
 
-    /** @var int|int[]|null The id of the token to force as the last generated token when `max_length` is reached. */
-    public int|array|null $forced_eos_token_id;
+    /** @var null|int|int[] The id of the token to force as the last generated token when `max_length` is reached. */
+    public null|array|int $forced_eos_token_id;
 
     /** @var bool Whether to remove possible *nan* and *inf* outputs of the model to prevent the generation method to crash. */
     public bool $remove_invalid_values;
 
-    /** @var int[]|null This Tuple adds an exponentially increasing length penalty, after a certain amount of tokens have been generated. */
+    /** @var null|int[] This Tuple adds an exponentially increasing length penalty, after a certain amount of tokens have been generated. */
     public ?array $exponential_decay_length_penalty;
 
-    /** @var int[]|null A list of tokens that will be suppressed at generation. */
+    /** @var null|int[] A list of tokens that will be suppressed at generation. */
     public ?array $suppress_tokens;
 
-    /** @var int[]|null A list of tokens that will be suppressed at the beginning of the generation. */
+    /** @var null|int[] A list of tokens that will be suppressed at the beginning of the generation. */
     public ?array $begin_suppress_tokens;
 
-    /** @var int[][]|null A list of pairs of integers which indicates a mapping from generation indices to token indices that will be forced before sampling. */
+    /** @var null|int[][] A list of pairs of integers which indicates a mapping from generation indices to token indices that will be forced before sampling. */
     public ?array $forced_decoder_ids;
 
     /** @var int The number of independently computed returned sequences for each element in the batch. */
@@ -130,31 +130,33 @@ class GenerationConfig implements ArrayAccess
     /** @var bool Whether or not to return a `ModelOutput` instead of a plain tuple. */
     public bool $return_dict_in_generate;
 
-    /** @var int|int[]|null The id of the *padding* token. */
-    public int|array|null $pad_token_id;
+    /** @var null|int|int[] The id of the *padding* token. */
+    public null|array|int $pad_token_id;
 
-    /** @var int|null The id of the *beginning-of-sequence* token. */
+    /** @var null|int The id of the *beginning-of-sequence* token. */
     public ?int $bos_token_id;
 
-    /** @var int|int[]|null The id of the *end-of-sequence* token. */
-    public int|array|null $eos_token_id;
+    /** @var null|int|int[] The id of the *end-of-sequence* token. */
+    public null|array|int $eos_token_id;
 
     /** @var int If set to int > 0, all ngrams of that size that occur in the `encoder_input_ids` cannot occur in the `decoder_input_ids`. */
     public int $encoder_no_repeat_ngram_size;
 
-    /** @var int|null If an encoder-decoder model starts decoding with a different token than *bos*, the id of that token. */
+    /** @var null|int If an encoder-decoder model starts decoding with a different token than *bos*, the id of that token. */
     public ?int $decoder_start_token_id;
 
     /** @var array Additional generation kwargs will be forwarded to the `generate` function of the model. */
     public array $generation_kwargs;
+
     /**
-     * @var mixed|null
+     * @var null|mixed
      */
     public ?array $decoder_input_ids;
 
     /**
      * Create a new GenerationConfig object.
-     * @param array $kwargs The configuration parameters.
+     *
+     * @param array $kwargs the configuration parameters
      */
     public function __construct(protected array $kwargs = [])
     {
@@ -207,8 +209,9 @@ class GenerationConfig implements ArrayAccess
 
     public function toArray(): array
     {
-        $objectProps = array_filter(get_object_vars($this), static fn ($value) => $value !== null);
+        $objectProps = array_filter(get_object_vars($this), static fn ($value) => null !== $value);
         unset($objectProps['kwargs']);
+
         return array_merge($objectProps, $this->kwargs);
     }
 
@@ -219,13 +222,13 @@ class GenerationConfig implements ArrayAccess
 
     public function offsetGet(mixed $offset): mixed
     {
-        return $this->kwargs[$offset] ?? $this->$offset;
+        return $this->kwargs[$offset] ?? $this->{$offset};
     }
 
     public function offsetSet(mixed $offset, mixed $value): void
     {
         if (property_exists($this, $offset)) {
-            $this->$offset = $value;
+            $this->{$offset} = $value;
         }
 
         $this->kwargs[$offset] = $value;

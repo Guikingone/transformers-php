@@ -15,5 +15,4 @@ class RobertaForMaskedLM extends RobertaPretrainedModel
     {
         return MaskedLMOutput::fromOutput(parent::__invoke($modelInputs));
     }
-
 }

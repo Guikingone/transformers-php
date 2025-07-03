@@ -22,7 +22,7 @@ class PreTokenizerSequence extends PreTokenizer
         );
     }
 
-    public function preTokenizeText(string|array $text, array $options): array
+    public function preTokenizeText(array|string $text, array $options): array
     {
         return array_reduce(
             $this->preTokenizers,

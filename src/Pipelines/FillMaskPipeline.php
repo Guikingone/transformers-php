@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Codewithkyrian\Transformers\Pipelines;
 
 use Codewithkyrian\Transformers\Models\Output\MaskedLMOutput;
-use Codewithkyrian\Transformers\Pipelines\Pipeline;
-use Codewithkyrian\Transformers\Utils\Math;
 use Error;
 
 use function array_search;
@@ -51,7 +49,7 @@ class FillMaskPipeline extends Pipeline
             $ids = $modelInputs['input_ids'][$i]->toArray();
             $maskTokenIndex = array_search($this->tokenizer->maskTokenId, $ids);
 
-            if ($maskTokenIndex === false) {
+            if (false === $maskTokenIndex) {
                 throw new Error("Mask token ({$this->tokenizer->maskToken}) not found in text.");
             }
 

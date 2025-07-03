@@ -23,8 +23,8 @@ class WordPieceDecoder extends Decoder
     {
         $decodedTokens = [];
         foreach ($tokens as $i => $token) {
-            if ($i !== 0) {
-                if (str_starts_with((string)$token, $this->config['prefix'])) {
+            if (0 !== $i) {
+                if (str_starts_with((string) $token, $this->config['prefix'])) {
                     // NOTE: Use str_replace to replace only the first occurrence
                     $token = str_replace($this->config['prefix'], '', $token);
                 } else {

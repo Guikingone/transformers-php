@@ -20,7 +20,6 @@ it('can create a pipeline for a task', static function () {
     expect($extractor)->toBeInstanceOf(FeatureExtractionPipeline::class);
 });
 
-
 it('can create a pipeline for a task with a model', static function () {
     $extractor = pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 

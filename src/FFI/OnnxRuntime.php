@@ -21,34 +21,15 @@ class OnnxRuntime
     protected static FFI $ffi;
     protected static mixed $api;
 
-
-    /**
-     * Returns an instance of the FFI class after checking if it has already been instantiated.
-     * If not, it creates a new instance by defining the header contents and library path.
-     *
-     * @return FFI The FFI instance.
-     * @throws Exception
-     */
-    protected static function ffi(): FFI
-    {
-        if (!isset(self::$ffi)) {
-            self::$ffi = FFI::cdef(
-                file_get_contents(Library::OnnxRuntime->header(basePath('includes'))),
-                Library::OnnxRuntime->library(basePath('libs')),
-            );
-        }
-
-        return self::$ffi;
-    }
-
     /**
      * Creates a new instance of the specified type.
      *
-     * @param string $type The type of the instance to create.
+     * @param string $type the type of the instance to create
      * @param bool $owned Whether the instance should be owned. Default is true.
      * @param bool $persistent Whether the instance should be persistent. Default is false.
      *
-     * @return CData|null The created instance, or null if the creation failed.
+     * @return null|CData the created instance, or null if the creation failed
+     *
      * @throws Exception
      */
     public static function new(string $type, bool $owned = true, bool $persistent = false): ?CData
@@ -59,13 +40,14 @@ class OnnxRuntime
     /**
      * Casts a pointer to a different type.
      *
-     * @param CType|string $type The type to cast to.
-     * @param CData|int|float|bool|null $ptr The pointer to cast.
+     * @param CType|string $type the type to cast to
+     * @param null|bool|CData|float|int $ptr the pointer to cast
      *
-     * @return ?CData The cast pointer, or null if the cast failed.
+     * @return ?CData the cast pointer, or null if the cast failed
+     *
      * @throws Exception
      */
-    public static function cast(CType|string$type, CData|int|float|bool|null$ptr): ?CData
+    public static function cast(CType|string $type, null|bool|CData|float|int $ptr): ?CData
     {
         return self::ffi()->cast($type, $ptr);
     }
@@ -73,9 +55,10 @@ class OnnxRuntime
     /**
      * Retrieves the value of the enum constant with the given name.
      *
-     * @param string $name The name of the enum constant.
+     * @param string $name the name of the enum constant
      *
-     * @return mixed The value of the enum constant.
+     * @return mixed the value of the enum constant
+     *
      * @throws Exception
      */
     public static function enum(string $name): mixed
@@ -86,7 +69,7 @@ class OnnxRuntime
     /**
      * Returns the version of the library as a string.
      *
-     * @return string The version of the library.
+     * @return string the version of the library
      */
     public static function version(): string
     {
@@ -100,15 +83,6 @@ class OnnxRuntime
         }
 
         return self::$api;
-    }
-
-    private static function checkStatus($status): void
-    {
-        if (!is_null($status)) {
-            $message = (self::api()->GetErrorMessage)($status);
-            (self::api()->ReleaseStatus)($status);
-            throw new RuntimeException($message);
-        }
     }
 
     public static function CreateSession($env, $modelPath, $options): CData
@@ -365,7 +339,7 @@ class OnnxRuntime
 
         $keys = [];
 
-        for ($i = 0; $i < $numKeys->cdata; $i++) {
+        for ($i = 0; $i < $numKeys->cdata; ++$i) {
             $keys[] = FFI::string($keyPtrs[$i]);
         }
 
@@ -502,7 +476,7 @@ class OnnxRuntime
 
     public static function Run($session, $runOptions, $inputNames, $inputs, int $inputLength, $outputNames, int $outputLength): CData
     {
-        $outputTensor = self::new("OrtValue*[$outputLength]");
+        $outputTensor = self::new("OrtValue*[{$outputLength}]");
 
         self::checkStatus((self::api()->Run)($session, $runOptions, $inputNames, $inputs, $inputLength, $outputNames, $outputLength, $outputTensor));
 
@@ -533,14 +507,14 @@ class OnnxRuntime
 
     public static function GetDimensions($info, int $numDims): array
     {
-        $nodeDims = self::new("int64_t[$numDims]");
+        $nodeDims = self::new("int64_t[{$numDims}]");
 
         self::checkStatus((self::api()->GetDimensions)($info, $nodeDims, $numDims));
 
         $dims = [];
 
         $n = count($nodeDims);
-        for ($i = 0; $i < $n; $i++) {
+        for ($i = 0; $i < $n; ++$i) {
             $dims[] = $nodeDims[$i];
         }
 
@@ -549,7 +523,7 @@ class OnnxRuntime
 
     public static function GetSymbolicDimensions($info, int $numDims): CData
     {
-        $symbolicDims = self::new("char*[$numDims]");
+        $symbolicDims = self::new("char*[{$numDims}]");
 
         self::checkStatus((self::api()->GetSymbolicDimensions)($info, $symbolicDims, $numDims));
 
@@ -630,8 +604,8 @@ class OnnxRuntime
 
     public static function GetStringTensorContent($value, int $len, int $offsetsLength): array
     {
-        $s = self::new("char[$len]");
-        $offsets = self::new("size_t[$offsetsLength]");
+        $s = self::new("char[{$len}]");
+        $offsets = self::new("size_t[{$offsetsLength}]");
 
         self::checkStatus((self::api()->GetStringTensorContent)($value, $s, $len, $offsets, $offsetsLength));
 
@@ -759,5 +733,35 @@ class OnnxRuntime
         self::checkStatus((OnnxRuntime::api()->DisableTelemetryEvents)($env));
 
         return $env;
+    }
+
+    /**
+     * Returns an instance of the FFI class after checking if it has already been instantiated.
+     * If not, it creates a new instance by defining the header contents and library path.
+     *
+     * @return FFI the FFI instance
+     *
+     * @throws Exception
+     */
+    protected static function ffi(): FFI
+    {
+        if (!isset(self::$ffi)) {
+            self::$ffi = FFI::cdef(
+                file_get_contents(Library::OnnxRuntime->header(basePath('includes'))),
+                Library::OnnxRuntime->library(basePath('libs')),
+            );
+        }
+
+        return self::$ffi;
+    }
+
+    private static function checkStatus($status): void
+    {
+        if (!is_null($status)) {
+            $message = (self::api()->GetErrorMessage)($status);
+            (self::api()->ReleaseStatus)($status);
+
+            throw new RuntimeException($message);
+        }
     }
 }

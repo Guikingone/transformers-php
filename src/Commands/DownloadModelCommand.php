@@ -74,7 +74,6 @@ class DownloadModelCommand extends Command
             'The host to download the model from.',
             null,
         );
-
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -90,10 +89,10 @@ class DownloadModelCommand extends Command
 
         $transformers = Transformers::setup();
 
-        if ($cacheDir != null) {
+        if (null != $cacheDir) {
             $transformers->setCacheDir($cacheDir);
         }
-        if ($host != null) {
+        if (null != $host) {
             $transformers->setRemoteHost($host);
         }
 
@@ -101,19 +100,19 @@ class DownloadModelCommand extends Command
             $task = $task ? Task::tryFrom($task) : null;
 
             $onProgress = function ($type, $filename, $downloadSize, $downloaded) use ($output) {
-                if ($type === 'advance_download') {
+                if ('advance_download' === $type) {
                     $progressBar = $this->getProgressBar($filename, $output);
                     $percent = round(($downloaded / $downloadSize) * 100, 2);
-                    $progressBar->setProgress((int)$percent);
-                } elseif ($type === 'complete_download') {
+                    $progressBar->setProgress((int) $percent);
+                } elseif ('complete_download' === $type) {
                     $progressBar = $this->getProgressBar($filename, $output);
                     $progressBar->finish();
                     $progressBar->clear();
-                    $output->writeln("✔ Downloaded <info>$filename</info>");
+                    $output->writeln("✔ Downloaded <info>{$filename}</info>");
                 }
             };
 
-            if ($task != null) {
+            if (null != $task) {
                 pipeline($task, $model, quantized: $quantized, modelFilename: $modelFilename, onProgress: $onProgress);
             } else {
                 AutoTokenizer::fromPretrained($model, onProgress: $onProgress);
@@ -130,6 +129,7 @@ class DownloadModelCommand extends Command
             return Command::SUCCESS;
         } catch (Exception $e) {
             $output->writeln("<error>✘ {$e->getMessage()}</error>");
+
             return Command::FAILURE;
         }
     }
@@ -142,7 +142,7 @@ class DownloadModelCommand extends Command
             $progressBar = new ProgressBar($output, 100);
             $progressBar->setFormat('hub');
             $progressBar->setBarCharacter('<fg=green>•</>');
-            $progressBar->setEmptyBarCharacter("<fg=red>⚬</>");
+            $progressBar->setEmptyBarCharacter('<fg=red>⚬</>');
             $progressBar->setProgressCharacter('<fg=green>➤</>');
             $progressBar->setMessage($filename);
             $this->progressBars[$filename] = $progressBar;

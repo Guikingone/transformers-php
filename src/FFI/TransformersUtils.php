@@ -17,34 +17,15 @@ class TransformersUtils
 {
     protected static FFI $ffi;
 
-
-    /**
-     * Returns an instance of the FFI class after checking if it has already been instantiated.
-     * If not, it creates a new instance by defining the header contents and library path.
-     *
-     * @return FFI The FFI instance.
-     * @throws Exception
-     */
-    protected static function ffi(): FFI
-    {
-        if (!isset(self::$ffi)) {
-            self::$ffi = FFI::cdef(
-                file_get_contents(Library::TransformersPHP->header(basePath('includes'))),
-                Library::TransformersPHP->library(basePath('libs')),
-            );
-        }
-
-        return self::$ffi;
-    }
-
     /**
      * Creates a new instance of the specified type.
      *
-     * @param CType|string $type The type of the instance to create.
+     * @param CType|string $type the type of the instance to create
      * @param bool $owned Whether the instance should be owned. Default is true.
      * @param bool $persistent Whether the instance should be persistent. Default is false.
      *
-     * @return CData|null The created instance, or null if the creation failed.
+     * @return null|CData the created instance, or null if the creation failed
+     *
      * @throws Exception
      */
     public static function new(CType|string $type, bool $owned = true, bool $persistent = false): ?CData
@@ -55,13 +36,14 @@ class TransformersUtils
     /**
      * Casts a pointer to a different type.
      *
-     * @param CType|string $type The type to cast to.
-     * @param CData|int|float|bool|null $ptr The pointer to cast.
+     * @param CType|string $type the type to cast to
+     * @param null|bool|CData|float|int $ptr the pointer to cast
      *
-     * @return ?CData The cast pointer, or null if the cast failed.
+     * @return ?CData the cast pointer, or null if the cast failed
+     *
      * @throws Exception
      */
-    public static function cast(CType|string$type, CData|int|float|bool|null$ptr): ?CData
+    public static function cast(CType|string $type, null|bool|CData|float|int $ptr): ?CData
     {
         return self::ffi()->cast($type, $ptr);
     }
@@ -69,9 +51,10 @@ class TransformersUtils
     /**
      * Retrieves the value of the enum constant with the given name.
      *
-     * @param string $name The name of the enum constant.
+     * @param string $name the name of the enum constant
      *
-     * @return mixed The value of the enum constant.
+     * @return mixed the value of the enum constant
+     *
      * @throws Exception
      */
     public static function enum(string $name): mixed
@@ -82,17 +65,18 @@ class TransformersUtils
     /**
      * Returns the version of the library as a string.
      *
-     * @return string The version of the library.
+     * @return string the version of the library
      */
     public static function version(): string
     {
         self::ffi();
+
         return '1.0.0';
     }
 
     public static function padReflect($input, int $length, int $paddedLength): CData
     {
-        $padded = self::new("float[$paddedLength]");
+        $padded = self::new("float[{$paddedLength}]");
         self::ffi()->pad_reflect($input, $length, $padded, $paddedLength);
 
         return $padded;
@@ -120,7 +104,7 @@ class TransformersUtils
         bool $doPad,
         bool $transpose,
     ): CData {
-        $spectrogram = self::new("float[$spectrogramLength]");
+        $spectrogram = self::new("float[{$spectrogramLength}]");
 
         self::ffi()->spectrogram(
             $waveform,
@@ -147,5 +131,25 @@ class TransformersUtils
         );
 
         return $spectrogram;
+    }
+
+    /**
+     * Returns an instance of the FFI class after checking if it has already been instantiated.
+     * If not, it creates a new instance by defining the header contents and library path.
+     *
+     * @return FFI the FFI instance
+     *
+     * @throws Exception
+     */
+    protected static function ffi(): FFI
+    {
+        if (!isset(self::$ffi)) {
+            self::$ffi = FFI::cdef(
+                file_get_contents(Library::TransformersPHP->header(basePath('includes'))),
+                Library::TransformersPHP->library(basePath('libs')),
+            );
+        }
+
+        return self::$ffi;
     }
 }

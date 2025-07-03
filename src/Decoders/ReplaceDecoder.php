@@ -10,8 +10,6 @@ use function str_replace;
 
 class ReplaceDecoder extends Decoder
 {
-    /**
-     */
     public function __construct(array $config)
     {
         parent::__construct($config);
@@ -21,7 +19,7 @@ class ReplaceDecoder extends Decoder
     {
         $pattern = $this->config['pattern'] ?? null;
 
-        if ($pattern === null) {
+        if (null === $pattern) {
             return $tokens;
         }
 
@@ -30,12 +28,13 @@ class ReplaceDecoder extends Decoder
         $replacement = $this->config['content'] ?? '';
 
         return array_map(static function ($token) use ($regex, $string, $replacement) {
-            if ($regex !== null) {
-                return preg_replace("/{$regex}/u", $replacement, (string)$token);
+            if (null !== $regex) {
+                return preg_replace("/{$regex}/u", $replacement, (string) $token);
             }
-            if ($string !== null) {
-                return str_replace($string, $replacement, (string)$token);
+            if (null !== $string) {
+                return str_replace($string, $replacement, (string) $token);
             }
+
             return $token;
         }, $tokens);
     }

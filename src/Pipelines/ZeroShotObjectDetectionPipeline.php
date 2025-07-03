@@ -93,7 +93,7 @@ class ZeroShotObjectDetectionPipeline extends Pipeline
             // Sort by score
             usort($result, static fn ($a, $b) => $b['score'] <=> $a['score']);
 
-            if ($topK !== null) {
+            if (null !== $topK) {
                 $result = array_slice($result, 0, $topK);
             }
 

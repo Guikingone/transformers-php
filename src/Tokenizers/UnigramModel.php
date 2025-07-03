@@ -33,7 +33,6 @@ class UnigramModel extends TokenizerModel
 
     protected CharTrie $trie;
 
-
     public function __construct(array $config, ...$args)
     {
         parent::__construct($config);
@@ -68,7 +67,8 @@ class UnigramModel extends TokenizerModel
 
     /**
      * Populates lattice nodes.
-     * @param TokenLattice $lattice The token lattice to populate with nodes.
+     *
+     * @param TokenLattice $lattice the token lattice to populate with nodes
      */
     public function populateNodes(TokenLattice $lattice): void
     {
@@ -100,20 +100,24 @@ class UnigramModel extends TokenizerModel
     /**
      * Encodes an array of tokens into an array of subtokens using the unigram model.
      *
-     * @param string $normalized The normalized string.
-     * @return string[] An array of subtokens obtained by encoding the input tokens using the unigram model.
+     * @param string $normalized the normalized string
+     *
+     * @return string[] an array of subtokens obtained by encoding the input tokens using the unigram model
      */
     public function tokenize(string $normalized): array
     {
         $lattice = new TokenLattice($normalized, $this->bosTokenId, $this->eosTokenId);
         $this->populateNodes($lattice);
+
         return $lattice->tokens();
     }
 
     /**
      * Encodes an array of tokens using Unigram encoding.
-     * @param string[] $tokens The tokens to encode.
-     * @return string[] An array of encoded tokens.
+     *
+     * @param string[] $tokens the tokens to encode
+     *
+     * @return string[] an array of encoded tokens
      */
     protected function encode(array $tokens): array
     {
@@ -122,6 +126,7 @@ class UnigramModel extends TokenizerModel
             $tokenized = $this->tokenize($token);
             $toReturn = array_merge($toReturn, $tokenized);
         }
+
         return $toReturn;
     }
 }

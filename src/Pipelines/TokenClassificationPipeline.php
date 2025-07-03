@@ -78,7 +78,6 @@ class TokenClassificationPipeline extends Pipeline
         $logits = $outputs->logits;
         $id2label = $this->model->config['id2label'];
 
-
         $toReturn = [];
         for ($i = 0; $i < $logits->shape()[0]; ++$i) {
             $ids = $modelInputs['input_ids'][$i];
@@ -94,7 +93,7 @@ class TokenClassificationPipeline extends Pipeline
                 // TODO: add option to keep special tokens?
                 $word = $this->tokenizer->decode([$ids[$j]], skipSpecialTokens: true);
 
-                if ($word === '') {
+                if ('' === $word) {
                     // Was a special token. So, we skip it.
                     continue;
                 }
@@ -115,7 +114,7 @@ class TokenClassificationPipeline extends Pipeline
 
             $entities = $this->aggregateWords($entities, $aggregationStrategy);
 
-            if ($aggregationStrategy === AggregationStrategy::NONE) {
+            if (AggregationStrategy::NONE === $aggregationStrategy) {
                 $entities = array_filter($entities, static fn ($token) => !in_array($token['entity'], $ignoreLabels));
             } else {
                 $entities = $this->groupEntities($entities);
@@ -129,32 +128,54 @@ class TokenClassificationPipeline extends Pipeline
     }
 
     /**
+     * Group together the adjacent tokens with the same entity predicted.
+     *
+     * Example: 'New York' is a single entity, but it's split into two tokens. This function groups them together.
+     */
+    public function groupSubEntities(array $entities): array
+    {
+        $entity = explode('-', $entities[0]['entity'], 2)[1] ?? $entities[0]['entity'];
+        $scores = array_column($entities, 'score');
+        $averageScore = array_sum($scores) / count($scores);
+        $word = implode(' ', array_column($entities, 'word'));
+
+        return [
+            'entity_group' => $entity,
+            'score' => $averageScore,
+            'word' => $word,
+            'start' => null,
+            'end' => null,
+        ];
+    }
+
+    /**
      * Override tokens from a given word that disagree to force agreement on word boundaries.
      *
      * Example: micro|soft| com|pany| B-ENT I-NAME I-ENT I-ENT will be rewritten with first strategy as microsoft|
      * company| B-ENT I-ENT
-     * @param array $entities The entities to aggregate.
-     * @param AggregationStrategy $aggregationStrategy The strategy to use for aggregation.
+     *
+     * @param array $entities the entities to aggregate
+     * @param AggregationStrategy $aggregationStrategy the strategy to use for aggregation
      */
     protected function aggregateWords(array $entities, AggregationStrategy $aggregationStrategy): array
     {
-        if ($aggregationStrategy == AggregationStrategy::NONE) {
+        if (AggregationStrategy::NONE == $aggregationStrategy) {
             return $entities;
         }
 
         $wordEntities = [];
         $wordGroup = null;
         foreach ($entities as $entity) {
-            if ($wordGroup === null) {
+            if (null === $wordGroup) {
                 $wordGroup = [$entity];
-            } elseif ($this->tokenizer->model->continuingSubwordPrefix != null && str_starts_with($entity['word'], $this->tokenizer->model->continuingSubwordPrefix)) {
+            } elseif (null != $this->tokenizer->model->continuingSubwordPrefix && str_starts_with($entity['word'], $this->tokenizer->model->continuingSubwordPrefix)) {
                 $wordGroup[] = $entity;
             } else {
                 $wordEntities[] = $this->aggregateWord($wordGroup, $aggregationStrategy);
                 $wordGroup = [$entity];
             }
         }
-        if ($wordGroup !== null) {
+        if (null !== $wordGroup) {
             $wordEntities[] = $this->aggregateWord($wordGroup, $aggregationStrategy);
         }
 
@@ -167,27 +188,30 @@ class TokenClassificationPipeline extends Pipeline
             case AggregationStrategy::FIRST:
                 $score = $entities[0]['score'];
                 $entity = $entities[0]['entity'];
+
                 break;
 
             case AggregationStrategy::MAX:
                 $score = max(array_column($entities, 'score'));
                 $entity = $entities[array_search($score, array_column($entities, 'score'))]['entity'];
+
                 break;
 
             case AggregationStrategy::AVERAGE:
                 $score = array_sum(array_column($entities, 'score')) / count($entities);
                 $entity = $entities[array_search(max(array_column($entities, 'score')), array_column($entities, 'score'))]['entity'];
+
                 break;
 
             default:
-                throw new Exception("Invalid aggregation_strategy");
+                throw new Exception('Invalid aggregation_strategy');
         }
 
-
         $words = array_map(function ($word) {
-            if ($this->tokenizer->model->continuingSubwordPrefix != null && str_starts_with($word, $this->tokenizer->model->continuingSubwordPrefix)) {
+            if (null != $this->tokenizer->model->continuingSubwordPrefix && str_starts_with($word, $this->tokenizer->model->continuingSubwordPrefix)) {
                 return substr($word, strlen($this->tokenizer->model->continuingSubwordPrefix));
             }
+
             return $word;
         }, array_column($entities, 'word'));
 
@@ -212,13 +236,14 @@ class TokenClassificationPipeline extends Pipeline
         foreach ($entities as $entity) {
             if (empty($entityGroupDisagg)) {
                 $entityGroupDisagg[] = $entity;
+
                 continue;
             }
 
             [$bi, $tag] = $this->getTag($entity['entity']);
             [$lastBi, $lastTag] = $this->getTag(end($entityGroupDisagg)['entity']);
 
-            if ($tag === $lastTag && $bi !== "B") {
+            if ($tag === $lastTag && 'B' !== $bi) {
                 $entityGroupDisagg[] = $entity;
             } else {
                 $entityGroups[] = $this->groupSubEntities($entityGroupDisagg);
@@ -235,34 +260,13 @@ class TokenClassificationPipeline extends Pipeline
 
     protected function getTag($entityName): array
     {
-        if (str_starts_with($entityName, "B-")) {
-            return ["B", substr($entityName, 2)];
-        } elseif (str_starts_with($entityName, "I-")) {
-            return ["I", substr($entityName, 2)];
+        if (str_starts_with($entityName, 'B-')) {
+            return ['B', substr($entityName, 2)];
         }
-        return ["I", $entityName]; // Default to "I" for continuation
+        if (str_starts_with($entityName, 'I-')) {
+            return ['I', substr($entityName, 2)];
+        }
 
+        return ['I', $entityName]; // Default to "I" for continuation
     }
-
-    /**
-     * Group together the adjacent tokens with the same entity predicted.
-     *
-     * Example: 'New York' is a single entity, but it's split into two tokens. This function groups them together.
-     */
-    public function groupSubEntities(array $entities): array
-    {
-        $entity = explode("-", $entities[0]['entity'], 2)[1] ?? $entities[0]['entity'];
-        $scores = array_column($entities, 'score');
-        $averageScore = array_sum($scores) / count($scores);
-        $word = implode(' ', array_column($entities, 'word'));
-
-        return [
-            'entity_group' => $entity,
-            'score' => $averageScore,
-            'word' => $word,
-            'start' => null,
-            'end' => null,
-        ];
-    }
-
 }

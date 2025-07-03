@@ -13,7 +13,6 @@ class MultinomialSampler extends Sampler
 {
     /**
      * Sample from the logits.
-     *
      */
     public function sample(Tensor $logits, int $index): array
     {
@@ -34,7 +33,7 @@ class MultinomialSampler extends Sampler
 
         $sampledResults = [];
 
-        for ($i = 0; $i < $this->generationConfig->num_beams; $i++) {
+        for ($i = 0; $i < $this->generationConfig->num_beams; ++$i) {
             $sampledIndex = $this->randomSelect($probabilities);
 
             $sampledResults[] = [

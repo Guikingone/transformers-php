@@ -17,18 +17,15 @@ class ForcedBOSTokenLogitsProcessor extends LogitsProcessor
 {
     public function __construct(
         protected int $bosTokenId,
-    ) {
-    }
+    ) {}
 
-    /**
-     *
-     */
     public function __invoke(array $inputIds, Tensor $logits): Tensor
     {
-        if (count($inputIds) === 1) {
+        if (1 === count($inputIds)) {
             Tensor::mo()->la()->fill(-INF, $logits);
             $logits->buffer()[$this->bosTokenId] = 0;
         }
+
         return $logits;
     }
 }

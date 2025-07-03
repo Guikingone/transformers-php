@@ -15,8 +15,8 @@ class GPTJPretrainedModel extends PretrainedModel
     protected int $dimKv;
 
     public function __construct(
-        AutoConfig        $config,
-        InferenceSession  $session,
+        AutoConfig $config,
+        InferenceSession $session,
         ModelArchitecture $modelArchitecture = ModelArchitecture::EncoderOnly,
         ...$args,
     ) {
@@ -29,6 +29,5 @@ class GPTJPretrainedModel extends PretrainedModel
         $this->numHeads = $this->config['n_head'];
         $this->numLayers = $this->config['n_layer'];
         $this->dimKv = $this->config['n_embd'] / $this->numHeads;
-
     }
 }

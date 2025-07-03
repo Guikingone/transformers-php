@@ -30,7 +30,6 @@ enum ModelArchitecture: string
     case Vision2Seq = 'Vision2Seq';
     case MaskGeneration = 'MaskGeneration';
 
-
     // <editor-fold desc="Abstract methods">
 
     public function canGenerate(): bool
@@ -51,11 +50,11 @@ enum ModelArchitecture: string
     }
 
     public function startBeams(
-        PretrainedModel  $model,
-        Tensor           $inputTokenIds,
+        PretrainedModel $model,
+        Tensor $inputTokenIds,
         GenerationConfig $generationConfig,
-        int              $numOutputTokens,
-        Tensor           $inputsAttentionMask = null,
+        int $numOutputTokens,
+        ?Tensor $inputsAttentionMask = null,
     ): array {
         return match ($this) {
             self::DecoderOnly => $this->decoderStartBeams($model, $inputTokenIds, $generationConfig, $numOutputTokens, $inputsAttentionMask),
@@ -83,11 +82,11 @@ enum ModelArchitecture: string
         };
     }
 
-    //</editor-fold>
+    // </editor-fold>
 
-    //<editor-fold desc="Encoder methods">
+    // <editor-fold desc="Encoder methods">
 
-    protected function encoderForward(PretrainedModel $model, array $modelInputs): array
+    private function encoderForward(PretrainedModel $model, array $modelInputs): array
     {
         $encoderFeeds = [];
 
@@ -108,17 +107,19 @@ enum ModelArchitecture: string
         return $model->runSession($model->session, $encoderFeeds);
     }
 
-    //</editor-fold>
+    // </editor-fold>
 
-    //<editor-fold desc="Decoder methods">
+    // <editor-fold desc="Decoder methods">
 
     /**
      * Runs a single step of the text generation process for a given beam.
-     * @param PretrainedModel $model The text generation model object.
-     * @param array $beam The beam to run the generation process for.
-     * @return array The output of the generation process for the given beam.
+     *
+     * @param PretrainedModel $model the text generation model object
+     * @param array $beam the beam to run the generation process for
+     *
+     * @return array the output of the generation process for the given beam
      */
-    protected function decoderRunBeam(PretrainedModel $model, array &$beam): array
+    private function decoderRunBeam(PretrainedModel $model, array &$beam): array
     {
         $attnMaskLength = count($beam['output_token_ids']);
         $attnMaskData = array_fill(0, $attnMaskLength, 1);
@@ -130,7 +131,6 @@ enum ModelArchitecture: string
             'past_key_values' => $beam['prev_model_outputs']['past_key_values'] ?? null,
         ];
 
-
         // 2. Run
         $output = $model->forward($modelInputs);
 
@@ -141,19 +141,20 @@ enum ModelArchitecture: string
     }
 
     /** Starts the generation of text by initializing the beams for the given input token IDs.
-     * @param PretrainedModel $model The text generation model object.
-     * @param Tensor $inputTokenIds A tensor of input token IDs to generate text from.
-     * @param GenerationConfig $generationConfig The generation config.
-     * @param int $numOutputTokens The maximum number of tokens to generate for each beam.
-     * @param Tensor|null $inputsAttentionMask The attention mask tensor for the input token IDs.
-     * @return array An array of beams initialized with the given inputs and parameters.
+     * @param PretrainedModel $model the text generation model object
+     * @param Tensor $inputTokenIds a tensor of input token IDs to generate text from
+     * @param GenerationConfig $generationConfig the generation config
+     * @param int $numOutputTokens the maximum number of tokens to generate for each beam
+     * @param null|Tensor $inputsAttentionMask the attention mask tensor for the input token IDs
+     *
+     * @return array an array of beams initialized with the given inputs and parameters
      */
-    protected function decoderStartBeams(
-        PretrainedModel  $model,
-        Tensor           $inputTokenIds,
+    private function decoderStartBeams(
+        PretrainedModel $model,
+        Tensor $inputTokenIds,
         GenerationConfig $generationConfig,
-        int              $numOutputTokens,
-        Tensor           $inputsAttentionMask = null,
+        int $numOutputTokens,
+        ?Tensor $inputsAttentionMask = null,
     ): array {
         $beams = [];
         $beamId = 0;
@@ -165,7 +166,7 @@ enum ModelArchitecture: string
             $tokens = $tokens->reshape([1, ...$tokens->shape()]);
 
             $attnMask = null;
-            if ($inputsAttentionMask !== null) {
+            if (null !== $inputsAttentionMask) {
                 $attnMask = $inputsAttentionMask[$beamId];
                 $attnMask = $attnMask->reshape([1, ...$attnMask->shape()]);
             } else {
@@ -194,10 +195,11 @@ enum ModelArchitecture: string
 
     /**
      * Update a beam with a new token ID.
-     * @param array $beam The beam to update.
-     * @param int $newTokenId The new token ID to add to the beam.
+     *
+     * @param array $beam the beam to update
+     * @param int $newTokenId the new token ID to add to the beam
      */
-    protected function decoderUpdatebeam(array &$beam, int $newTokenId): void
+    private function decoderUpdatebeam(array &$beam, int $newTokenId): void
     {
         $beam['output_token_ids'][] = $newTokenId;
         $beam['model_input_ids'] = new Tensor([$newTokenId], NDArray::int64, [1, 1]);
@@ -205,23 +207,25 @@ enum ModelArchitecture: string
 
     /**
      * Forward pass for the decoder model.
-     * @param PretrainedModel $model The model to use for the forward pass.
-     * @param array $modelInputs The inputs to the model.
-     * @return array The output of the forward pass.
+     *
+     * @param PretrainedModel $model the model to use for the forward pass
+     * @param array $modelInputs the inputs to the model
+     *
+     * @return array the output of the forward pass
+     *
      * @throws MissingModelInputException|ModelExecutionException
      */
-    protected function decoderForward(PretrainedModel $model, array $modelInputs): array
+    private function decoderForward(PretrainedModel $model, array $modelInputs): array
     {
         ['input_ids' => $inputIds, 'past_key_values' => $pastKeyValues, 'attention_mask' => $attentionMask]
             = $modelInputs;
-
 
         $decoderFeeds = [
             'input_ids' => $inputIds,
             'attention_mask' => $attentionMask ?? $model->prepareAttentionMask($inputIds),
         ];
 
-        $useCacheBranch = !!$pastKeyValues;
+        $useCacheBranch = (bool) $pastKeyValues;
 
         $inputNames = array_column($model->session->inputs(), 'name');
 
@@ -241,11 +245,11 @@ enum ModelArchitecture: string
         return ['logits' => $logits, 'past_key_values' => $pastKeyValues];
     }
 
-    //</editor-fold>
+    // </editor-fold>
 
-    //<editor-fold desc="Seq2Seq methods">
+    // <editor-fold desc="Seq2Seq methods">
 
-    protected function seq2seqRunBeam(PretrainedModel $model, array &$beam): array
+    private function seq2seqRunBeam(PretrainedModel $model, array &$beam): array
     {
         $inputName = $model->mainInputName;
 
@@ -265,7 +269,6 @@ enum ModelArchitecture: string
             'past_key_values' => $beam['prev_model_outputs']['past_key_values'] ?? null,
         ];
 
-
         if (isset($beam['attention_mask'])) {
             $modelInputs['attention_mask'] = $beam['attention_mask'];
         }
@@ -281,17 +284,18 @@ enum ModelArchitecture: string
     }
 
     /** Start the beam search process for the seq2seq model.
-     * @param PretrainedModel $model The model to use for the beam search.
-     * @param Tensor $inputTokenIds Array of input token ids for each input sequence.
-     * @param GenerationConfig $generationConfig The generation configuration.
-     * @param int $numOutputTokens The maximum number of output tokens for the model.
-     * @return array Array of beam search objects.
+     * @param PretrainedModel $model the model to use for the beam search
+     * @param Tensor $inputTokenIds array of input token ids for each input sequence
+     * @param GenerationConfig $generationConfig the generation configuration
+     * @param int $numOutputTokens the maximum number of output tokens for the model
+     *
+     * @return array array of beam search objects
      */
-    protected function seq2seqStartBeams(
-        PretrainedModel  $model,
-        Tensor           $inputTokenIds,
+    private function seq2seqStartBeams(
+        PretrainedModel $model,
+        Tensor $inputTokenIds,
         GenerationConfig $generationConfig,
-        int              $numOutputTokens,
+        int $numOutputTokens,
     ): array {
         $beams = [];
         $beamId = 0;
@@ -335,31 +339,28 @@ enum ModelArchitecture: string
         return $beams;
     }
 
-    protected function seq2seqUpdatebeam(array &$beam, int $newTokenId): void
+    private function seq2seqUpdatebeam(array &$beam, int $newTokenId): void
     {
         $beam['output_token_ids'][] = $newTokenId;
     }
 
-    protected function seq2seqForward(PretrainedModel $model, array $modelInputs): array
+    private function seq2seqForward(PretrainedModel $model, array $modelInputs): array
     {
-
         ['encoder_outputs' => $encoderOutputs, 'past_key_values' => $pastKeyValues] = $modelInputs;
 
-        if ($encoderOutputs === null) {
+        if (null === $encoderOutputs) {
             // Encoder outputs are not given, so we must compute them.
             $encoderOutputs = $this->encoderForward($model, $modelInputs)['last_hidden_state'];
         }
-
 
         $decoderFeeds = [
             'input_ids' => $modelInputs['decoder_input_ids'],
             'encoder_hidden_states' => $encoderOutputs,
         ];
 
-        $useCacheBranch = !!$pastKeyValues;
+        $useCacheBranch = (bool) $pastKeyValues;
 
         $inputNames = array_column($model->decoderMergedSession->inputs(), 'name');
-
 
         if (in_array('use_cache_branch', $inputNames)) {
             $decoderFeeds['use_cache_branch'] = new Tensor([$useCacheBranch], Tensor::bool, [1]);
@@ -387,6 +388,5 @@ enum ModelArchitecture: string
         ];
     }
 
-    //</editor-fold>
-
+    // </editor-fold>
 }

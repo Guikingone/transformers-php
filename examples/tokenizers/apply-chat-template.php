@@ -7,7 +7,7 @@ use Codewithkyrian\Transformers\PreTrainedTokenizers\AutoTokenizer;
 require_once './bootstrap.php';
 
 $tokenizer = AutoTokenizer::fromPretrained('mistralai/Mistral-7B-Instruct-v0.1');
-//$tokenizer = AutoTokenizer::fromPretrained('facebook/blenderbot-400M-distill');
+// $tokenizer = AutoTokenizer::fromPretrained('facebook/blenderbot-400M-distill');
 $messages = [
     ['role' => 'user', 'content' => 'Hello!'],
     ['role' => 'assistant', 'content' => 'Hi! How are you?'],

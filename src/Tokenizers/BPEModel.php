@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Tokenizers;
 
-use SplDoublyLinkedList;
 use SplPriorityQueue;
 
 use function array_flip;
@@ -24,6 +23,8 @@ use const PREG_SPLIT_NO_EMPTY;
  */
 class BPEModel extends TokenizerModel
 {
+    protected const BPE_SPLIT_TOKEN = ' ';
+
     /**
      * Mapping of BPE merges to their rank.
      */
@@ -46,12 +47,8 @@ class BPEModel extends TokenizerModel
 
     /**
      * Cache of BPE encoded tokens.
-     *
      */
     protected array $cache = [];
-
-
-    protected const BPE_SPLIT_TOKEN = ' ';
 
     public function __construct(array $config)
     {
@@ -74,19 +71,66 @@ class BPEModel extends TokenizerModel
         $this->continuingSubwordSuffix = $config['continuing_subword_suffix'] ?? null;
 
         $this->byteFallback = $config['byte_fallback'] ?? false;
+    }
 
+    public function addNodeToQueue(SplPriorityQueue $queue, BPENode $node): void
+    {
+        // `score` is a measure of the merge priority: lower means higher priority.
+        // We use the BPE rank as a measure of priority (i.e., the local of the merge in the merges list)
+        // We also add a fractional component to the score to break ties (with the earlier character having higher priority)
+        $rank = $this->bpeRanks[$node->token . self::BPE_SPLIT_TOKEN . $node->next?->token] ?? null;
+
+        if (null !== $rank) {
+            $node->score = -($rank + $node->bias);
+            $queue->insert($node, $node->score);
+        }
+    }
+
+    /**
+     * Encodes the input sequence of tokens using the BPE algorithm and returns the resulting subword tokens.
+     *
+     * @param string[] $tokens the input tokens to encode
+     *
+     * @return string[] the resulting subword tokens after applying the BPE algorithm to the input sequence of tokens
+     */
+    public function encode(array $tokens): array
+    {
+        $outputTokens = [];
+
+        foreach ($tokens as $token) {
+            $bpeTokenList = $this->bpe($token);
+
+            foreach ($bpeTokenList as $bpeToken) {
+                if (array_key_exists($bpeToken, $this->tokenToIds)) {
+                    $outputTokens[] = $bpeToken;
+                } else {
+                    if ($this->byteFallback) {
+                        $bytes = unpack('C*', $bpeToken);
+
+                        foreach ($bytes as $byte) {
+                            $outputTokens[] = sprintf('<0x%02X>', $byte);
+                        }
+                    } else {
+                        $outputTokens[] = $this->unkToken;
+                    }
+                }
+            }
+        }
+
+        return $outputTokens;
     }
 
     /**
      * Apply Byte-Pair-Encoding (BPE) to a given token. Efficient heap-based priority
      *  queue implementation adapted from https://github.com/belladoreai/llama-tokenizer-js.
      *
-     * @param string $token The token to encode.
-     * @return string[] The encoded token.
+     * @param string $token the token to encode
+     *
+     * @return string[] the encoded token
      */
     protected function bpe(string $token): array
     {
-        if (mb_strlen($token) === 0) {
+        if (0 === mb_strlen($token)) {
             return [];
         }
 
@@ -111,7 +155,7 @@ class BPEModel extends TokenizerModel
             $startingNode = new BPENode($word[0], 0);
             $previousNode = $startingNode;
 
-            for ($i = 1; $i < count($word); $i++) {
+            for ($i = 1; $i < count($word); ++$i) {
                 $currentNode = new BPENode(
                     $word[$i],
                     $i / count($word),
@@ -125,11 +169,11 @@ class BPEModel extends TokenizerModel
 
             while (!$queue->isEmpty()) {
                 /**
-                 * Get the next node with the highest priority
+                 * Get the next node with the highest priority.
+                 *
                  * @var BPENode $node
                  */
                 $node = $queue->extract();
-
 
                 // Check that this merge is still possible
                 if ($node->deleted || !$node->next || $node->next->deleted) {
@@ -180,7 +224,7 @@ class BPEModel extends TokenizerModel
             }
 
             // Finally, we construct the result by traversing the doubly-linked list of nodes.
-            for ($node = $startingNode; $node != null; $node = $node->next) {
+            for ($node = $startingNode; null != $node; $node = $node->next) {
                 $result[] = $node->token;
             }
         } else {
@@ -198,52 +242,5 @@ class BPEModel extends TokenizerModel
         $this->cache[$token] = $result;
 
         return $result;
-    }
-
-
-    public function addNodeToQueue(SplPriorityQueue $queue, BPENode $node): void
-    {
-        // `score` is a measure of the merge priority: lower means higher priority.
-        // We use the BPE rank as a measure of priority (i.e., the local of the merge in the merges list)
-        // We also add a fractional component to the score to break ties (with the earlier character having higher priority)
-        $rank = $this->bpeRanks[$node->token . self::BPE_SPLIT_TOKEN . $node->next?->token] ?? null;
-
-        if ($rank !== null) {
-            $node->score = -($rank + $node->bias);
-            $queue->insert($node, $node->score);
-        }
-    }
-
-    /**
-     * Encodes the input sequence of tokens using the BPE algorithm and returns the resulting subword tokens.
-     * @param string[] $tokens The input tokens to encode.
-     * @return string[] The resulting subword tokens after applying the BPE algorithm to the input sequence of tokens.
-     */
-    public function encode(array $tokens): array
-    {
-        $outputTokens = [];
-
-        foreach ($tokens as $token) {
-            $bpeTokenList = $this->bpe($token);
-
-
-            foreach ($bpeTokenList as $bpeToken) {
-                if (array_key_exists($bpeToken, $this->tokenToIds)) {
-                    $outputTokens[] = $bpeToken;
-                } else {
-                    if ($this->byteFallback) {
-                        $bytes = unpack('C*', $bpeToken);
-
-                        foreach ($bytes as $byte) {
-                            $outputTokens[] = sprintf("<0x%02X>", $byte);
-                        }
-                    } else {
-                        $outputTokens[] = $this->unkToken;
-                    }
-                }
-            }
-        }
-
-        return $outputTokens;
     }
 }

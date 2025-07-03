@@ -27,7 +27,7 @@ function toTensorTest(ImageDriver $imageDriver): Tensor
         ->thumbnail(101, 101)
         ->toTensor();
 
-    dump("$imageDriver->name (toTensor) : " . timeUsage(true));
+    dump("{$imageDriver->name} (toTensor) : " . timeUsage(true));
 
     return $tensor;
 }
@@ -40,23 +40,21 @@ function fromTensorTest(ImageDriver $imageDriver, Tensor $tensor): Image
 
     $image = Image::fromTensor($tensor);
 
-    dump("$imageDriver->name (fromTensor) : " . timeUsage(true));
+    dump("{$imageDriver->name} (fromTensor) : " . timeUsage(true));
 
     return $image;
 }
 
-
 // Run the test
-dump("------------ toTensor ------------");
+dump('------------ toTensor ------------');
 $tensor = toTensorTest(ImageDriver::IMAGICK);
 $tensor = toTensorTest(ImageDriver::GD);
 $tensor = toTensorTest(ImageDriver::VIPS);
 
-
-dump("------------ fromTensor ------------");
+dump('------------ fromTensor ------------');
 $image = fromTensorTest(ImageDriver::IMAGICK, $tensor);
 $image = fromTensorTest(ImageDriver::GD, $tensor);
 $image = fromTensorTest(ImageDriver::VIPS, $tensor);
 
 // Save the image
-//$image->save('images/images/kyrian-cartoon-converted.jpeg');
+// $image->save('images/images/kyrian-cartoon-converted.jpeg');

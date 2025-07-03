@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Tokenizers;
 
-use Codewithkyrian\Transformers\Tokenizers\TokenizerModel;
-
 use function array_key_exists;
 use function array_merge;
 use function array_slice;
@@ -37,8 +35,10 @@ class WordPieceModel extends TokenizerModel
 
     /**
      * Encodes an array of tokens using WordPiece encoding.
-     * @param string[] $tokens The tokens to encode.
-     * @return string[] The encoded token IDs.
+     *
+     * @param string[] $tokens the tokens to encode
+     *
+     * @return string[] the encoded token IDs
      */
     protected function encode(array $tokens): array
     {
@@ -49,6 +49,7 @@ class WordPieceModel extends TokenizerModel
 
             if (count($chars) > $this->maxInputCharsPerWord) {
                 $outputTokens[] = $this->unkToken;
+
                 continue;
             }
 
@@ -69,14 +70,16 @@ class WordPieceModel extends TokenizerModel
 
                     if (array_key_exists($substr, $this->tokenToIds)) {
                         $currentSubstring = $substr;
+
                         break;
                     }
 
                     --$end;
                 }
 
-                if ($currentSubstring === null) {
+                if (null === $currentSubstring) {
                     $isUnknown = true;
+
                     break;
                 }
 

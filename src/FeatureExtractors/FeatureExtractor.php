@@ -9,7 +9,5 @@ namespace Codewithkyrian\Transformers\FeatureExtractors;
  */
 class FeatureExtractor
 {
-    public function __construct(public array $config)
-    {
-    }
+    public function __construct(public array $config) {}
 }

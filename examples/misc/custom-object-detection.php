@@ -33,7 +33,7 @@ $inputs = $processor($image);
 
 ['outputs' => $outputs] = $model($inputs);
 
-$boxes = array_map(static function ($args) use ($inputs, $model): ?array {
+$boxes = array_map(static function ($args) use ($model): ?array {
     [$xmin, $ymin, $xmax, $ymax, $score, $id] = $args;
 
     if ($score < 0.11) {

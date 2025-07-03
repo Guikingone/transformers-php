@@ -17,21 +17,18 @@ use const INF;
 class MinLengthLogitsProcessor extends LogitsProcessor
 {
     /**
-     * @param int $minLength The minimum length below which the score of `eos_token_id` is set to negative infinity.
-     * @param int|array $eosTokenId he ID/IDs of the end-of-sequence token.
+     * @param int $minLength the minimum length below which the score of `eos_token_id` is set to negative infinity
+     * @param array|int $eosTokenId he ID/IDs of the end-of-sequence token
      */
     public function __construct(
         protected int $minLength,
-        protected int|array $eosTokenId,
+        protected array|int $eosTokenId,
     ) {
         if (!is_array($eosTokenId)) {
             $this->eosTokenId = [$eosTokenId];
         }
     }
 
-    /**
-     *
-     */
     public function __invoke(array $inputIds, Tensor $logits): Tensor
     {
         if (count($inputIds) < $this->minLength) {
@@ -39,6 +36,7 @@ class MinLengthLogitsProcessor extends LogitsProcessor
                 $logits->buffer()[$id] = -INF;
             }
         }
+
         return $logits;
     }
 }

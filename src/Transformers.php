@@ -27,20 +27,17 @@ class Transformers
     /**
      * Returns a new instance of the static class.
      *
-     * @return static The newly created instance of the static class.
+     * @return static the newly created instance of the static class
      */
     public static function setup(): static
     {
         return new static();
     }
 
-    public static function apply()
-    {
-    }
+    public static function apply() {}
 
     /**
-     * Set the default cache directory for transformers models and tokenizers
-     *
+     * Set the default cache directory for transformers models and tokenizers.
      *
      * @return $this
      */
@@ -53,8 +50,7 @@ class Transformers
 
     /**
      * Set the remote host for downloading models and tokenizers. This is useful for using a custom mirror
-     * or a local server for downloading models and tokenizers
-     *
+     * or a local server for downloading models and tokenizers.
      *
      * @return $this
      */
@@ -67,8 +63,7 @@ class Transformers
 
     /**
      * Set the remote path template for downloading models and tokenizers. This is useful for using a custom mirror
-     * or a local server for downloading models and tokenizers
-     *
+     * or a local server for downloading models and tokenizers.
      *
      * @return $this
      */
@@ -81,8 +76,7 @@ class Transformers
 
     /**
      * Set the authentication token for downloading models and tokenizers. This is useful for using a private model
-     * repository in Hugging Face
-     *
+     * repository in Hugging Face.
      *
      * @return $this
      */
@@ -95,8 +89,7 @@ class Transformers
 
     /**
      * Set the user agent for downloading models and tokenizers. This is useful for using a custom user agent
-     * for downloading models and tokenizers
-     *
+     * for downloading models and tokenizers.
      *
      * @return $this
      */
@@ -110,7 +103,6 @@ class Transformers
     /**
      * Set the image driver for processing images.
      *
-     *
      * @return $this
      */
     public function setImageDriver(ImageDriver $imageDriver): static
@@ -122,7 +114,6 @@ class Transformers
 
     /**
      * Set the logger for debugging.
-     *
      *
      * @return $this
      */

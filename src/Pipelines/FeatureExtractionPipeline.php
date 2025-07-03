@@ -61,7 +61,6 @@ use function Codewithkyrian\Transformers\Utils\array_pop_key;
  * //   ]
  * // }
  * ```
- *
  */
 class FeatureExtractionPipeline extends Pipeline
 {
@@ -75,17 +74,21 @@ class FeatureExtractionPipeline extends Pipeline
         $outputs = $this->model->__invoke($modelInputs);
 
         /** @var Tensor $result */
-        $result = $outputs["last_hidden_state"] ?? $outputs["logits"] ?? $outputs["token_embeddings"];
+        $result = $outputs['last_hidden_state'] ?? $outputs['logits'] ?? $outputs['token_embeddings'];
 
         switch ($pooling) {
             case 'none':
                 // No pooling, return the full tensor
                 break;
+
             case 'mean':
-                $result = $result->meanPooling($modelInputs["attention_mask"]);
+                $result = $result->meanPooling($modelInputs['attention_mask']);
+
                 break;
+
             case 'cls':
                 $result = $result->slice(null, 0);
+
                 break;
 
             default:

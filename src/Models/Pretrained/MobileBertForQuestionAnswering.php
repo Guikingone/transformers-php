@@ -7,7 +7,7 @@ namespace Codewithkyrian\Transformers\Models\Pretrained;
 use Codewithkyrian\Transformers\Models\Output\QuestionAnsweringModelOutput;
 
 /**
- * MobileBert Model with a span classification head on top for extractive question-answering tasks
+ * MobileBert Model with a span classification head on top for extractive question-answering tasks.
  */
 class MobileBertForQuestionAnswering extends MobileBertPretrainedModel
 {

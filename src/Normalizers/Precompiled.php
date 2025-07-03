@@ -32,20 +32,6 @@ class Precompiled extends Normalizer
         $this->parse(base64_decode($this->precompiled_charsmap));
     }
 
-    private function parse($precompiled_charsmap)
-    {
-        $trie_size = unpack('V', substr($precompiled_charsmap, 0, 4))[1];
-        $trie_char_size = $trie_size / 4;
-        $trie_blob = [];
-        $offset = 4;
-        for ($i = 0; $i < $trie_char_size; $i++) {
-            $trie_blob[] = unpack('V', substr($precompiled_charsmap, $offset, 4))[1];
-            $offset += 4;
-        }
-        $this->normalized = substr($precompiled_charsmap, $offset);
-        $this->trie = new DoubleArray($trie_blob);
-    }
-
     public function normalize(string $text): string
     {
         $transformations = [];
@@ -55,16 +41,17 @@ class Precompiled extends Normalizer
         foreach ($graphemes as $grapheme) {
             if (mb_strlen($grapheme) < 6) {
                 $norm = $this->transform($grapheme);
-                if ($norm !== null) {
+                if (null !== $norm) {
                     $modified = true;
                     $this->replace($transformations, $grapheme, $norm);
+
                     continue;
                 }
             }
             $chars = mb_str_split($grapheme);
             foreach ($chars as $char) {
                 $norm = $this->transform($char);
-                if ($norm !== null) {
+                if (null !== $norm) {
                     $modified = true;
                     $this->replace($transformations, $char, $norm);
                 } else {
@@ -74,7 +61,7 @@ class Precompiled extends Normalizer
         }
 
         if ($modified) {
-            $text =  $this->applyTransformations($text, $transformations);
+            $text = $this->applyTransformations($text, $transformations);
         }
 
         // Remove control characters
@@ -84,7 +71,7 @@ class Precompiled extends Normalizer
         $text = preg_replace('/[\x{0009}\x{000A}\x{000C}\x{000D}\x{1680}\x{200B}\x{200C}\x{200E}\x{200F}\x{2028}\x{2029}\x{2581}\x{FEFF}\x{FFFD}]/u', ' ', $text);
 
         // Special case handling for Fullwidth Tilde character
-        if (mb_strpos($text, "\u{FF5E}") !== false) {
+        if (false !== mb_strpos($text, "\u{FF5E}")) {
             $parts = explode("\u{FF5E}", $text);
             $normalizedParts = array_map(fn ($part) => $this->normalizeNFKC($part), $parts);
             $text = implode("\u{FF5E}", $normalizedParts);
@@ -95,12 +82,27 @@ class Precompiled extends Normalizer
         return $text;
     }
 
+    private function parse($precompiled_charsmap)
+    {
+        $trie_size = unpack('V', substr($precompiled_charsmap, 0, 4))[1];
+        $trie_char_size = $trie_size / 4;
+        $trie_blob = [];
+        $offset = 4;
+        for ($i = 0; $i < $trie_char_size; ++$i) {
+            $trie_blob[] = unpack('V', substr($precompiled_charsmap, $offset, 4))[1];
+            $offset += 4;
+        }
+        $this->normalized = substr($precompiled_charsmap, $offset);
+        $this->trie = new DoubleArray($trie_blob);
+    }
+
     private function normalizeNFKC(string $text): string
     {
         // Perform NFKC normalization using PHP's intl extension
         if (class_exists('Normalizer')) {
             return \Normalizer::normalize($text, \Normalizer::FORM_KC);
         }
+
         return $text; // Fallback if intl extension is not available
     }
 
@@ -113,11 +115,12 @@ class Precompiled extends Normalizer
         $index = $results[0];
         $index2 = $index;
         while ($index2 < mb_strlen($this->normalized)) {
-            if (ord($this->normalized[$index2]) === 0) {
+            if (0 === ord($this->normalized[$index2])) {
                 break;
             }
-            $index2++;
+            ++$index2;
         }
+
         return mb_substr($this->normalized, $index, $index2 - $index);
     }
 
@@ -132,7 +135,7 @@ class Precompiled extends Normalizer
         }
 
         if ($diff > 0) {
-            for ($i = 0; $i < $diff; $i++) {
+            for ($i = 0; $i < $diff; ++$i) {
                 $transformations[count($transformations) - 1 - $i][1] = 1;
             }
         } elseif ($diff < 0) {
@@ -148,15 +151,14 @@ class Precompiled extends Normalizer
             $result .= $char;
             $offset += $change;
         }
+
         return $result;
     }
 }
 
 class DoubleArray
 {
-    public function __construct(protected array $array)
-    {
-    }
+    public function __construct(protected array $array) {}
 
     public function commonPrefixSearch($key): array
     {
@@ -167,7 +169,7 @@ class DoubleArray
         $node_pos ^= $this->offset($unit);
 
         foreach (mb_str_split($key) as $c) {
-            if (ord($c) === 0) {
+            if (0 === ord($c)) {
                 break;
             }
             $node_pos ^= ord($c);
@@ -180,6 +182,7 @@ class DoubleArray
                 $results[] = $this->value($this->array[$node_pos]);
             }
         }
+
         return $results;
     }
 

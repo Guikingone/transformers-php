@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Codewithkyrian\Transformers\Normalizers;
 
-/*
- * NFKC Normalizer.
- */
+// NFKC Normalizer.
 
 use function normalizer_normalize;
 

@@ -8,7 +8,6 @@ use Codewithkyrian\Transformers\Exceptions\HubException;
 use Codewithkyrian\Transformers\FeatureExtractors\ImageFeatureExtractor;
 use Codewithkyrian\Transformers\Utils\Hub;
 use Exception;
-use Symfony\Component\Console\Output\OutputInterface;
 
 use function class_exists;
 
@@ -42,13 +41,14 @@ class AutoProcessor
      *                                Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
      *                                user or organization name, like `dbmdz/bert-base-german-cased`.
      *                                - A path to a *directory* containing tokenizer files, e.g., `./my_model_directory/`.
+     *
      * @throws HubException
      */
     public static function fromPretrained(
-        string           $modelNameOrPath,
-        ?array           $config = null,
-        ?string          $cacheDir = null,
-        string           $revision = 'main',
+        string $modelNameOrPath,
+        ?array $config = null,
+        ?string $cacheDir = null,
+        string $revision = 'main',
         ?callable $onProgress = null,
     ): Processor {
         $preprocessorConfig = $config ?? Hub::getJson($modelNameOrPath, 'preprocessor_config.json', $cacheDir, $revision, onProgress: $onProgress);
@@ -56,7 +56,6 @@ class AutoProcessor
         $featureExtractorKey = $preprocessorConfig['feature_extractor_type'] ?? $preprocessorConfig['image_processor_type'];
 
         $featureExtractorClass = "\\Codewithkyrian\\Transformers\\FeatureExtractors\\{$featureExtractorKey}";
-
 
         if (!class_exists($featureExtractorClass)) {
             if (isset($preprocessorConfig['size'])) {
@@ -69,9 +68,8 @@ class AutoProcessor
             }
         }
 
-        $processorKey = $preprocessorConfig['processor_class'] ?? "Processor";
-        $processorClass = "\\Codewithkyrian\\Transformers\\Processors\\$processorKey";
-
+        $processorKey = $preprocessorConfig['processor_class'] ?? 'Processor';
+        $processorClass = "\\Codewithkyrian\\Transformers\\Processors\\{$processorKey}";
 
         $featureExtractor = new $featureExtractorClass($preprocessorConfig);
 

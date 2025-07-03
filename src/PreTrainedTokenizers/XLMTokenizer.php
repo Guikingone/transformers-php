@@ -14,6 +14,6 @@ class XLMTokenizer extends PreTrainedTokenizer
     {
         parent::__construct($tokenizerJSON, $tokenizerConfig);
 
-        trigger_error("WARNING: `XLMTokenizer` is not yet supported by Hugging Face\'s `fast` tokenizers library. Therefore, you may experience slightly inaccurate results.");
+        trigger_error("WARNING: `XLMTokenizer` is not yet supported by Hugging Face\\'s `fast` tokenizers library. Therefore, you may experience slightly inaccurate results.");
     }
 }

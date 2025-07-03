@@ -15,5 +15,4 @@ class MobileBertForMaskedLM extends MobileBertPretrainedModel
     {
         return MaskedLMOutput::fromOutput(parent::__invoke($modelInputs));
     }
-
 }

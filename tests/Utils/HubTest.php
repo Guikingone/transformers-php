@@ -73,7 +73,6 @@ it('combines part files correctly', static function () {
     file_put_contents('cache/test/file.txt.part2', 'Part 2');
     file_put_contents('cache/test/file.txt.part3', 'Part 3');
 
-
     // Combine part files
     Hub::combinePartFiles('cache/test/file.txt', 'cache/test/file.txt.part', 3);
 
@@ -87,10 +86,10 @@ it('combines part files correctly', static function () {
     rmdir('cache');
 });
 
-//it('downloads a file correctly', function () {
-////    $mock = new MockHandler([new Response(200, [], 'File content')]);
-////
-////    $client = new Client(['handler' => $mock]);
+// it('downloads a file correctly', function () {
+// //    $mock = new MockHandler([new Response(200, [], 'File content')]);
+// //
+// //    $client = new Client(['handler' => $mock]);
 //
 //    $filePath = Hub::getFile('model_id', 'file.txt');
 //
@@ -100,4 +99,4 @@ it('combines part files correctly', static function () {
 //
 //    unlink($filePath);
 //    rmdir('tests/models/model_id');
-//});
+// });

@@ -18,7 +18,7 @@ use function range;
 use function usort;
 
 /**
- * Question answering pipeline
+ * Question answering pipeline.
  *
  * *Example:** Extractive question-answering w/ `Xenova/distilbert-base-uncased-distilled-squad`.
  * ```php
@@ -35,7 +35,7 @@ class QuestionAnsweringPipeline extends Pipeline
     public function __invoke(array|string $inputs, ...$args): array
     {
         $question = $inputs;
-        $context = $args[0] ?? $args["context"];
+        $context = $args[0] ?? $args['context'];
         $topK = array_pop_key($args, 'topK', 1);
 
         $inputs = $this->tokenizer->__invoke($question, $context, padding: true, truncation: true);
@@ -60,7 +60,6 @@ class QuestionAnsweringPipeline extends Pipeline
                 ),
                 static fn ($x) => $x[1] > $sepIndex,
             );
-
 
             $e1 = array_filter(
                 array_map(
@@ -95,6 +94,6 @@ class QuestionAnsweringPipeline extends Pipeline
             }
         }
 
-        return $topK === 1 ? $toReturn[0] : $toReturn;
+        return 1 === $topK ? $toReturn[0] : $toReturn;
     }
 }

@@ -37,20 +37,20 @@ class AutoModel extends PretrainedMixin
 {
     public const ENCODER_ONLY_MODEL_MAPPING = [
         'albert' => AlbertModel::class,
-        "bert" => BertModel::class,
-        "distilbert" => DistilBertModel::class,
-        "deberta" => DebertaModel::class,
-        "deberta-v2" => DebertaV2Model::class,
-        "mobilebert" => MobileBertModel::class,
-        "roformer" => RoFormerModel::class,
-        "roberta" => RobertaModel::class,
-        "clip" => CLIPModel::class,
-        "vit" => ViTModel::class,
-        "deit" => DeiTModel::class,
-        "siglip" => SigLipModel::class,
+        'bert' => BertModel::class,
+        'distilbert' => DistilBertModel::class,
+        'deberta' => DebertaModel::class,
+        'deberta-v2' => DebertaV2Model::class,
+        'mobilebert' => MobileBertModel::class,
+        'roformer' => RoFormerModel::class,
+        'roberta' => RobertaModel::class,
+        'clip' => CLIPModel::class,
+        'vit' => ViTModel::class,
+        'deit' => DeiTModel::class,
+        'siglip' => SigLipModel::class,
 
-        "audio-spectrogram-transformer" => ASTModel::class,
-        "wav2vec2" => Wav2Vec2Model::class,
+        'audio-spectrogram-transformer' => ASTModel::class,
+        'wav2vec2' => Wav2Vec2Model::class,
 
         'detr' => DETRModel::class,
         'yolos' => YOLOSModel::class,
@@ -60,18 +60,18 @@ class AutoModel extends PretrainedMixin
     ];
 
     public const ENCODER_DECODER_MODEL_MAPPING = [
-        "t5" => T5Model::class,
-        "bart" => BartModel::class,
-        "m2m_100" => M2M100Model::class,
+        't5' => T5Model::class,
+        'bart' => BartModel::class,
+        'm2m_100' => M2M100Model::class,
     ];
 
     public const DECODER_ONLY_MODEL_MAPPING = [
-        "gpt2" => GPT2Model::class,
-        "gptj" => GPTJModel::class,
-        "gpt_bigcode" => GPTBigCodeModel::class,
-        "codegen" => CodeGenModel::class,
-        "llama" => LlamaModel::class,
-        "qwen2" => Qwen2Model::class,
+        'gpt2' => GPT2Model::class,
+        'gptj' => GPTJModel::class,
+        'gpt_bigcode' => GPTBigCodeModel::class,
+        'codegen' => CodeGenModel::class,
+        'llama' => LlamaModel::class,
+        'qwen2' => Qwen2Model::class,
     ];
 
     public const MODEL_CLASS_MAPPINGS = [

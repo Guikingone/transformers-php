@@ -28,12 +28,12 @@ use const PHP_ROUND_HALF_EVEN;
 class ImageFeatureExtractor extends FeatureExtractor
 {
     /** The mean values for image normalization. */
-    protected int|array|null $imageMean;
+    protected null|array|int $imageMean;
 
     /** The standard deviation values for image normalization. */
-    protected int|array|null $imageStd;
+    protected null|array|int $imageStd;
 
-    /* What method to use for resampling. */
+    // What method to use for resampling.
     protected int $resample;
 
     /** Whether to rescale the image pixel values to the [0,1] range. */
@@ -55,10 +55,10 @@ class ImageFeatureExtractor extends FeatureExtractor
     protected ?array $size;
     protected mixed $sizeDivisibility;
     protected ?bool $doCenterCrop;
-    protected array|int|null $cropSize;
+    protected null|array|int $cropSize;
     protected ?bool $doConvertRGB;
     protected ?bool $doCropMargin;
-    protected array|int|null $padSize;
+    protected null|array|int $padSize;
     protected ?bool $doPad;
 
     public function __construct(public array $config)
@@ -86,20 +86,48 @@ class ImageFeatureExtractor extends FeatureExtractor
         $this->padSize = $config['pad_size'] ?? null;
         $this->doPad = $config['do_pad'] ?? null;
 
-        if ($this->doPad && !$this->padSize && $this->size && isset($this->size['width']) && isset($this->size['height'])) {
+        if ($this->doPad && !$this->padSize && $this->size && isset($this->size['width'], $this->size['height'])) {
             // Should pad, but no pad size specified
             // We infer the pad size from the resize size
             $this->padSize = $this->size;
         }
     }
 
+    /**
+     * Calls the feature extraction process on an array of images,
+     * preprocesses each image, and concatenates the resulting
+     * features into a single Tensor.
+     *
+     * @param Image|Image[] $images the image(s) to extract features from
+     * @param mixed ...$args Additional arguments.
+     *
+     * @return array an object containing the concatenated pixel values (and other metadata) of the preprocessed images
+     */
+    public function __invoke(array|Image $images, ...$args): array
+    {
+        if (!is_array($images)) {
+            $images = [$images];
+        }
+
+        $imageData = array_map([$this, 'preprocess'], $images);
+
+        $pixelValues = array_column($imageData, 'pixel_values');
+        $originalSizes = array_column($imageData, 'original_size');
+        $reshapedInputSizes = array_column($imageData, 'reshaped_input_size');
+
+        return [
+            'pixel_values' => Tensor::stack($pixelValues),
+            'original_sizes' => $originalSizes,
+            'reshaped_input_sizes' => $reshapedInputSizes,
+        ];
+    }
 
     /**
      * Crops the margin of the image. Gray pixels are considered margin (i.e., pixels with a value below the threshold).
      *
-     * @param int $grayThreshold Value below which pixels are considered to be gray.
+     * @param int $grayThreshold value below which pixels are considered to be gray
      *
-     * @return static The cropped image.
+     * @return static the cropped image
      */
     public function cropMargin(Image $image, int $grayThreshold = 200): static
     {
@@ -112,7 +140,7 @@ class ImageFeatureExtractor extends FeatureExtractor
         $diff = $maxValue - $minValue;
 
         // If all pixels have the same value, no need to crop
-        if ($diff === 0) {
+        if (0 === $diff) {
             return $this;
         }
 
@@ -151,24 +179,25 @@ class ImageFeatureExtractor extends FeatureExtractor
     /**
      * Pad the image by a certain amount.
      *
-     * @param Tensor $imageTensor The pixel data to pad.
-     * @param int[]|int $padSize The dimensions of the padded image.
-     * @param string $mode The type of padding to add.
-     * @param bool $center Whether to center the image.
-     * @param int $constantValues The constant value to use for padding.
+     * @param Tensor $imageTensor the pixel data to pad
+     * @param int|int[] $padSize the dimensions of the padded image
+     * @param string $mode the type of padding to add
+     * @param bool $center whether to center the image
+     * @param int $constantValues the constant value to use for padding
      *
-     * @return Tensor The padded pixel data and image dimensions.
+     * @return Tensor the padded pixel data and image dimensions
+     *
      * @throws Exception
      */
     public function padImage(
-        Tensor    $imageTensor,
-        int|array $padSize,
-        string    $tensorFormat = 'CHW', // 'HWC' or 'CHW
-        string    $mode = 'constant',
-        bool      $center = false,
-        int       $constantValues = 0,
+        Tensor $imageTensor,
+        array|int $padSize,
+        string $tensorFormat = 'CHW', // 'HWC' or 'CHW
+        string $mode = 'constant',
+        bool $center = false,
+        int $constantValues = 0,
     ): Tensor {
-        if ($tensorFormat === 'CHW') {
+        if ('CHW' === $tensorFormat) {
             [$imageChannels, $imageHeight, $imageWidth] = $imageTensor->shape();
         } else {
             [$imageHeight, $imageWidth, $imageChannels] = $imageTensor->shape();
@@ -198,9 +227,9 @@ class ImageFeatureExtractor extends FeatureExtractor
                 $paddedPixelData = Tensor::fill($paddedShape, $constantValues);
             }
 
-            [$left, $top] = $center ?
-                [floor(($paddedImageWidth - $imageWidth) / 2), floor(($paddedImageHeight - $imageHeight) / 2)] :
-                [0, 0];
+            [$left, $top] = $center
+                ? [floor(($paddedImageWidth - $imageWidth) / 2), floor(($paddedImageHeight - $imageHeight) / 2)]
+                : [0, 0];
 
             // Copy the original image into the padded image
             for ($i = 0; $i < $imageHeight; ++$i) {
@@ -217,7 +246,7 @@ class ImageFeatureExtractor extends FeatureExtractor
                 }
             }
 
-            if ($mode === 'symmetric') {
+            if ('symmetric' === $mode) {
                 if ($center) {
                     throw new Exception('`center` padding is not supported when `mode` is set to `symmetric`.');
                     // TODO: Implement this
@@ -251,24 +280,18 @@ class ImageFeatureExtractor extends FeatureExtractor
         return $imageTensor;
     }
 
-    private function calculateReflectOffset(int $val, int $max): int
-    {
-        $mod = $val % ($max * 2);
-        return $mod > $max ? $max - ($mod - $max) : $mod;
-    }
-
-
     /**
      * Find the target (width, height) dimension of the output image after
      * resizing given the input image and the desired size.
      *
-     * @param Image $image The image to be resized.
-     * @param int|array|null $size The size to use for resizing the image.
+     * @param Image $image the image to be resized
+     * @param null|array|int $size the size to use for resizing the image
      *
-     * @return array The target (width, height) dimension of the output image after resizing.
+     * @return array the target (width, height) dimension of the output image after resizing
+     *
      * @throws Exception
      */
-    public function getResizeOutputImageSize(Image $image, int|array|null $size): array
+    public function getResizeOutputImageSize(Image $image, null|array|int $size): array
     {
         [$srcWidth, $srcHeight] = $image->size();
 
@@ -281,18 +304,17 @@ class ImageFeatureExtractor extends FeatureExtractor
             // Backward compatibility with integer size
             $shortestEdge = $size;
             $longestEdge = $this->config['max_size'] ?? $shortestEdge;
-        } elseif ($size != null) {
+        } elseif (null != $size) {
             // Extract known properties from size
             $shortestEdge = $size['shortest_edge'] ?? null;
             $longestEdge = $size['longest_edge'] ?? null;
         }
 
-
         // If `$longestEdge` and `$shortestEdge` are set, maintain aspect ratio and resize to `$shortestEdge`
         // while keeping the largest dimension <= `$shortestEdge`
-        if ($shortestEdge != null || $longestEdge != null) {
+        if (null != $shortestEdge || null != $longestEdge) {
             // Try resize so that shortest edge is shortestEdge (target)
-            $shortResizeFactor = $shortestEdge !== null
+            $shortResizeFactor = null !== $shortestEdge
                 ? max($shortestEdge / $srcWidth, $shortestEdge / $srcHeight)
                 : 1;
 
@@ -301,20 +323,21 @@ class ImageFeatureExtractor extends FeatureExtractor
 
             // The new width and height might be greater than `longest_edge`, so
             // we downscale to ensure the largest dimension is longestEdge
-            $longResizeFactor = $longestEdge !== null
+            $longResizeFactor = null !== $longestEdge
                 ? min($longestEdge / $newWidth, $longestEdge / $newHeight)
                 : 1;
 
             // Round to avoid floating point precision issues
-            $finalWidth = (int)floor(round($srcWidth * $longResizeFactor, 2));
-            $finalHeight = (int)floor(round($srcHeight * $longResizeFactor, 2));
+            $finalWidth = (int) floor(round($srcWidth * $longResizeFactor, 2));
+            $finalHeight = (int) floor(round($srcHeight * $longResizeFactor, 2));
 
-            if ($this->sizeDivisibility !== null) {
+            if (null !== $this->sizeDivisibility) {
                 [$finalWidth, $finalHeight] = $this->enforceSizeDivisibility([$finalWidth, $finalHeight], $this->sizeDivisibility);
             }
 
             return [$finalWidth, $finalHeight];
-        } elseif (isset($size['width'], $size['height'])) {
+        }
+        if (isset($size['width'], $size['height'])) {
             // Resize to the specified dimensions
             $newWidth = $size['width'];
             $newHeight = $size['height'];
@@ -337,24 +360,25 @@ class ImageFeatureExtractor extends FeatureExtractor
             }
 
             return [$newWidth, $newHeight];
-        } elseif ($this->sizeDivisibility != null) {
+        }
+        if (null != $this->sizeDivisibility) {
             return $this->enforceSizeDivisibility([$srcWidth, $srcHeight], $this->sizeDivisibility);
         }
+
         throw new Exception("Could not resize image due to unsupported 'size' parameter passed: " . json_encode($size));
-
     }
-
 
     /**
      * Preprocesses the given image.
      *
-     * @param Image $image The image to preprocess.
-     * @param ?bool $doNormalize Whether to normalize the image.
-     * @param ?bool $doPad Whether to pad the image.
-     * @param ?bool $doConvertRGB Whether to convert the image to RGB.
-     * @param ?bool $doConvertGrayscale Whether to convert the image to grayscale.
+     * @param Image $image the image to preprocess
+     * @param ?bool $doNormalize whether to normalize the image
+     * @param ?bool $doPad whether to pad the image
+     * @param ?bool $doConvertRGB whether to convert the image to RGB
+     * @param ?bool $doConvertGrayscale whether to convert the image to grayscale
      *
-     * @return array The preprocessed image.
+     * @return array the preprocessed image
+     *
      * @throws Exception
      */
     public function preprocess(
@@ -392,7 +416,6 @@ class ImageFeatureExtractor extends FeatureExtractor
         }
 
         if ($this->doCenterCrop) {
-
             if (is_int($this->cropSize)) {
                 $cropWidth = $this->cropSize;
                 $cropHeight = $this->cropSize;
@@ -421,7 +444,6 @@ class ImageFeatureExtractor extends FeatureExtractor
                 $imageMean = Tensor::fill([$image->channels * $image->height() * $image->width()], -$this->imageMean);
             }
 
-
             if (is_array($this->imageStd)) {
                 // Inverse the standard deviation values to multiple instead of divide
                 $inversedStd = array_map(static fn ($std) => 1 / $std, $this->imageStd);
@@ -430,13 +452,12 @@ class ImageFeatureExtractor extends FeatureExtractor
                 $imageStd = Tensor::fill([$image->channels * $image->height() * $image->width()], 1 / $this->imageStd);
             }
 
-
             // Reshape mean and std to match the image tensor shape
             $imageMean = $imageMean->reshape($imageTensor->shape());
             $imageStd = $imageStd->reshape($imageTensor->shape());
 
             if (count($imageMean) !== $image->channels || count($imageStd) !== $image->channels) {
-                throw new Exception("When set to arrays, the length of `imageMean` (" . count($imageMean) . ") and `imageStd` (" . count($imageStd) . ") must match the number of channels in the image ({$image->channels}).");
+                throw new Exception('When set to arrays, the length of `imageMean` (' . count($imageMean) . ') and `imageStd` (' . count($imageStd) . ") must match the number of channels in the image ({$image->channels}).");
             }
 
             // Normalize pixel data
@@ -445,9 +466,9 @@ class ImageFeatureExtractor extends FeatureExtractor
 
         // Perform padding after rescaling/normalizing
         if ($doPad ?? $this->doPad) {
-            if ($this->padSize !== null) {
+            if (null !== $this->padSize) {
                 $imageTensor = $this->padImage($imageTensor, $this->padSize);
-            } elseif ($this->sizeDivisibility !== null) {
+            } elseif (null !== $this->sizeDivisibility) {
                 [$paddedWidth, $paddedHeight] = $this->enforceSizeDivisibility([$imageTensor->shape()[1], $imageTensor->shape()[0]], $this->sizeDivisibility);
                 $imageTensor = $this->padImage($imageTensor, ['width' => $paddedWidth, 'height' => $paddedHeight]);
             }
@@ -460,42 +481,20 @@ class ImageFeatureExtractor extends FeatureExtractor
         ];
     }
 
-    /**
-     * Calls the feature extraction process on an array of images,
-     * preprocesses each image, and concatenates the resulting
-     * features into a single Tensor.
-     *
-     * @param Image|Image[] $images The image(s) to extract features from.
-     * @param mixed ...$args Additional arguments.
-     *
-     * @return array An object containing the concatenated pixel values (and other metadata) of the preprocessed images.
-     */
-    public function __invoke(Image|array $images, ...$args): array
+    private function calculateReflectOffset(int $val, int $max): int
     {
-        if (!is_array($images)) {
-            $images = [$images];
-        }
+        $mod = $val % ($max * 2);
 
-        $imageData = array_map([$this, 'preprocess'], $images);
-
-        $pixelValues = array_column($imageData, 'pixel_values');
-        $originalSizes = array_column($imageData, 'original_size');
-        $reshapedInputSizes = array_column($imageData, 'reshaped_input_size');
-
-        return [
-            'pixel_values' => Tensor::stack($pixelValues),
-            'original_sizes' => $originalSizes,
-            'reshaped_input_sizes' => $reshapedInputSizes,
-        ];
+        return $mod > $max ? $max - ($mod - $max) : $mod;
     }
 
     /**
-     * Rounds the height and width down to the closest multiple of size_divisibility
+     * Rounds the height and width down to the closest multiple of size_divisibility.
      *
      * @param array{int, int} $size The size of the image
-     * @param int $divisor The divisor to use.
+     * @param int $divisor the divisor to use
      *
-     * @return array{int, int} The rounded size.
+     * @return array{int, int} the rounded size
      */
     private function enforceSizeDivisibility(array $size, int $divisor): array
     {
@@ -510,11 +509,10 @@ class ImageFeatureExtractor extends FeatureExtractor
     /**
      *  Constrain a value to be a multiple of a number.
      *
-     * @param int $val The value to constrain.
-     * @param int $multiple The number to constrain to.
-     * @param int $minVal The minimum value to constrain to.
-     * @param int|null $maxVal The maximum value to constrain to.
-     *
+     * @param int $val the value to constrain
+     * @param int $multiple the number to constrain to
+     * @param int $minVal the minimum value to constrain to
+     * @param null|int $maxVal the maximum value to constrain to
      */
     private function constraintToMultipleOf(int $val, int $multiple, int $minVal = 0, ?int $maxVal = null): int
     {
@@ -522,7 +520,7 @@ class ImageFeatureExtractor extends FeatureExtractor
 
         $x = round($a, 0, PHP_ROUND_HALF_EVEN) * $multiple;
 
-        if ($maxVal !== null && $x > $maxVal) {
+        if (null !== $maxVal && $x > $maxVal) {
             $x = floor($a) * $multiple;
         }
 

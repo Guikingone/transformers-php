@@ -19,10 +19,10 @@ class LlamaPretrainedModel extends PretrainedModel
     protected int $dimKv;
 
     public function __construct(
-        AutoConfig               $config,
-        InferenceSession         $session,
+        AutoConfig $config,
+        InferenceSession $session,
         public ModelArchitecture $modelArchitecture,
-        public GenerationConfig  $generationConfig,
+        public GenerationConfig $generationConfig,
     ) {
         parent::__construct($config, $session, $modelArchitecture);
 

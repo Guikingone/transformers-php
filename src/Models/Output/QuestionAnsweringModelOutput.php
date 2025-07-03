@@ -14,8 +14,7 @@ class QuestionAnsweringModelOutput implements ModelOutput
     public function __construct(
         public readonly Tensor $startLogits,
         public readonly Tensor $endLogits,
-    ) {
-    }
+    ) {}
 
     public static function fromOutput(array $array): self
     {

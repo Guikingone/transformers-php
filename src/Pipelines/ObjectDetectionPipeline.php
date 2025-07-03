@@ -36,15 +36,13 @@ class ObjectDetectionPipeline extends Pipeline
         $threshold = $args['threshold'] ?? 0.9;
         $percentage = $args['percentage'] ?? false;
 
-
         $isBatched = is_array($inputs);
 
-        if ($isBatched && count($inputs) !== 1) {
-            throw new Exception("Object detection pipeline currently only supports a batch size of 1.");
+        if ($isBatched && 1 !== count($inputs)) {
+            throw new Exception('Object detection pipeline currently only supports a batch size of 1.');
         }
 
         $preparedImages = prepareImages($inputs);
-
 
         $imageSizes = $percentage ? null : array_map(static fn ($x) => [$x->height(), $x->width()], $preparedImages);
 

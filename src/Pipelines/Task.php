@@ -58,6 +58,7 @@ enum Task: string
     case AudioClassification = 'audio-classification';
     case AutomaticSpeechRecognition = 'automatic-speech-recognition';
     case ASR = 'asr';
+
     public function pipeline(
         PretrainedModel $model,
         ?PreTrainedTokenizer $tokenizer,
@@ -109,6 +110,7 @@ enum Task: string
             self::AutomaticSpeechRecognition => new AutomaticSpeechRecognitionPipeline($this, $model, $tokenizer, $processor),
         };
     }
+
     public function defaultModelName(): string
     {
         return match ($this) {
@@ -155,6 +157,7 @@ enum Task: string
             self::AutomaticSpeechRecognition => 'Xenova/whisper-tiny.en', // Original: 'openai/whisper-tiny.en',
         };
     }
+
     public function autoModel(
         string $modelNameOrPath,
         bool $quantized = true,
@@ -215,9 +218,9 @@ enum Task: string
     }
 
     public function autoTokenizer(
-        string    $modelNameOrPath,
-        ?string   $cacheDir = null,
-        string    $revision = 'main',
+        string $modelNameOrPath,
+        ?string $cacheDir = null,
+        string $revision = 'main',
         ?callable $onProgress = null,
     ): ?PreTrainedTokenizer {
         return match ($this) {
@@ -246,15 +249,15 @@ enum Task: string
             self::ZeroShotImageClassification,
             self::ZeroShotObjectDetection,
             self::ASR,
-            self::AutomaticSpeechRecognition  => AutoTokenizer::fromPretrained($modelNameOrPath, $cacheDir, $revision, null, $onProgress),
+            self::AutomaticSpeechRecognition => AutoTokenizer::fromPretrained($modelNameOrPath, $cacheDir, $revision, null, $onProgress),
         };
     }
 
     public function autoProcessor(
-        string    $modelNameOrPath,
-        ?array    $config = null,
-        ?string   $cacheDir = null,
-        string    $revision = 'main',
+        string $modelNameOrPath,
+        ?array $config = null,
+        ?string $cacheDir = null,
+        string $revision = 'main',
         ?callable $onProgress = null,
     ): ?Processor {
         return match ($this) {
@@ -267,7 +270,7 @@ enum Task: string
             self::ZeroShotObjectDetection,
             self::AudioClassification,
             self::ASR,
-            self::AutomaticSpeechRecognition  => AutoProcessor::fromPretrained($modelNameOrPath, $config, $cacheDir, $revision, $onProgress),
+            self::AutomaticSpeechRecognition => AutoProcessor::fromPretrained($modelNameOrPath, $config, $cacheDir, $revision, $onProgress),
 
             self::TextToSpeech,
 

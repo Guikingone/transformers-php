@@ -14,8 +14,6 @@ class StripDecoder extends Decoder
     protected int $start;
     protected int $stop;
 
-    /**
-     */
     public function __construct(array $config)
     {
         parent::__construct($config);
@@ -33,10 +31,11 @@ class StripDecoder extends Decoder
                 $char = mb_substr($token, $i, 1);
                 if ($char === $this->content) {
                     $startCut = $i + 1;
+
                     continue;
                 }
-                break;
 
+                break;
             }
 
             $stopCut = mb_strlen($token);
@@ -44,10 +43,11 @@ class StripDecoder extends Decoder
                 $index = mb_strlen($token) - $i - 1;
                 if ($token[$index] ?? null === $this->content) {
                     $stopCut = $index;
+
                     continue;
                 }
-                break;
 
+                break;
             }
 
             return mb_substr($token, $startCut, $stopCut - $startCut);

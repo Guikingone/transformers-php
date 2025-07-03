@@ -25,7 +25,8 @@ class CharTrie
 
     /**
      * Adds one or more `texts` to the trie.
-     * @param array $texts The strings to add to the trie.
+     *
+     * @param array $texts the strings to add to the trie
      */
     public function extend(array $texts): void
     {
@@ -37,34 +38,36 @@ class CharTrie
 
     /**
      * Adds text to the trie.
-     * @param string $text The string to add to the trie.
+     *
+     * @param string $text the string to add to the trie
      */
     public function push(string $text): void
     {
         $node = $this->root;
         $length = mb_strlen($text);
 
-        for ($i = 0; $i < $length; $i++) {
+        for ($i = 0; $i < $length; ++$i) {
             $ch = mb_substr($text, $i, 1);
             $node = $node->getChild($ch);
         }
-
 
         $node->isLeaf = true;
     }
 
     /**
      * Searches the trie for all strings with a common prefix of `text`.
-     * @param string $text The common prefix to search for.
-     * @return Generator Yields each string in the trie that has `text` as a prefix.
+     *
+     * @param string $text the common prefix to search for
+     *
+     * @return Generator yields each string in the trie that has `text` as a prefix
      */
     public function commonPrefixSearch(string $text): Generator
     {
         $node = $this->root;
-        $prefix = "";
+        $prefix = '';
         $length = mb_strlen($text);
 
-        for ($i = 0; $i < $length && $node != null; $i++) {
+        for ($i = 0; $i < $length && null != $node; ++$i) {
             $ch = mb_substr($text, $i, 1);
             $prefix .= $ch;
             $node = $node->getChild($ch);

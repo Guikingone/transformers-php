@@ -18,13 +18,14 @@ class DetrFeatureExtractor extends ImageFeatureExtractor
     /**
      * Calls the feature extraction process on an array of images, preprocesses
      * each image, and concatenates the resulting features into a single Tensor.
-     * @param Image|array $images The image(s) to extract features from.
-     * @return array An object containing the concatenated pixel values of the preprocessed images.
+     *
+     * @param array|Image $images the image(s) to extract features from
+     *
+     * @return array an object containing the concatenated pixel values of the preprocessed images
      */
-    public function __invoke(Image|array $images, ...$args): array
+    public function __invoke(array|Image $images, ...$args): array
     {
         $result = parent::__invoke($images, $args);
-
 
         // TODO support differently-sized images, for now assume all images are the same size.
         // TODO support different mask sizes (not just 64x64)
@@ -38,14 +39,15 @@ class DetrFeatureExtractor extends ImageFeatureExtractor
         return ['pixel_values' => $result['pixel_values'], 'pixel_mask' => $pixelMask];
     }
 
-
     /**
      * Post-processes the outputs of the model (for object detection).
+     *
      * @param ObjectDetectionOutput $outputs The outputs of the model that must be post-processed
-     * @param float $threshold The threshold to use for the scores.
-     * @param array|null $targetSizes The sizes of the original images.
-     * @param bool $isZeroShot Whether zero-shot object detection was performed.
-     * @return array An array of objects containing the post-processed outputs.
+     * @param float $threshold the threshold to use for the scores
+     * @param null|array $targetSizes the sizes of the original images
+     * @param bool $isZeroShot whether zero-shot object detection was performed
+     *
+     * @return array an array of objects containing the post-processed outputs
      */
     public function postProcessObjectDetection(ObjectDetectionOutput $outputs, float $threshold = 0.5, ?array $targetSizes = null, bool $isZeroShot = false): array
     {

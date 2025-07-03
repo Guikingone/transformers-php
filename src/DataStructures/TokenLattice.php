@@ -19,7 +19,6 @@ class TokenLattice
     /** @var int The length of the input sentence. */
     public int $len;
 
-
     /** @var TokenLatticeNode[] An array of nodes representing the lattice nodes. */
     public array $nodes = [];
 
@@ -32,14 +31,14 @@ class TokenLattice
     /**
      * Creates a new TokenLattice instance.
      *
-     * @param string $sentence The input sentence to be tokenized.
-     * @param int $bosTokenId The beginning-of-sequence token ID.
-     * @param int $eosTokenId The end-of-sequence token ID.
+     * @param string $sentence the input sentence to be tokenized
+     * @param int $bosTokenId the beginning-of-sequence token ID
+     * @param int $eosTokenId the end-of-sequence token ID
      */
     public function __construct(
         public string $sentence,
-        public ?int    $bosTokenId,
-        public ?int    $eosTokenId,
+        public ?int $bosTokenId,
+        public ?int $eosTokenId,
     ) {
         $this->len = mb_strlen($sentence);
         $this->beginNodes = array_fill(0, $this->len + 1, []);
@@ -57,10 +56,10 @@ class TokenLattice
     /**
      * Inserts a new token node into the token lattice.
      *
-     * @param int $pos The starting position of the token.
-     * @param int $length The length of the token.
-     * @param float $score The score of the token.
-     * @param int $tokenId The token ID of the token.
+     * @param int $pos the starting position of the token
+     * @param int $length the length of the token
+     * @param float $score the score of the token
+     * @param int $tokenId the token ID of the token
      */
     public function insert(int $pos, int $length, float $score, int $tokenId): void
     {
@@ -74,7 +73,7 @@ class TokenLattice
     /**
      * Implements the Viterbi algorithm to compute the most likely sequence of tokens.
      *
-     * @return TokenLatticeNode[] The array of nodes representing the most likely sequence of tokens.
+     * @return TokenLatticeNode[] the array of nodes representing the most likely sequence of tokens
      */
     public function viterbi(): array
     {
@@ -90,13 +89,13 @@ class TokenLattice
                 $bestNode = null;
                 foreach ($this->endNodes[$pos] as $lnode) {
                     $score = $lnode->backtraceScore + $rnode->score;
-                    if ($bestNode === null || $score > $bestScore) {
-                        $bestNode =  $lnode;
+                    if (null === $bestNode || $score > $bestScore) {
+                        $bestNode = $lnode;
                         $bestScore = $score;
                     }
                 }
 
-                if ($bestNode !== null) {
+                if (null !== $bestNode) {
                     $rnode->prev = $bestNode;
                     $rnode->backtraceScore = $bestScore;
                 } else {
@@ -109,22 +108,22 @@ class TokenLattice
         $results = [];
         $root = $this->beginNodes[$len][0];
         $prev = $root->prev;
-        if ($prev === null) {
+        if (null === $prev) {
             return [];
         }
 
         $node = $prev;
-        while ($node->prev !== null) {
+        while (null !== $node->prev) {
             $results[] = $node;
-            $n =  $node;
-            $node =  $n->prev;
+            $n = $node;
+            $node = $n->prev;
         }
 
         return array_reverse($results);
     }
 
     /**
-     * @return string The array of nodes representing the most likely sequence of tokens.
+     * @return string the array of nodes representing the most likely sequence of tokens
      */
     public function piece(TokenLatticeNode $node): string
     {
@@ -132,20 +131,22 @@ class TokenLattice
     }
 
     /**
-     * @return array The array of nodes representing the most likely sequence of tokens.
+     * @return array the array of nodes representing the most likely sequence of tokens
      */
     public function tokens(): array
     {
         $nodes = $this->viterbi();
+
         return array_map([$this, 'piece'], $nodes);
     }
 
     /**
-     * @return array The array of nodes representing the most likely sequence of tokens.
+     * @return array the array of nodes representing the most likely sequence of tokens
      */
     public function tokenIds(): array
     {
         $nodes = $this->viterbi();
+
         return array_map(static fn ($x) => $x->tokenId, $nodes);
     }
 }

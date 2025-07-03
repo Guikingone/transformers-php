@@ -124,16 +124,17 @@ class InferenceSession
         foreach ($providers as $provider) {
             if (!in_array($provider, $this->providers())) {
                 trigger_error('Provider not available: ' . $provider, E_USER_WARNING);
+
                 continue;
             }
 
-            if ($provider == 'CUDAExecutionProvider') {
+            if ('CUDAExecutionProvider' == $provider) {
                 $cudaOptions = OnnxRuntime::CreateCUDAProviderOptions();
                 OnnxRuntime::SessionOptionsAppendExecutionProvider_CUDA_V2($sessionOptions, $cudaOptions);
                 OnnxRuntime::ReleaseCUDAProviderOptions($cudaOptions);
-            } elseif ($provider == 'CoreMLExecutionProvider') {
+            } elseif ('CoreMLExecutionProvider' == $provider) {
                 OnnxRuntime::OrtSessionOptionsAppendExecutionProvider_CoreML($sessionOptions, 1);
-            } elseif ($provider == 'CPUExecutionProvider') {
+            } elseif ('CPUExecutionProvider' == $provider) {
                 break;
             } else {
                 throw new InvalidArgumentException('Provider not supported: ' . $provider);
@@ -194,7 +195,7 @@ class InferenceSession
         OnnxRuntime::ReleaseRunOptions($runOptions);
 
         if ($inputTensor) {
-            for ($i = 0; $i < count($inputFeed); $i++) {
+            for ($i = 0; $i < count($inputFeed); ++$i) {
                 OnnxRuntime::ReleaseValue($inputTensor[$i]);
             }
         }
@@ -221,7 +222,7 @@ class InferenceSession
         $customMetadataMap = [];
         [$keys, $numKeys] = OnnxRuntime::ModelMetadataGetCustomMetadataMapKeys($metadata, $this->allocator);
 
-        for ($i = 0; $i < $numKeys; $i++) {
+        for ($i = 0; $i < $numKeys; ++$i) {
             $key = $keys[$i];
             $value = OnnxRuntime::ModelMetadataLookupCustomMetadataMap($metadata, $this->allocator, $key);
             $customMetadataMap[$key] = $value;
@@ -263,7 +264,7 @@ class InferenceSession
 
         $providers = [];
 
-        for ($i = 0; $i < $length; $i++) {
+        for ($i = 0; $i < $length; ++$i) {
             $providers[] = FFI::string($outPtr[$i]);
         }
 
@@ -274,12 +275,13 @@ class InferenceSession
 
     private function loadSession($path, $sessionOptions): ?CData
     {
-        if (is_resource($path) && get_resource_type($path) == 'stream') {
+        if (is_resource($path) && 'stream' == get_resource_type($path)) {
             $contents = stream_get_contents($path);
             $session = OnnxRuntime::CreateSessionFromArray(self::env(), $contents, strlen($contents), $sessionOptions);
         } else {
             $session = OnnxRuntime::CreateSession(self::env(), $this->ortString($path), $sessionOptions);
         }
+
         return $session;
     }
 
@@ -288,7 +290,7 @@ class InferenceSession
         $inputs = [];
         $numInputNodes = OnnxRuntime::SessionGetInputCount($this->session);
 
-        for ($i = 0; $i < $numInputNodes; $i++) {
+        for ($i = 0; $i < $numInputNodes; ++$i) {
             $name = OnnxRuntime::SessionGetInputName($this->session, $i, $this->allocator);
 
             $typeInfo = OnnxRuntime::SessionGetInputTypeInfo($this->session, $i); // freed in nodeInfo
@@ -304,7 +306,7 @@ class InferenceSession
         $outputs = [];
         $numOutputNodes = OnnxRuntime::SessionGetOutputCount($this->session);
 
-        for ($i = 0; $i < $numOutputNodes; $i++) {
+        for ($i = 0; $i < $numOutputNodes; ++$i) {
             $name = OnnxRuntime::SessionGetOutputName($this->session, $i, $this->allocator);
 
             $typeInfo = OnnxRuntime::SessionGetOutputTypeInfo($this->session, $i); // freed in nodeInfo
@@ -320,45 +322,45 @@ class InferenceSession
         $allocatorInfo = OnnxRuntime::CreateCpuMemoryInfo(1, 0);
 
         $inputFeedSize = count($inputFeed);
-        if ($inputFeedSize == 0) {
+        if (0 == $inputFeedSize) {
             throw new Exception('No input');
         }
 
-        $inputTensor = OnnxRuntime::new("OrtValue*[$inputFeedSize]");
+        $inputTensor = OnnxRuntime::new("OrtValue*[{$inputFeedSize}]");
 
         $idx = 0;
-        /* @var $input Tensor */
+        // @var $input Tensor
         foreach ($inputFeed as $inputName => $input) {
             $inp = null;
             foreach ($this->inputs as $i) {
                 if ($i['name'] == $inputName) {
                     $inp = $i;
+
                     break;
                 }
             }
             if (is_null($inp)) {
-                throw new Exception("Unknown input: $inputName");
+                throw new Exception("Unknown input: {$inputName}");
             }
 
             $shape = $input->shape();
             $ndim = $input->ndim();
             $size = $input->size();
 
-            $inputNodeShape = OnnxRuntime::new("int64_t[$ndim]");
-            for ($i = 0; $i < $ndim; $i++) {
+            $inputNodeShape = OnnxRuntime::new("int64_t[{$ndim}]");
+            for ($i = 0; $i < $ndim; ++$i) {
                 $inputNodeShape[$i] = $shape[$i];
             }
 
-            if ($inp['type'] == 'tensor(string)') {
-                $inputTensorValues = OnnxRuntime::new("char*[$size]");
+            if ('tensor(string)' == $inp['type']) {
+                $inputTensorValues = OnnxRuntime::new("char*[{$size}]");
                 $this->fillStringTensorValues($input, $inputTensorValues, $refs);
 
                 $typeEnum = OnnxRuntime::enum('ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING');
                 OnnxRuntime::CreateTensorAsOrtValue($this->allocator, $inputNodeShape, $ndim, $typeEnum, FFI::addr($inputTensor[$idx]));
                 OnnxRuntime::FillStringTensor($inputTensor[$idx], $inputTensorValues, $size);
             } else {
-
-                $inputTypes = array_flip(array_map(static fn ($v) => "tensor($v)", $this->elementDataTypes()));
+                $inputTypes = array_flip(array_map(static fn ($v) => "tensor({$v})", $this->elementDataTypes()));
 
                 if (isset($inputTypes[$inp['type']])) {
                     $typeEnum = $inputTypes[$inp['type']];
@@ -369,10 +371,10 @@ class InferenceSession
                     $this->unsupportedType('input', $inp['type']);
                 }
 
-                if ($size === 0) {
-                    $inputTensorValues = OnnxRuntime::new("void *");
+                if (0 === $size) {
+                    $inputTensorValues = OnnxRuntime::new('void *');
                 } else {
-                    $inputTensorValues = OnnxRuntime::new("{$castType}[$size]");
+                    $inputTensorValues = OnnxRuntime::new("{$castType}[{$size}]");
                 }
 
                 $inputDump = $input->buffer()->dump();
@@ -384,7 +386,7 @@ class InferenceSession
             $refs[] = $inputNodeShape;
             $refs[] = $inputTensorValues;
 
-            $idx++;
+            ++$idx;
         }
 
         // TODO use finally
@@ -405,12 +407,13 @@ class InferenceSession
     private function createNodeNames($names, &$refs): CData
     {
         $namesSize = count($names);
-        $ptr = OnnxRuntime::new("char*[$namesSize]");
+        $ptr = OnnxRuntime::new("char*[{$namesSize}]");
         foreach ($names as $i => $name) {
             $strPtr = Libc::cstring($name);
             $ptr[$i] = $strPtr;
             $refs[] = $strPtr;
         }
+
         return $ptr;
     }
 
@@ -434,7 +437,7 @@ class InferenceSession
                 $castTypes = $this->castTypes();
 
                 if (isset($castTypes[$type])) {
-                    $arr = OnnxRuntime::cast($castTypes[$type] . "[$outputTensorSize]", $tensorData);
+                    $arr = OnnxRuntime::cast($castTypes[$type] . "[{$outputTensorSize}]", $tensorData);
                 } elseif ($type == OnnxRuntime::enum('ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING')) {
                     $arr = $this->createStringsFromOnnxValue($outPtr, $outputTensorSize);
                 } else {
@@ -450,16 +453,19 @@ class InferenceSession
                 $buffer->load($stringPtr);
 
                 return new Tensor($buffer, $phpTensorType, $shape, 0);
-            } elseif ($outType->cdata == OnnxRuntime::enum('ONNX_TYPE_SEQUENCE')) {
+            }
+            if ($outType->cdata == OnnxRuntime::enum('ONNX_TYPE_SEQUENCE')) {
                 $out = OnnxRuntime::GetValueCount($outPtr);
 
                 $result = [];
-                for ($i = 0; $i < $out; $i++) {
+                for ($i = 0; $i < $out; ++$i) {
                     $sequence = OnnxRuntime::GetValue($outPtr, $i, $this->allocator);
                     $result[] = $this->createFromOnnxValue($sequence);
                 }
+
                 return $result;
-            } elseif ($outType->cdata == OnnxRuntime::enum('ONNX_TYPE_MAP')) {
+            }
+            if ($outType->cdata == OnnxRuntime::enum('ONNX_TYPE_MAP')) {
                 $mapKeys = OnnxRuntime::GetValue($outPtr, 0, $this->allocator);
                 $mapValues = OnnxRuntime::GetValue($outPtr, 1, $this->allocator);
                 $typeShape = OnnxRuntime::GetTensorTypeAndShape($mapKeys);
@@ -471,10 +477,10 @@ class InferenceSession
                 if ($elemType->cdata == OnnxRuntime::enum('ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64')) {
                     $keys = $this->createFromOnnxValue($mapKeys);
                     $values = $this->createFromOnnxValue($mapValues);
+
                     return array_combine($keys, $values);
                 }
                 $this->unsupportedType('element', $elemType);
-
             } else {
                 $this->unsupportedType('ONNX', $outType->cdata);
             }
@@ -498,6 +504,7 @@ class InferenceSession
             $size = $end - $start;
             $result[] = FFI::string($s + $start, $size);
         }
+
         return $result;
     }
 
@@ -512,15 +519,17 @@ class InferenceSession
             [$type, $shape] = $this->tensorTypeAndShape($tensorInfo);
             $elementDataType = $this->elementDataTypes()[$type];
 
-            return ['type' => "tensor($elementDataType)", 'shape' => $shape];
-        } elseif ($onnxType->cdata == OnnxRuntime::enum('ONNX_TYPE_SEQUENCE')) {
+            return ['type' => "tensor({$elementDataType})", 'shape' => $shape];
+        }
+        if ($onnxType->cdata == OnnxRuntime::enum('ONNX_TYPE_SEQUENCE')) {
             $sequenceTypeInfo = OnnxRuntime::CastTypeInfoToSequenceTypeInfo($typeInfo);
             $nestedTypeInfo = OnnxRuntime::GetSequenceElementType($sequenceTypeInfo);
 
             $v = $this->nodeInfo($nestedTypeInfo)['type'];
 
-            return ['type' => "seq($v)", 'shape' => []];
-        } elseif ($onnxType->cdata == OnnxRuntime::enum('ONNX_TYPE_MAP')) {
+            return ['type' => "seq({$v})", 'shape' => []];
+        }
+        if ($onnxType->cdata == OnnxRuntime::enum('ONNX_TYPE_MAP')) {
             $mapTypeInfo = OnnxRuntime::CastTypeInfoToMapTypeInfo($typeInfo);
 
             // key
@@ -531,10 +540,9 @@ class InferenceSession
             $valueTypeInfo = OnnxRuntime::GetMapValueType($mapTypeInfo);
             $v = $this->nodeInfo($valueTypeInfo)['type'];
 
-            return ['type' => "map($k,$v)", 'shape' => []];
+            return ['type' => "map({$k},{$v})", 'shape' => []];
         }
         $this->unsupportedType('ONNX', $onnxType->cdata);
-
     }
 
     private function castTypes(): array
@@ -594,7 +602,6 @@ class InferenceSession
         ];
     }
 
-
     private function tensorTypeAndShape($tensorInfo): array
     {
         $type = OnnxRuntime::GetTensorElementType($tensorInfo);
@@ -604,9 +611,9 @@ class InferenceSession
             $dims = OnnxRuntime::GetDimensions($tensorInfo, $numDims);
             $symbolicDims = OnnxRuntime::GetSymbolicDimensions($tensorInfo, $numDims);
 
-            for ($i = 0; $i < $numDims; $i++) {
+            for ($i = 0; $i < $numDims; ++$i) {
                 $namedDim = FFI::string($symbolicDims[$i]);
-                if ($namedDim != '') {
+                if ('' != $namedDim) {
                     $dims[$i] = $namedDim;
                 }
             }
@@ -619,7 +626,7 @@ class InferenceSession
 
     private function unsupportedType($name, $type)
     {
-        throw new Exception("Unsupported $name type: $type");
+        throw new Exception("Unsupported {$name} type: {$type}");
     }
 
     // wide string on Windows
@@ -638,8 +645,8 @@ class InferenceSession
 
             return $dest;
         }
-        return $str;
 
+        return $str;
     }
 
     private static function env()

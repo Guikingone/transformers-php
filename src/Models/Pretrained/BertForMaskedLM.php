@@ -15,5 +15,4 @@ class BertForMaskedLM extends BertPretrainedModel
     {
         return MaskedLMOutput::fromOutput(parent::__invoke($modelInputs));
     }
-
 }

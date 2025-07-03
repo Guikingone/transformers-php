@@ -15,8 +15,6 @@ use function substr;
 
 class ByteFallback extends Decoder
 {
-    /**
-     */
     public function __construct(array $config)
     {
         parent::__construct($config);
@@ -31,7 +29,7 @@ class ByteFallback extends Decoder
             $bytes = null;
 
             // Check if the token is of the form <0xXX>
-            if (strlen($token) === 6 && str_starts_with($token, '<0x') && str_ends_with($token, '>')) {
+            if (6 === strlen($token) && str_starts_with($token, '<0x') && str_ends_with($token, '>')) {
                 // Extract the hexadecimal value from the token
                 $byte = hexdec(substr($token, 3, 2));
                 if (!is_nan($byte)) {
@@ -39,7 +37,7 @@ class ByteFallback extends Decoder
                 }
             }
 
-            if ($bytes !== null) {
+            if (null !== $bytes) {
                 // Add byte to previousByteTokens
                 $previousByteTokens[] = $bytes;
             } else {
@@ -54,7 +52,6 @@ class ByteFallback extends Decoder
             }
         }
 
-
         // After the loop, if there are still byte tokens, decode them
         if (!empty($previousByteTokens)) {
             $string = pack('C*', ...$previousByteTokens);  // Convert remaining bytes to string
@@ -68,12 +65,14 @@ class ByteFallback extends Decoder
     /**
      * Convert an array of byte values back to a string.
      *
-     * @param array $bytes An array of byte values.
-     * @return string The resulting string after conversion.
+     * @param array $bytes an array of byte values
+     *
+     * @return string the resulting string after conversion
      */
     protected function bytesToString(array $bytes): string
     {
         $binaryString = pack('C*', ...$bytes);
+
         return mb_convert_encoding($binaryString, 'ISO-8859-1');
     }
 }

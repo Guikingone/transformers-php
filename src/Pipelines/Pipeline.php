@@ -18,22 +18,22 @@ class Pipeline
         protected PretrainedModel $model,
         public ?PreTrainedTokenizer $tokenizer = null,
         protected ?Processor $processor = null,
-    ) {
-    }
+    ) {}
 
     /**
-     * @param string[]|string $inputs
+     * @param string|string[] $inputs
      */
     public function __invoke(
         array|string $inputs,
         ...$args,
-    ): array|Tensor|Image {
+    ): array|Image|Tensor {
         return [];
     }
 }
 
 /**
  * Utility factory method to build a `Pipeline` object.
+ *
  * @param string|Task $task The task defining which pipeline will be returned. Currently accepted tasks are:
  *                          - "feature-extraction": will return a `FeatureExtractionPipeline`.
  *                          - "sentiment-analysis": will return a `TextClassificationPipeline`.
@@ -46,11 +46,12 @@ class Pipeline
  *                          - "text-to-speech": will return a `TextToSpeechPipeline`.
  * @param bool $quantized Whether to use a quantized version of the model. If the model doesn't have a quantized version, will
  *                        default to `false`. Only available for some models.
- * @param array|null $config The configuration to use for the pipeline.
- * @param string|null $cacheDir The directory in which the pre-trained models will be cached. Will default to the Transformers cache directory
+ * @param null|array $config the configuration to use for the pipeline
+ * @param null|string $cacheDir The directory in which the pre-trained models will be cached. Will default to the Transformers cache directory
  * @param string $revision The specific model version to use. It can be a branch name, a tag name, or a commit id, since we use a git-based
  *                         system for storing models and other artifacts on huggingface.co, so ``revision`` can be any identifier allowed by git.
- * @throws UnsupportedTaskException If the task is not supported.
+ *
+ * @throws UnsupportedTaskException if the task is not supported
  */
 function pipeline(
     string|Task $task,
@@ -66,7 +67,7 @@ function pipeline(
         $taskAsString = $task;
         $task = Task::tryFrom($taskAsString);
 
-        if ($task === null) {
+        if (null === $task) {
             throw UnsupportedTaskException::make($taskAsString);
         }
     }

@@ -41,14 +41,15 @@ class MetaspacePreTokenizer extends PreTokenizer
         $this->prependScheme = $this->config['prepend_scheme'] ?? 'always';
     }
 
-
     /**
      * This method takes a string, replaces spaces with the replacement character,
      *  adds a prefix space if requested, and returns a new list of tokens.
+     *
      * @param array{ section_index : int} $options
+     *
      * @return array|string[]
      */
-    public function preTokenizeText(string|array $text, array $options): array
+    public function preTokenizeText(array|string $text, array $options): array
     {
         $normalized = str_replace(' ', $this->strRep, $text);
 
@@ -64,8 +65,8 @@ class MetaspacePreTokenizer extends PreTokenizer
             //  (a) prepend_scheme is 'always'
             //  (b) prepend_scheme is 'first' and this is the first section
             && (
-                $this->prependScheme === 'always' ||
-                ($this->prependScheme === 'first' && $sectionIndex === 0)
+                'always' === $this->prependScheme
+                || ('first' === $this->prependScheme && 0 === $sectionIndex)
             )
         ) {
             $normalized = $this->strRep . $normalized;

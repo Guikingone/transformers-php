@@ -25,7 +25,7 @@ use function stream_copy_to_stream;
 use function unlink;
 
 /**
- * Utility class to download files from the Hugging Face Hub
+ * Utility class to download files from the Hugging Face Hub.
  */
 class Hub
 {
@@ -47,34 +47,33 @@ class Hub
      *
      * @param string $pathOrRepoID This can be either a string, the "model id" of a model repo on huggingface.co,
      *                             or a path to a local directory containing a model.
-     * @param string $fileName The name of the file to locate in $pathOrRepoID.
-     * @param string|null $cacheDir Path to a directory in which a downloaded pretrained model configuration should
+     * @param string $fileName the name of the file to locate in $pathOrRepoID
+     * @param null|string $cacheDir Path to a directory in which a downloaded pretrained model configuration should
      *                              be cached if the standard cache should not be used.
      *                              the cached versions if they exist. Defaults to false.
      * @param string $revision The specific model version to use. It can be a branch name, a tag name,
      *                         or a commit id. Defaults to 'main'.
-     * @param string $subFolder In case the relevant files are located inside a subfolder of the model repo or
-     *                          directory, indicate it here.
-     * @param bool $fatal Whether to raise an error if the file could not be loaded.
+     * @param string $subFolder in case the relevant files are located inside a subfolder of the model repo or
+     *                          directory, indicate it here
+     * @param bool $fatal whether to raise an error if the file could not be loaded
      *
      * @throws HubException
      */
-
     public static function getFile(
-        string    $pathOrRepoID,
-        string    $fileName,
-        ?string   $cacheDir = null,
-        string    $revision = 'main',
-        string    $subFolder = '',
-        bool      $fatal = true,
+        string $pathOrRepoID,
+        string $fileName,
+        ?string $cacheDir = null,
+        string $revision = 'main',
+        string $subFolder = '',
+        bool $fatal = true,
         ?callable $onProgress = null,
     ): ?string {
-        # Local cache and file paths
+        // Local cache and file paths
         $cacheDir ??= Transformers::getCacheDir();
 
         $filePath = joinPaths($cacheDir, $pathOrRepoID, $subFolder, $fileName);
 
-        # Check if file already exists
+        // Check if file already exists
         if (file_exists($filePath)) {
             return $filePath;
         }
@@ -82,23 +81,23 @@ class Hub
         $remoteURL = self::resolveRepositoryURL($pathOrRepoID, $revision, $fileName, $subFolder);
 
         $partCounter = 1;
-        $partBasePath = "$filePath.part";
+        $partBasePath = "{$filePath}.part";
 
         while (file_exists($partBasePath . $partCounter)) {
-            $partCounter++;
+            ++$partCounter;
         }
 
         $partPath = $partBasePath . $partCounter;
 
-        # Resume download if partially downloaded
+        // Resume download if partially downloaded
         $downloadedBytes = 0;
         if ($partCounter > 1) {
-            for ($i = 1; $i < $partCounter; $i++) {
+            for ($i = 1; $i < $partCounter; ++$i) {
                 $downloadedBytes += filesize($partBasePath . $i);
             }
         }
 
-        # Create directory structure if needed
+        // Create directory structure if needed
         ensureDirectory($filePath);
 
         $options = [
@@ -131,7 +130,7 @@ class Hub
                 $onProgress('complete_download', $fileName, 0, 0, 0, 0);
             }
 
-            # Combine part files if necessary
+            // Combine part files if necessary
             if ($partCounter > 1) {
                 self::combinePartFiles($filePath, $partBasePath, $partCounter);
             } else {
@@ -151,50 +150,37 @@ class Hub
      * @throws HubException
      */
     public static function getJson(
-        string    $pathOrRepoID,
-        string    $fileName,
-        ?string   $cacheDir = null,
-        string    $revision = 'main',
-        string    $subFolder = '',
-        bool      $fatal = true,
+        string $pathOrRepoID,
+        string $fileName,
+        ?string $cacheDir = null,
+        string $revision = 'main',
+        string $subFolder = '',
+        bool $fatal = true,
         ?callable $onProgress = null,
     ): ?array {
         $file = self::getFile($pathOrRepoID, $fileName, $cacheDir, $revision, $subFolder, $fatal, $onProgress);
 
-        if ($file === null) {
+        if (null === $file) {
             return null;
         }
 
         $json = file_get_contents($file);
         $data = json_decode($json, true);
 
-        if ($data === null) {
+        if (null === $data) {
             $error = json_last_error_msg();
-            $message = "Unable to decode JSON file `$file`: $error";
+            $message = "Unable to decode JSON file `{$file}`: {$error}";
+
             throw new RuntimeException($message, json_last_error());
         }
 
         return $data;
     }
 
-
-    private static function onProgress(ProgressBar $progressBar): callable
-    {
-        return static function ($totalDownload, $downloadedBytes) use ($progressBar) {
-            if ($totalDownload == 0) {
-                return;
-            }
-
-            $percent = round(($downloadedBytes / $totalDownload) * 100, 2);
-            $progressBar->setProgress((int)$percent);
-        };
-    }
-
-
     public static function combinePartFiles($filePath, $partBasePath, $partCount): void
     {
         $fileHandle = fopen($filePath, 'w');
-        for ($i = 1; $i <= $partCount; $i++) {
+        for ($i = 1; $i <= $partCount; ++$i) {
             $partPath = $partBasePath . $i;
             $partFileHandle = fopen($partPath, 'r');
             stream_copy_to_stream($partFileHandle, $fileHandle);
@@ -204,6 +190,17 @@ class Hub
         fclose($fileHandle);
     }
 
+    private static function onProgress(ProgressBar $progressBar): callable
+    {
+        return static function ($totalDownload, $downloadedBytes) use ($progressBar) {
+            if (0 == $totalDownload) {
+                return;
+            }
+
+            $percent = round(($downloadedBytes / $totalDownload) * 100, 2);
+            $progressBar->setProgress((int) $percent);
+        };
+    }
 
     /**
      * @throws HubException
@@ -216,7 +213,7 @@ class Hub
             return;
         }
 
-        $message = self::ERROR_MAPPING[$statusCode] ?? "Error $statusCode occurred while trying to load file from $remoteURL";
+        $message = self::ERROR_MAPPING[$statusCode] ?? "Error {$statusCode} occurred while trying to load file from {$remoteURL}";
 
         throw new HubException($message, $statusCode);
     }
@@ -227,10 +224,10 @@ class Hub
 
         $remotePath = str_replace(
             ['{model}', '{revision}', '{file}'],
-            [$pathOrRepoID, $revision, $subFolder === '' ? $fileName : "$subFolder/$fileName"],
+            [$pathOrRepoID, $revision, '' === $subFolder ? $fileName : "{$subFolder}/{$fileName}"],
             Transformers::getRemotePathTemplate(),
         );
 
-        return "$remoteHost/$remotePath";
+        return "{$remoteHost}/{$remotePath}";
     }
 }
