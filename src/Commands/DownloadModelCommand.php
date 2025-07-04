@@ -99,7 +99,7 @@ class DownloadModelCommand extends Command
         try {
             $task = $task ? Task::tryFrom($task) : null;
 
-            $onProgress = function ($type, $filename, $downloadSize, $downloaded) use ($output) {
+            $onProgress = function ($type, $filename, $downloadSize, $downloaded) use ($output): void {
                 if ('advance_download' === $type) {
                     $progressBar = $this->getProgressBar($filename, $output);
                     $percent = round(($downloaded / $downloadSize) * 100, 2);

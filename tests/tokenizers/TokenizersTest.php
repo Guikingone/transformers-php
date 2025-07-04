@@ -14,14 +14,14 @@ use function str_replace;
 
 ini_set('memory_limit', -1);
 
-beforeAll(static function () {
+beforeAll(static function (): void {
     Transformers::setup()
         ->setCacheDir('tests/models')
         ->apply();
 });
 
-describe('Tokenizers (dynamic)', static function () {
-    it('can tokenize a text', static function ($data) {
+describe('Tokenizers (dynamic)', static function (): void {
+    it('can tokenize a text', static function ($data): void {
         ['tokenizerId' => $tokenizerId, 'test' => $test] = $data;
 
         $tokenizer = AutoTokenizer::fromPretrained($tokenizerId);
@@ -56,8 +56,8 @@ describe('Tokenizers (dynamic)', static function () {
         ->with('regular-tokenization');
 });
 
-describe('Chat templates', static function () {
-    it('can apply a chat template', static function () {
+describe('Chat templates', static function (): void {
+    it('can apply a chat template', static function (): void {
         $tokenizer = AutoTokenizer::fromPretrained('Xenova/mistral-tokenizer-v1');
 
         $chat = [
@@ -77,7 +77,7 @@ describe('Chat templates', static function () {
             ->toBe([1, 733, 16289, 28793, 22557, 28725, 910, 460, 368, 28804, 733, 28748, 16289, 28793, 28737, 28742, 28719, 2548, 1598, 28723, 1602, 541, 315, 1316, 368, 3154, 28804, 2, 28705, 733, 16289, 28793, 315, 28742, 28715, 737, 298, 1347, 805, 910, 10706, 5752, 1077, 3791, 28808, 733, 28748, 16289, 28793]);
     });
 
-    it('should support user-defined chat template', static function () {
+    it('should support user-defined chat template', static function (): void {
         $tokenizer = AutoTokenizer::fromPretrained('Xenova/llama-tokenizer');
 
         $chat = [
@@ -126,8 +126,8 @@ describe('Chat templates', static function () {
     });
 });
 
-describe('Chat templates (dynamic)', static function () {
-    it('can tokenize with chat template', static function ($data) {
+describe('Chat templates (dynamic)', static function (): void {
+    it('can tokenize with chat template', static function ($data): void {
         ['tokenizerId' => $tokenizerId, 'test' => $test] = $data;
 
         $tokenizer = AutoTokenizer::fromPretrained($tokenizerId);
@@ -143,10 +143,10 @@ describe('Chat templates (dynamic)', static function () {
     })->with('template-tokenization');
 });
 
-describe('Tokenizer padding/truncation', static function () {
+describe('Tokenizer padding/truncation', static function (): void {
     $inputs = ['a', 'b c'];
 
-    it('should create a jagged array', static function () use ($inputs) {
+    it('should create a jagged array', static function () use ($inputs): void {
         $tokenizer = AutoTokenizer::fromPretrained('Xenova/bert-base-uncased');
 
         // Support jagged array if `returnTensor` is false
@@ -172,7 +172,7 @@ describe('Tokenizer padding/truncation', static function () {
         expect($output)->toBe($expected);
     });
 
-    it('should create a tensor', static function () use ($inputs) {
+    it('should create a tensor', static function () use ($inputs): void {
         $tokenizer = AutoTokenizer::fromPretrained('Xenova/bert-base-uncased');
 
         // Expected to throw error if jagged array

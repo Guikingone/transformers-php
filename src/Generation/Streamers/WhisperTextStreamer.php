@@ -37,9 +37,9 @@ class WhisperTextStreamer extends Streamer
     {
         $streamer = parent::make();
 
-        $streamer->onStreamCallback ??= static function ($value) {};
+        $streamer->onStreamCallback ??= static function ($value): void {};
 
-        $streamer->onStreamEndCallback ??= static function () {};
+        $streamer->onStreamEndCallback ??= static function (): void {};
 
         return $streamer;
     }

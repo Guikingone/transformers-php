@@ -10,6 +10,7 @@ use Codewithkyrian\Transformers\PreTrainedTokenizers\PreTrainedTokenizer;
 use Codewithkyrian\Transformers\Processors\Processor;
 use Codewithkyrian\Transformers\Tensor\Tensor;
 use Codewithkyrian\Transformers\Utils\Image;
+use Codewithkyrian\Transformers\Utils\RawAudio;
 
 class Pipeline
 {
@@ -26,7 +27,7 @@ class Pipeline
     public function __invoke(
         array|string $inputs,
         ...$args,
-    ): array|Image|Tensor {
+    ): array|Image|Tensor|RawAudio {
         return [];
     }
 }
@@ -74,7 +75,9 @@ function pipeline(
 
     $modelName ??= $task->defaultModelName();
 
+
     $model = $task->autoModel($modelName, $quantized, $config, $cacheDir, $revision, $modelFilename, $onProgress);
+    var_dump($model);die;
 
     $tokenizer = $task->autoTokenizer($modelName, $cacheDir, $revision, $onProgress);
 

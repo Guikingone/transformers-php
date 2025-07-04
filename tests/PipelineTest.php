@@ -8,24 +8,24 @@ use Codewithkyrian\Transformers\Transformers;
 
 use function Codewithkyrian\Transformers\Pipelines\pipeline;
 
-beforeAll(static function () {
+beforeAll(static function (): void {
     Transformers::setup()
         ->setCacheDir('tests/models')
         ->apply();
 });
 
-it('can create a pipeline for a task', static function () {
+it('can create a pipeline for a task', static function (): void {
     $extractor = pipeline('feature-extraction');
 
     expect($extractor)->toBeInstanceOf(FeatureExtractionPipeline::class);
 });
 
-it('can create a pipeline for a task with a model', static function () {
+it('can create a pipeline for a task with a model', static function (): void {
     $extractor = pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 
     expect($extractor)->toBeInstanceOf(FeatureExtractionPipeline::class);
 });
 
-it('throws an exception when creating a pipeline for an unsupported task', static function () {
+it('throws an exception when creating a pipeline for an unsupported task', static function (): void {
     pipeline('unsupported-task');
 })->throws(UnsupportedTaskException::class);

@@ -9,7 +9,7 @@ use Codewithkyrian\Transformers\Models\Output\VitsModelOutput;
 
 final class VitsModel extends VitsPretrainedModel
 {
-    public function __invoke(array $modelInputs): array|ModelOutput
+    public function __invoke(array $modelInputs): ModelOutput
     {
         $output = parent::__invoke($modelInputs);
 

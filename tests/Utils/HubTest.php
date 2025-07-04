@@ -20,38 +20,38 @@ use function mkdir;
 use function rmdir;
 use function unlink;
 
-beforeEach(static function () {
+beforeEach(static function (): void {
     Transformers::setup()
         ->setCacheDir('tests/models')
         ->apply();
 });
 
-it('joins paths correctly', static function () {
+it('joins paths correctly', static function (): void {
     $result = joinPaths('path', 'to', 'file');
     expect($result)->toBe('path/to/file');
 });
 
-it('joins paths correctly with leading slash', static function () {
+it('joins paths correctly with leading slash', static function (): void {
     $result = joinPaths('/path', 'to', 'file');
     expect($result)->toBe('/path/to/file');
 });
 
-it('joins paths correctly with trailing slash', static function () {
+it('joins paths correctly with trailing slash', static function (): void {
     $result = joinPaths('path', 'to', 'file/');
     expect($result)->toBe('path/to/file');
 });
 
-it('joins paths correctly with empty string', static function () {
+it('joins paths correctly with empty string', static function (): void {
     $result = joinPaths('path', '', 'file');
     expect($result)->toBe('path/file');
 });
 
-it('joins paths correctly with empty string and slashes', static function () {
+it('joins paths correctly with empty string and slashes', static function (): void {
     $result = joinPaths('path', '', '/file');
     expect($result)->toBe('path/file');
 });
 
-it('ensures directory creation', static function () {
+it('ensures directory creation', static function (): void {
     $filePath = 'cache/test/file.txt';
     ensureDirectory($filePath);
 
@@ -62,7 +62,7 @@ it('ensures directory creation', static function () {
     rmdir('cache');
 });
 
-it('combines part files correctly', static function () {
+it('combines part files correctly', static function (): void {
     // Allow test write access
     if (!is_dir('cache/test')) {
         mkdir('cache/test', 0o777, true);

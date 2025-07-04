@@ -1223,7 +1223,7 @@ class Tensor implements NDArray, Countable, Serializable, IteratorAggregate
         $offsetTV = $topValues->offset();
         $offsetTI = $topIndices->offset();
 
-        $meanHeapify = static function (array &$heap, int $i, int $k) {
+        $meanHeapify = static function (array &$heap, int $i, int $k): void {
             $smallest = $i;
             $left = 2 * $i + 1;
             $right = 2 * $i + 2;

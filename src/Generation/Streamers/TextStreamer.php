@@ -30,11 +30,11 @@ class TextStreamer extends Streamer
     {
         $streamer = parent::make();
 
-        $streamer->onStreamCallback ??= static function ($value) {
+        $streamer->onStreamCallback ??= static function ($value): void {
             echo $value;
         };
 
-        $streamer->onStreamEndCallback ??= static function () {
+        $streamer->onStreamEndCallback ??= static function (): void {
             echo PHP_EOL;
         };
 

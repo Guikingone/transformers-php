@@ -20,3 +20,5 @@ playground/*
 .transformers-cache/*
 tests/models/*
 dist
+
+*.log

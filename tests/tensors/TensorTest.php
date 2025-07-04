@@ -11,8 +11,8 @@ use function pack;
 use function serialize;
 use function unserialize;
 
-describe('Tensor creation', static function () {
-    it('can create tensor with various input types', static function () {
+describe('Tensor creation', static function (): void {
+    it('can create tensor with various input types', static function (): void {
         $t1 = new Tensor([1, 2, 3, 4]);
         expect($t1)->toBeInstanceOf(Tensor::class)
             ->and($t1->shape())->toBe([4])
@@ -29,29 +29,29 @@ describe('Tensor creation', static function () {
             ->and($t3->dtype())->toBe(Tensor::int32);
     });
 
-    it('can create ones tensor', static function () {
+    it('can create ones tensor', static function (): void {
         $t = Tensor::ones([2, 2], Tensor::int32);
         expect($t->toArray())->toBe([[1, 1], [1, 1]]);
     });
 
-    it('can create zeros tensor', static function () {
+    it('can create zeros tensor', static function (): void {
         $t = Tensor::zeros([2, 2], Tensor::int32);
         expect($t->toArray())->toBe([[0, 0], [0, 0]]);
     });
 
-    it('can create a tensor from a binary string', static function () {
+    it('can create a tensor from a binary string', static function (): void {
         $binaryString = pack('g*', 1.0, 2.0, 3.0, 4.0);
         $t = Tensor::fromString($binaryString, Tensor::float32, [4]);
         expect($t->toArray())->toBe([1.0, 2.0, 3.0, 4.0]);
     });
 
-    it('can create a tensor from repeating another tensor', static function () {
+    it('can create a tensor from repeating another tensor', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0]);
         $repeated = Tensor::repeat($t, 3);
         expect($repeated->toArray())->toBe([1.0, 2.0, 3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0]);
     });
 
-    test('Tensor properties are correctly set', static function () {
+    test('Tensor properties are correctly set', static function (): void {
         $t = new Tensor([1, 2, 3, 4]);
         expect($t->shape())->toBe([4])
             ->and($t->dtype())->toBe(Tensor::float32)
@@ -59,7 +59,7 @@ describe('Tensor creation', static function () {
             ->and($t->size())->toBe(4);
     });
 
-    it('can be serialized and unserialized', static function () {
+    it('can be serialized and unserialized', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0, 4.0]);
         $serialized = serialize($t);
         $unserialized = unserialize($serialized);
@@ -68,58 +68,58 @@ describe('Tensor creation', static function () {
     });
 });
 
-describe('Mathematical Operations', static function () {
-    it('can reshape tensor', static function () {
+describe('Mathematical Operations', static function (): void {
+    it('can reshape tensor', static function (): void {
         $t = new Tensor([1, 2, 3, 4]);
         $reshaped = $t->reshape([2, 2]);
         expect($reshaped->shape())->toBe([2, 2]);
     });
 
-    it('can perform element-wise addition', static function () {
+    it('can perform element-wise addition', static function (): void {
         $t1 = new Tensor([1.0, 2.0, 3.0]);
         $t2 = new Tensor([4.0, 5.0, 6.0]);
         $result = $t1->add($t2);
         expect($result->toArray())->toBe([5.0, 7.0, 9.0]);
     });
 
-    it('can perform scalar addition', static function () {
+    it('can perform scalar addition', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0]);
         $result = $t->add(5.0);
         expect($result->toArray())->toBe([6.0, 7.0, 8.0]);
     });
 
-    it('can perform element-wise multiplication', static function () {
+    it('can perform element-wise multiplication', static function (): void {
         $t1 = new Tensor([1.0, 2.0, 3.0]);
         $t2 = new Tensor([4.0, 5.0, 6.0]);
         $result = $t1->multiply($t2);
         expect($result->toArray())->toBe([4.0, 10.0, 18.0]);
     });
 
-    it('can perform scalar multiplication', static function () {
+    it('can perform scalar multiplication', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0]);
         $result = $t->multiply(2.0);
         expect($result->toArray())->toBe([2.0, 4.0, 6.0]);
     });
 
-    it('can calculate sigmoid', static function () {
+    it('can calculate sigmoid', static function (): void {
         $t = new Tensor([0, 1, -1]);
         $result = $t->sigmoid();
         expect($result->toArray())
             ->toMatchArrayApproximately([0.5, 0.7310585786300049, 0.2689414213699951]);
     });
 
-    it('can calculate magnitude', static function () {
+    it('can calculate magnitude', static function (): void {
         $t = new Tensor([3.0, 4.0]);
         expect($t->magnitude())->toBe(5.0);
     });
 
-    it('can calculate dot product', static function () {
+    it('can calculate dot product', static function (): void {
         $t1 = new Tensor([1.0, 2.0, 3.0]);
         $t2 = new Tensor([4.0, 5.0, 6.0]);
         expect($t1->dot($t2))->toBe(32.0);
     });
 
-    it('can calculate cross product', static function () {
+    it('can calculate cross product', static function (): void {
         $t1 = new Tensor([
             [1.0, 2.0, 3.0],
             [4.0, 5.0, 6.0],
@@ -138,66 +138,66 @@ describe('Mathematical Operations', static function () {
         ]);
     });
 
-    it('can calculate square root', static function () {
+    it('can calculate square root', static function (): void {
         $t = new Tensor([4.0, 9.0]);
         expect($t->sqrt()->toArray())->toBe([2.0, 3.0]);
     });
 
-    it('can calculate exponential', static function () {
+    it('can calculate exponential', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0]);
         $exp = $t->exp();
         expect($exp->toArray())
             ->toMatchArrayApproximately([2.718281828459045, 7.38905609893065, 20.085536923187668]);
     });
 
-    it('can calculate log', static function () {
+    it('can calculate log', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0]);
         $log = $t->log();
         expect($log->toArray())
             ->toMatchArrayApproximately([0.0, 0.6931471805599453, 1.0986122886681098]);
     });
 
-    it('can perform element-wise power', static function () {
+    it('can perform element-wise power', static function (): void {
         $t1 = new Tensor([1.0, 2.0, 3.0]);
         $t2 = new Tensor([4.0, 5.0, 6.0]);
         $result = $t1->pow($t2);
         expect($result->toArray())->toBe([1.0, 32.0, 729.0]);
     });
 
-    it('can perform scalar power', static function () {
+    it('can perform scalar power', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0]);
         $result = $t->pow(2.0);
         expect($result->toArray())->toBe([1.0, 4.0, 9.0]);
     });
 });
 
-describe('Tensor transformations', static function () {
-    it('can be transposed', static function () {
+describe('Tensor transformations', static function (): void {
+    it('can be transposed', static function (): void {
         $t = new Tensor([[1.0, 2.0], [3.0, 4.0]]);
         $transposed = $t->transpose();
         expect($transposed->shape())->toBe([2, 2])
             ->and($transposed->toArray())->toBe([[1.0, 3.0], [2.0, 4.0]]);
     });
 
-    it('can calculate reciprocal', static function () {
+    it('can calculate reciprocal', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0]);
         $reciprocal = $t->reciprocal();
         expect($reciprocal->toArray())->toMatchArrayApproximately([1.0, 0.5, 0.3333333333333333]);
     });
 
-    it('can be squeezed', static function () {
+    it('can be squeezed', static function (): void {
         $t = new Tensor([[[1], [2]], [[3], [4]]]);
         $squeezed = $t->squeeze(2);
         expect($squeezed->shape())->toBe([2, 2]);
     });
 
-    it('can be unsqueezed', static function () {
+    it('can be unsqueezed', static function (): void {
         $t = new Tensor([1, 2, 3, 4]);
         $unsqueezed = $t->unsqueeze(0);
         expect($unsqueezed->shape())->toBe([1, 4]);
     });
 
-    it('can be stacked on axis 0', static function () {
+    it('can be stacked on axis 0', static function (): void {
         $t1 = new Tensor([1.0, 2.0, 3.0]);
         $t2 = new Tensor([4.0, 5.0, 6.0]);
         $stacked = Tensor::stack([$t1, $t2], 0);
@@ -205,7 +205,7 @@ describe('Tensor transformations', static function () {
             ->and($stacked->toArray())->toBe([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]);
     });
 
-    it('can be stacked on axis 1', static function () {
+    it('can be stacked on axis 1', static function (): void {
         $t1 = new Tensor([
             [1.0, 2.0],
             [3.0, 4.0],
@@ -219,7 +219,7 @@ describe('Tensor transformations', static function () {
             ->and($stacked->toArray())->toBe([[[1.0, 2.0], [5.0, 6.0]], [[3.0, 4.0], [7.0, 8.0]]]);
     });
 
-    it('can be concatenated on axis 0', static function () {
+    it('can be concatenated on axis 0', static function (): void {
         $t1 = new Tensor([1.0, 2.0, 3.0]);
         $t2 = new Tensor([4.0, 5.0, 6.0]);
         $concatenated = Tensor::concat([$t1, $t2], 0);
@@ -227,7 +227,7 @@ describe('Tensor transformations', static function () {
             ->and($concatenated->toArray())->toBe([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
     });
 
-    it('can be concatenated on axis 1', static function () {
+    it('can be concatenated on axis 1', static function (): void {
         $t1 = new Tensor([
             [1.0, 2.0],
             [3.0, 4.0],
@@ -242,32 +242,32 @@ describe('Tensor transformations', static function () {
     });
 });
 
-describe('Indexing and Slicing', static function () {
-    it('supports integer indexing', static function () {
+describe('Indexing and Slicing', static function (): void {
+    it('supports integer indexing', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0, 4.0]);
         expect($t[0])->toBe(1.0)
             ->and($t[3])->toBe(4.0);
     });
 
-    it('supports range indexing', static function () {
+    it('supports range indexing', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0, 4.0, 5.0]);
         $slice = $t[[1, 3]];
         expect($slice->toArray())->toBe([2.0, 3.0]);
     });
 });
 
-describe('Statistical operations', static function () {
-    it('can calculate sum', static function () {
+describe('Statistical operations', static function (): void {
+    it('can calculate sum', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0, 4.0, 5.0]);
         expect($t->sum())->toBe(15.0);
     });
 
-    it('can calculate mean', static function () {
+    it('can calculate mean', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0, 4.0, 5.0]);
         expect($t->mean())->toBe(3.0);
     });
 
-    it('can calculate standard deviation', static function () {
+    it('can calculate standard deviation', static function (): void {
         $t = new Tensor([1.0, 2.0, 3.0, 4.0, 5.0]);
         [$std, $mean] = $t->stdMean();
 
@@ -275,20 +275,20 @@ describe('Statistical operations', static function () {
             ->and($mean)->toEqualWithDelta(3.0, 1e-4);
     })->todo();
 
-    it('can calculate cosine similarity', static function () {
+    it('can calculate cosine similarity', static function (): void {
         $t1 = new Tensor([1.0, 2.0, 3.0]);
         $t2 = new Tensor([4.0, 5.0, 6.0]);
         expect($t1->cosSimilarity($t2))->toEqualWithDelta(0.9746, 1e-4);
     });
 
-    it('can perform softmax', static function () {
+    it('can perform softmax', static function (): void {
         $t = new Tensor([1, 2, 3]);
         $result = $t->softmax();
         expect($result->toArray())->toMatchArrayApproximately([0.0900305, 0.2447284, 0.6652409], 1e-6)
             ->and($result->sum())->toEqualWithDelta(1, 1e-6);
     });
 
-    it('can find top k values', static function () {
+    it('can find top k values', static function (): void {
         $t = new Tensor([1.0, 4.0, 3.0, 2.0, 5.0]);
         [$values, $indices] = $t->topk(3);
         expect($values->toArray())->toBe([5.0, 4.0, 3.0])
@@ -296,8 +296,8 @@ describe('Statistical operations', static function () {
     });
 });
 
-describe('Error handling', static function () {
-    it('throws exception for out of bounds indexing', static function () {
+describe('Error handling', static function (): void {
+    it('throws exception for out of bounds indexing', static function (): void {
         $t = new Tensor([1, 2, 3]);
         expect(static fn () => $t[3])->toThrow(OutOfRangeException::class);
     });

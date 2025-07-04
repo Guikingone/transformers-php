@@ -100,7 +100,7 @@ class LibsChecker
             $downloadUrl = "{$baseUrl}/{$filename}.{$extension}";
             $downloadPath = tempnam(sys_get_temp_dir(), 'transformers-php') . ".{$extension}";
 
-            $onProgress = static function ($downloadSize, $downloaded, $uploadSize, $uploaded) use ($output, $filename) {
+            $onProgress = static function ($downloadSize, $downloaded, $uploadSize, $uploaded) use ($output, $filename): void {
                 $progressBar = self::getProgressBar($filename, $output);
                 $percent = round(($downloaded / $downloadSize) * 100, 2);
                 $progressBar->setProgress((int) $percent);

@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 use Codewithkyrian\Transformers\Utils\StreamLogger;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->outputBuffer = fopen('php://memory', 'rw');
     $this->logger = new StreamLogger($this->outputBuffer);
 });
 
-afterEach(function () {
+afterEach(function (): void {
     fclose($this->outputBuffer);
 });
 
-it('logs messages with the correct format', function () {
+it('logs messages with the correct format', function (): void {
     $this->logger->log('info', 'This is a test message');
 
     rewind($this->outputBuffer);
@@ -22,7 +22,7 @@ it('logs messages with the correct format', function () {
     expect($output)->toMatch('/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[\+\-]\d{2}:\d{2}\] info: This is a test message \[\]\n/');
 });
 
-it('handles context correctly in log messages', function () {
+it('handles context correctly in log messages', function (): void {
     $context = ['user_id' => 123, 'action' => 'login'];
     $this->logger->log('warning', 'User action recorded', $context);
 
@@ -35,7 +35,7 @@ it('handles context correctly in log messages', function () {
         ->and($output)->toContain($expectedContext);
 });
 
-it('handles different log levels correctly', function () {
+it('handles different log levels correctly', function (): void {
     $levels = ['debug', 'info', 'notice', 'warning', 'error', 'critical', 'alert', 'emergency'];
 
     foreach ($levels as $level) {
@@ -50,7 +50,7 @@ it('handles different log levels correctly', function () {
     }
 });
 
-it('handles empty context gracefully', function () {
+it('handles empty context gracefully', function (): void {
     $this->logger->log('info', 'Message with no context');
 
     rewind($this->outputBuffer);
@@ -59,7 +59,7 @@ it('handles empty context gracefully', function () {
     expect($output)->toContain('info: Message with no context []');
 });
 
-it('handles stringable objects in the message', function () {
+it('handles stringable objects in the message', function (): void {
     $stringable = new class {
         public function __toString(): string
         {
@@ -75,7 +75,7 @@ it('handles stringable objects in the message', function () {
     expect($output)->toContain('info: Stringable message content');
 });
 
-it('outputs log messages to STDOUT', function () {
+it('outputs log messages to STDOUT', function (): void {
     $this->logger->log('info', 'Check output redirection');
 
     rewind($this->outputBuffer);

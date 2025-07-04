@@ -1,19 +1,19 @@
 #!/usr/bin/env php
 <?php declare(strict_types=1);
 
+use Codewithkyrian\Transformers\Commands\DownloadModelCommand;
+use Codewithkyrian\Transformers\Commands\InstallCommand;
 use Symfony\Component\Console\Application;
 
 require_once $_composer_autoload_path ?? __DIR__ . '/../vendor/autoload.php';
 
 $application = new Application();
 
-// ... register commands
-
 try {
     $application->setName('Transformers PHP CLI');
 
-    $application->add(new Codewithkyrian\Transformers\Commands\InstallCommand());
-    $application->add(new Codewithkyrian\Transformers\Commands\DownloadModelCommand());
+    $application->add(new InstallCommand());
+    $application->add(new DownloadModelCommand());
 
     $application->run();
 } catch (Exception $e) {

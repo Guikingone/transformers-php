@@ -118,7 +118,7 @@ class Hub
                 $onProgress('begin_download', $fileName, 0, 0, 0, 0);
             }
 
-            $progressCallback = static function ($downloadSize, $downloaded, $uploadSize, $uploaded) use ($onProgress, $fileName) {
+            $progressCallback = static function ($downloadSize, $downloaded, $uploadSize, $uploaded) use ($onProgress, $fileName): void {
                 if ($onProgress) {
                     $onProgress('advance_download', $fileName, $downloadSize, $downloaded, $uploadSize, $uploaded);
                 }
@@ -192,7 +192,7 @@ class Hub
 
     private static function onProgress(ProgressBar $progressBar): callable
     {
-        return static function ($totalDownload, $downloadedBytes) use ($progressBar) {
+        return static function ($totalDownload, $downloadedBytes) use ($progressBar): void {
             if (0 == $totalDownload) {
                 return;
             }

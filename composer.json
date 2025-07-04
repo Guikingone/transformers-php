@@ -30,6 +30,7 @@
     "pestphp/pest": "^2.31",
     "phpstan/phpstan": "^2.1",
     "phpstan/phpstan-deprecation-rules": "^2.0",
+    "rector/rector": "^2.1",
     "symfony/var-dumper": "^7.0"
   },
   "suggest": {
@@ -68,7 +69,11 @@
     "test": "vendor/bin/pest",
     "test:coverage": "XDEBUG_MODE=coverage ./vendor/bin/pest --coverage",
     "post-install-cmd": "Codewithkyrian\\Transformers\\Utils\\LibsChecker::check",
-    "post-update-cmd": "Codewithkyrian\\Transformers\\Utils\\LibsChecker::check"
+    "post-update-cmd": "Codewithkyrian\\Transformers\\Utils\\LibsChecker::check",
+    "rector": "vendor/bin/rector",
+    "rector-dry": "vendor/bin/rector --dry-run > rector.log",
+    "php-cs-fixer": "vendor/bin/php-cs-fixer fix",
+    "phpstan": "vendor/bin/phpstan --memory-limit=-1"
   },
   "archive": {
     "exclude": [
